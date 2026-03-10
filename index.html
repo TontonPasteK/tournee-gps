@@ -5,1027 +5,1066 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Tournée GPS+Audio</title>
+<title>TournéeGuide</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
-
 :root {
-  --bg: #07090d;
-  --panel: #0e1117;
-  --border: #1c2130;
-  --accent: #00e5ff;
-  --accent2: #ff4d6d;
-  --green: #00ff87;
-  --yellow: #ffd60a;
-  --purple: #b57aff;
-  --text: #d8dde8;
-  --muted: #4a5568;
+  --bg:#07090d; --panel:#0e1117; --border:#1c2130;
+  --accent:#00e5ff; --accent2:#ff4d6d; --green:#00ff87;
+  --yellow:#ffd60a; --purple:#b57aff; --orange:#ff9500;
+  --text:#d8dde8; --muted:#4a5568;
 }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;overflow:hidden;position:fixed;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;}
+.screen.hidden{display:none!important;}
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* ── HOME ── */
+#screen-home{background:var(--bg);justify-content:center;align-items:center;padding:24px;gap:20px;}
+.home-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--accent);text-align:center;line-height:1;}
+.home-sub{font-size:9px;letter-spacing:2px;color:var(--muted);text-align:center;margin-top:-10px;}
+.home-btns{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:10px;}
+.home-btn{width:100%;height:70px;border-radius:16px;border:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:0 20px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;transition:transform .1s;}
+.home-btn:active{transform:scale(.97);}
+.home-btn .icon{font-size:26px;width:36px;text-align:center;}
+.home-btn .desc{display:flex;flex-direction:column;align-items:flex-start;}
+.home-btn .desc span{font-size:8px;font-weight:400;opacity:.7;letter-spacing:1px;margin-top:2px;}
+.home-btn.rec{background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff;}
+.home-btn.nav{background:linear-gradient(135deg,#00e5ff,#0077b6);color:#000;}
+.home-btn.lib{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
+.home-version{font-size:8px;color:var(--muted);letter-spacing:1px;}
 
-html, body {
-  height: 100%; width: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Space Mono', monospace;
-  overflow: hidden;
-  position: fixed;
-}
-
-#map {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  filter: brightness(0.85) saturate(0.7) contrast(1.1);
-}
-.leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.6); }
-.leaflet-container { background: #0a0c12; }
-
-#map::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px);
-  pointer-events: none;
-  z-index: 999;
-}
+/* ── MAP SCREENS (record + navigate) ── */
+#map-record,#map-navigate{position:absolute;inset:0;z-index:0;}
+.leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.85) saturate(.6);}
+.leaflet-container{background:#0a0c12;}
 
 /* ── HUD TOP ── */
-.hud-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  z-index: 1000;
-  padding: 12px 16px 0;
-  pointer-events: none;
-}
-.hud-bar {
-  background: rgba(7,9,13,0.9);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  backdrop-filter: blur(12px);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  pointer-events: all;
-}
-.hud-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  color: var(--accent);
-  line-height: 1;
-  flex-shrink: 0;
-}
-.hud-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
-.hud-stat { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-.hud-stat-val {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 1px;
-  color: var(--text);
-  line-height: 1;
-}
-.hud-stat-val.green { color: var(--green); }
-.hud-stat-val.yellow { color: var(--yellow); }
-.hud-stat-val.cyan { color: var(--accent); }
-.hud-stat-val.purple { color: var(--purple); }
-.hud-stat-lbl { font-size: 7px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
+.hud-top{position:absolute;top:0;left:0;right:0;z-index:100;padding:10px 12px 0;pointer-events:none;}
+.hud-bar{background:rgba(7,9,13,.92);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px);padding:9px 12px;display:flex;align-items:center;gap:8px;pointer-events:all;}
+.hud-back{background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:0 4px;font-family:'Space Mono',monospace;}
+.hud-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--accent);flex-shrink:0;}
+.hud-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+.hud-stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
+.hud-val{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;line-height:1;}
+.hud-val.cyan{color:var(--accent);} .hud-val.green{color:var(--green);} .hud-val.yellow{color:var(--yellow);} .hud-val.red{color:var(--accent2);}
+.hud-lbl{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 
-/* REC dot */
-.rec-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
-  flex-shrink: 0;
-  transition: background 0.3s;
-}
-.rec-dot.gps { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 1.2s infinite; }
-.rec-dot.audio { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); animation: blink 0.8s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* ── HUD BOTTOM PANEL ── */
+.hud-bottom{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
+.bottom-panel{background:rgba(7,9,13,.95);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(16px);overflow:hidden;}
+.tabs{display:flex;border-bottom:1px solid var(--border);}
+.tab{flex:1;padding:8px 4px;text-align:center;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'Space Mono',monospace;transition:color .2s,background .2s;}
+.tab.active{color:var(--accent);background:rgba(0,229,255,.06);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
-/* Audio bar indicator */
-.audio-bar {
-  position: absolute;
-  top: 72px; left: 16px; right: 16px;
-  z-index: 1001;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  display: none;
-}
-.audio-bar.show { display: block; }
-.audio-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--accent2);
-  border-radius: 2px;
-  transition: width 0.1s;
-}
+/* ── CONTROLS ── */
+.ctrl{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.btn-main{width:100%;height:54px;border-radius:14px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s;background:var(--accent2);color:#fff;}
+.btn-main.idle{background:var(--green);color:#000;}
+.btn-main:active{transform:scale(.97);}
+.btn-row{display:flex;gap:8px;}
+.btn-sm{flex:1;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color .15s,background .15s;}
+.btn-sm:active{background:var(--border);}
+.btn-sm:disabled{opacity:.3;pointer-events:none;}
+.btn-sm.yl{border-color:var(--yellow);color:var(--yellow);}
+.btn-sm.gn{border-color:var(--green);color:var(--green);}
+.btn-sm.cy{border-color:var(--accent);color:var(--accent);}
+.btn-sm.rd{border-color:var(--accent2);color:var(--accent2);}
 
-/* ── TOAST ── */
-.stop-toast {
-  position: absolute;
-  top: 80px; left: 16px; right: 16px;
-  z-index: 1002;
-  background: rgba(14,17,23,0.96);
-  border: 1px solid var(--yellow);
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  backdrop-filter: blur(8px);
-  transform: translateY(-4px);
-  opacity: 0;
-  transition: all 0.25s;
-  pointer-events: none;
-}
-.stop-toast.visible { opacity: 1; transform: translateY(0); }
-.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; animation: blink 0.8s infinite; }
+/* ── STOPS LIST ── */
+.stops-scroll{max-height:180px;overflow-y:auto;padding:4px 0;}
+.stop-item{padding:8px 12px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid rgba(28,33,48,.5);cursor:pointer;}
+.stop-item:active{background:rgba(0,229,255,.05);}
+.stop-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);width:26px;flex-shrink:0;line-height:1;}
+.stop-body{flex:1;min-width:0;}
+.stop-client{font-size:11px;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stop-addr{font-size:9px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stop-products{font-size:9px;color:var(--yellow);margin-top:2px;}
+.empty-stops{padding:18px 12px;text-align:center;font-size:10px;color:var(--muted);line-height:2;letter-spacing:1px;}
 
-/* accuracy */
-.acc-badge {
-  position: absolute;
-  top: 82px; right: 16px;
-  z-index: 1001;
-  background: rgba(7,9,13,0.85);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 7px;
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 1px;
-  pointer-events: none;
-  display: none;
-}
-.acc-badge.show { display: block; }
+/* ── STOP FORM MODAL ── */
+#stop-form-modal{position:absolute;inset:0;z-index:200;background:rgba(0,0,0,.7);display:flex;flex-direction:column;justify-content:flex-end;}
+#stop-form-modal.hidden{display:none!important;}
+.form-panel{background:var(--panel);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:16px 16px max(16px,calc(env(safe-area-inset-bottom)+8px));max-height:90vh;overflow-y:auto;}
+.form-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:12px;}
+.form-row{display:flex;gap:8px;margin-bottom:8px;}
+.form-group{flex:1;display:flex;flex-direction:column;gap:4px;}
+.form-label{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+.form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
+.form-input:focus{border-color:var(--accent);}
+.voice-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:rgba(181,122,255,.1);color:var(--purple);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end;}
+.voice-btn.active{background:rgba(255,77,109,.2);border-color:var(--accent2);color:var(--accent2);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.products-section{margin-bottom:8px;}
+.products-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s;}
+.chip:active{background:var(--border);}
+.chip .chip-qty{background:var(--yellow);color:#000;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.chip.selected{border-color:var(--yellow);color:var(--yellow);}
+.custom-product-row{display:flex;gap:6px;}
+.qty-input{width:56px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;text-align:center;outline:none;}
+.form-btns{display:flex;gap:8px;margin-top:12px;}
+.form-btn{flex:1;height:48px;border-radius:12px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
+.form-btn.save{background:var(--green);color:#000;}
+.form-btn.cancel{background:rgba(255,255,255,.07);color:var(--text);font-size:14px;}
+.voice-status{font-size:9px;color:var(--purple);letter-spacing:1px;min-height:14px;margin-bottom:4px;}
 
-/* ── HUD BOTTOM ── */
-.hud-bottom {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  z-index: 1000;
-  padding: 0 16px 16px;
-  padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
-}
-.bottom-panel {
-  background: rgba(7,9,13,0.93);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  backdrop-filter: blur(16px);
-  overflow: hidden;
-}
+/* ── REVIEW SCREEN ── */
+#screen-review{background:var(--bg);}
+.review-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.review-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
+.review-list{flex:1;overflow-y:auto;padding:8px 0;}
+.review-item{padding:12px 16px;border-bottom:1px solid rgba(28,33,48,.5);display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+.review-item:active{background:rgba(0,229,255,.04);}
+.review-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);width:30px;flex-shrink:0;line-height:1;}
+.review-body{flex:1;min-width:0;}
+.review-client{font-size:12px;font-weight:700;color:var(--text);}
+.review-addr{font-size:10px;color:var(--muted);margin-top:2px;}
+.review-products{font-size:10px;color:var(--yellow);margin-top:3px;}
+.review-meta{font-size:9px;color:var(--muted);margin-top:2px;}
+.review-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.route-name-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
+.route-name-input:focus{border-color:var(--accent);}
 
-/* TABS */
-.tabs { display: flex; border-bottom: 1px solid var(--border); }
-.tab {
-  flex: 1; padding: 9px 4px;
-  text-align: center;
-  font-size: 8px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color 0.2s, background 0.2s;
-  border: none; background: transparent;
-  font-family: 'Space Mono', monospace;
-}
-.tab.active { color: var(--accent); background: rgba(0,229,255,0.06); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+/* ── NAVIGATE SCREEN ── */
+.nav-progress{position:absolute;top:0;left:0;right:0;z-index:101;height:3px;background:var(--border);}
+.nav-progress-fill{height:100%;background:var(--green);transition:width .5s;}
+.nav-stop-panel{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
+.nav-card{background:rgba(7,9,13,.96);border:1px solid var(--border);border-radius:20px;backdrop-filter:blur(16px);padding:14px;}
+.nav-counter{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.nav-client{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);letter-spacing:1px;line-height:1.1;}
+.nav-address{font-size:11px;color:var(--muted);margin:4px 0 8px;}
+.nav-products-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.nav-product-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.15);border-radius:8px;}
+.nav-product-name{flex:1;font-size:12px;color:var(--text);}
+.nav-product-qty{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);line-height:1;}
+.nav-details{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.nav-detail-chip{padding:4px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;font-size:9px;color:var(--text);}
+.nav-notes{font-size:10px;color:var(--purple);padding:6px 10px;background:rgba(181,122,255,.07);border:1px solid rgba(181,122,255,.2);border-radius:8px;margin-bottom:10px;display:none;}
+.nav-actions{display:flex;gap:8px;}
+.btn-delivered{flex:2;height:54px;border-radius:14px;border:none;cursor:pointer;background:var(--green);color:#000;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
+.btn-delivered:active{opacity:.8;}
+.btn-skip{flex:1;height:54px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;}
+.btn-skip:active{background:var(--border);}
+.nav-dist-badge{position:absolute;top:70px;right:12px;z-index:101;background:rgba(7,9,13,.9);border:1px solid var(--border);border-radius:10px;padding:5px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;}
+.nav-done-screen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;}
+.nav-done-screen.hidden{display:none!important;}
+.done-icon{font-size:64px;}
+.done-title{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);letter-spacing:3px;}
+.done-stats{text-align:center;font-size:11px;color:var(--muted);line-height:2;}
 
-/* CONTROLS */
-.ctrl { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+/* ── ROUTES LIBRARY ── */
+#screen-routes{background:var(--bg);}
+.routes-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.routes-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
+.routes-list{flex:1;overflow-y:auto;}
+.route-card{padding:14px 16px;border-bottom:1px solid rgba(28,33,48,.5);}
+.route-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.route-card-name{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.route-card-meta{font-size:9px;color:var(--muted);letter-spacing:1px;}
+.route-card-actions{display:flex;gap:6px;}
+.route-btn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;}
+.route-btn.nav{border-color:var(--accent);color:var(--accent);}
+.route-btn.del{border-color:var(--accent2);color:var(--accent2);}
+.route-btn:active{background:var(--border);}
+.routes-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:10px;letter-spacing:1px;text-align:center;padding:32px;}
+.routes-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
 
-.btn-main {
-  width: 100%; height: 58px;
-  border-radius: 14px; border: none; cursor: pointer;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px; letter-spacing: 2px;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  transition: transform 0.1s;
-  background: var(--accent); color: #000;
-}
-.btn-main:active { transform: scale(0.97); }
-.btn-main.running { background: var(--accent2); color: #fff; }
-
-.btn-row { display: flex; gap: 8px; }
-.btn-sm {
-  flex: 1; height: 42px;
-  border-radius: 11px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: var(--text);
-  font-family: 'Space Mono', monospace;
-  font-size: 10px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  transition: border-color 0.15s, background 0.15s;
-}
-.btn-sm:active { background: var(--border); }
-.btn-sm:disabled { opacity: 0.3; pointer-events: none; }
-.btn-sm.hl-yellow { border-color: var(--yellow); color: var(--yellow); }
-.btn-sm.hl-purple { border-color: var(--purple); color: var(--purple); }
-.btn-sm.hl-green  { border-color: var(--green);  color: var(--green); }
-
-/* audio segment indicator */
-.seg-indicator {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px;
-  background: rgba(181,122,255,0.07);
-  border: 1px solid rgba(181,122,255,0.2);
-  border-radius: 8px;
-  font-size: 9px; color: var(--purple);
-}
-.seg-indicator.hidden { display: none; }
-
-/* STOPS LIST */
-.stops-content { max-height: 190px; overflow-y: auto; padding: 6px 0; }
-.stop-item {
-  padding: 7px 14px;
-  display: flex; align-items: flex-start; gap: 8px;
-  border-bottom: 1px solid rgba(28,33,48,0.5);
-  animation: fadeIn 0.25s ease;
-}
-@keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
-.stop-num { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--accent); line-height:1; flex-shrink:0; width:26px; }
-.stop-info { flex:1; min-width:0; }
-.stop-addr { font-size:10px; color:var(--text); line-height:1.4; }
-.stop-meta { font-size:8px; color:var(--muted); margin-top:2px; display:flex; gap:6px; flex-wrap:wrap; }
-.stop-dur { color: var(--yellow); }
-.empty-stops { padding:20px 14px; text-align:center; font-size:10px; color:var(--muted); line-height:2; letter-spacing:1px; }
-
-/* EXPORT */
-.export-content { padding: 12px 14px; display:flex; flex-direction:column; gap:8px; }
-.export-info { font-size:9px; color:var(--muted); line-height:1.8; }
-.export-info strong { color: var(--text); }
-
-/* MARKERS */
-.stop-pulse { width:14px; height:14px; border-radius:50%; background:var(--accent2); border:2px solid #fff; box-shadow:0 0 0 3px rgba(255,77,109,0.3); }
-.pos-marker { width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid #fff; box-shadow:0 0 10px var(--accent), 0 0 20px rgba(0,229,255,0.3); }
-
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+/* ── MISC ── */
+.pos-marker{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 10px var(--accent),0 0 20px rgba(0,229,255,.3);}
+.stop-dot{width:14px;height:14px;border-radius:50%;background:var(--accent2);border:2px solid #fff;box-shadow:0 0 6px rgba(255,77,109,.5);}
+.next-dot{width:18px;height:18px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4);animation:glow 1.2s infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4)}50%{box-shadow:0 0 20px var(--green),0 0 40px rgba(0,255,135,.6)}}
+.delivered-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);border:2px solid rgba(255,255,255,.2);}
+.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid var(--accent2);color:var(--accent2);font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;white-space:nowrap;}
+.stop-tooltip::before{display:none}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
 </head>
 <body>
 
-<div id="map"></div>
-<div class="acc-badge" id="acc-badge">GPS ±??m</div>
-<div class="audio-bar" id="audio-bar"><div class="audio-bar-fill" id="audio-fill"></div></div>
-
-<div class="stop-toast" id="stop-toast">
-  <div class="toast-dot"></div>
-  <div id="toast-text">Arrêt potentiel…</div>
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: HOME
+══════════════════════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="home-logo">TournéeGuide</div>
+  <div class="home-sub">GESTION DE TOURNÉE GPS</div>
+  <div class="home-btns">
+    <button class="home-btn rec" onclick="goRecord()">
+      <span class="icon">🔴</span>
+      <span class="desc">Enregistrer une tournée<span>Parcours + clients + journaux</span></span>
+    </button>
+    <button class="home-btn nav" onclick="goLibraryForNav()">
+      <span class="icon">🗺️</span>
+      <span class="desc">Suivre une tournée<span>Navigation guidée arrêt par arrêt</span></span>
+    </button>
+    <button class="home-btn lib" onclick="showScreen('routes')">
+      <span class="icon">📋</span>
+      <span class="desc">Mes tournées<span>Gérer, exporter, importer</span></span>
+    </button>
+  </div>
+  <div class="home-version">v2.0 — TournéeGuide</div>
 </div>
 
-<!-- HUD TOP -->
-<div class="hud-top">
-  <div class="hud-bar">
-    <div class="hud-title">TOURNÉE</div>
-    <div class="rec-dot" id="rec-gps" title="GPS"></div>
-    <div class="rec-dot" id="rec-audio" title="Audio"></div>
-    <div class="hud-divider"></div>
-    <div class="hud-stat">
-      <div class="hud-stat-val cyan" id="hud-time">00:00</div>
-      <div class="hud-stat-lbl">Durée</div>
-    </div>
-    <div class="hud-divider"></div>
-    <div class="hud-stat">
-      <div class="hud-stat-val green" id="hud-dist">0 m</div>
-      <div class="hud-stat-lbl">Distance</div>
-    </div>
-    <div class="hud-divider"></div>
-    <div class="hud-stat">
-      <div class="hud-stat-val yellow" id="hud-stops">0</div>
-      <div class="hud-stat-lbl">Arrêts</div>
-    </div>
-    <div class="hud-divider"></div>
-    <div class="hud-stat">
-      <div class="hud-stat-val purple" id="hud-segs">0</div>
-      <div class="hud-stat-lbl">Seg. audio</div>
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: RECORD
+══════════════════════════════════════════════════════ -->
+<div id="screen-record" class="screen hidden">
+  <div id="map-record"></div>
+
+  <!-- HUD TOP -->
+  <div class="hud-top">
+    <div class="hud-bar">
+      <button class="hud-back" onclick="confirmBack()">←</button>
+      <div class="hud-title">REC</div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat"><div class="hud-val cyan" id="rec-time">00:00</div><div class="hud-lbl">Durée</div></div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat"><div class="hud-val green" id="rec-dist">0 m</div><div class="hud-lbl">Distance</div></div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat"><div class="hud-val yellow" id="rec-stops">0</div><div class="hud-lbl">Arrêts</div></div>
     </div>
   </div>
-</div>
 
-<!-- HUD BOTTOM -->
-<div class="hud-bottom">
-  <div class="bottom-panel">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('controls')">⚙ Contrôles</button>
-      <button class="tab" onclick="switchTab('stops')">📍 Arrêts</button>
-      <button class="tab" onclick="switchTab('export')">↓ Export</button>
-    </div>
-
-    <!-- CONTROLS -->
-    <div class="tab-content active" id="tab-controls">
-      <div class="ctrl">
-        <button class="btn-main" id="btn-main" onclick="mainAction()">
-          <span id="btn-icon">▶</span>
-          <span id="btn-label">DÉMARRER</span>
-        </button>
-        <div class="seg-indicator hidden" id="seg-indicator">
-          🎙 Segment audio <span id="seg-num">1</span> en cours — <span id="seg-size">0 MB</span>
-        </div>
-        <div class="btn-row">
-          <button class="btn-sm hl-yellow" id="btn-poi" disabled onclick="addManualStop()">＋ Arrêt</button>
-          <button class="btn-sm" id="btn-center" onclick="centerMap()">◎ Centrer</button>
-          <button class="btn-sm hl-green" id="btn-finish" disabled onclick="finishTour()">✓ Terminer</button>
+  <!-- HUD BOTTOM -->
+  <div class="hud-bottom">
+    <div class="bottom-panel">
+      <div class="tabs">
+        <button class="tab active" onclick="switchRecTab('ctrl')">⚙ Contrôles</button>
+        <button class="tab" onclick="switchRecTab('list')">📍 Arrêts</button>
+      </div>
+      <!-- Controls tab -->
+      <div class="tab-content active" id="rec-tab-ctrl">
+        <div class="ctrl">
+          <button class="btn-main idle" id="btn-rec-main" onclick="recMainAction()">
+            <span id="rec-icon">▶</span> <span id="rec-label">DÉMARRER</span>
+          </button>
+          <div class="btn-row">
+            <button class="btn-sm yl" id="btn-add-stop" disabled onclick="openStopForm(null)">＋ Arrêt</button>
+            <button class="btn-sm cy" onclick="centerRecMap()">◎ Centrer</button>
+            <button class="btn-sm gn" id="btn-rec-finish" disabled onclick="finishRecording()">✓ Terminer</button>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- STOPS -->
-    <div class="tab-content" id="tab-stops">
-      <div class="stops-content" id="stops-list">
-        <div class="empty-stops">Les arrêts détectés<br>apparaîtront ici</div>
-      </div>
-    </div>
-
-    <!-- EXPORT -->
-    <div class="tab-content" id="tab-export">
-      <div class="export-content">
-        <div class="export-info" id="export-info">Lance la tournée pour générer un rapport.</div>
-        <button class="btn-sm hl-yellow" id="btn-export-txt" disabled onclick="exportTxt()" style="height:44px;font-size:11px">↓ Rapport .txt</button>
-        <button class="btn-sm hl-purple" id="btn-export-audio" disabled onclick="exportAudio()" style="height:44px;font-size:11px">↓ Fichiers audio</button>
-        <button class="btn-sm" id="btn-export-gpx" disabled onclick="exportGpx()" style="height:44px;font-size:11px">↓ Tracé .gpx</button>
+      <!-- List tab -->
+      <div class="tab-content" id="rec-tab-list">
+        <div class="stops-scroll" id="rec-stops-list">
+          <div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     STOP FORM MODAL
+══════════════════════════════════════════════════════ -->
+<div id="stop-form-modal" class="hidden">
+  <div class="form-panel">
+    <div class="form-title" id="form-title">NOUVEL ARRÊT</div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:3">
+        <div class="form-label">Nom du client</div>
+        <input class="form-input" id="f-client" type="text" placeholder="Ex: M. Dupont" autocomplete="off">
+      </div>
+      <button class="voice-btn" id="btn-voice-client" onclick="startVoice('f-client')" title="Dicter">🎙</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <div class="form-label">Adresse</div>
+        <input class="form-input" id="f-address" type="text" placeholder="15 rue Victor Hugo" autocomplete="off">
+      </div>
+      <div class="form-group" style="flex:1">
+        <div class="form-label">Étage</div>
+        <input class="form-input" id="f-floor" type="text" placeholder="2e G">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <div class="form-label">Code / Interphone</div>
+        <input class="form-input" id="f-code" type="text" placeholder="1234A">
+      </div>
+      <div class="form-group" style="flex:2">
+        <div class="form-label">Note</div>
+        <input class="form-input" id="f-note" type="text" placeholder="Sonner 2 fois…">
+      </div>
+    </div>
+
+    <div class="products-section">
+      <div class="form-label" style="margin-bottom:6px">Journaux / Publications</div>
+      <div class="voice-status" id="voice-status"></div>
+      <div class="products-chips" id="products-chips"></div>
+      <div class="custom-product-row">
+        <input class="form-input" id="f-custom-product" type="text" placeholder="Autre publication…" style="flex:3">
+        <input class="qty-input" id="f-custom-qty" type="number" min="1" max="99" value="1">
+        <button class="btn-sm cy" style="flex:none;width:44px;height:40px;" onclick="addCustomProduct()">＋</button>
+      </div>
+    </div>
+
+    <div class="form-btns">
+      <button class="form-btn cancel" onclick="closeStopForm()">Annuler</button>
+      <button class="form-btn save" onclick="saveStopForm()">✓ Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: REVIEW
+══════════════════════════════════════════════════════ -->
+<div id="screen-review" class="screen hidden">
+  <div class="review-header">
+    <button class="hud-back" onclick="showScreen('record')" style="font-size:16px">←</button>
+    <div class="review-title">RÉVISION</div>
+    <div style="font-size:10px;color:var(--muted)" id="review-summary"></div>
+  </div>
+  <div class="review-list" id="review-list"></div>
+  <div class="review-footer">
+    <input class="route-name-input" id="route-name-input" type="text" placeholder="Nom de la tournée (ex: Marseille Centre - Matin)">
+    <div class="btn-row">
+      <button class="btn-sm rd" onclick="discardRecording()">✕ Annuler</button>
+      <button class="btn-sm gn" style="flex:2" onclick="saveRoute()">💾 Sauvegarder la tournée</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: NAVIGATE
+══════════════════════════════════════════════════════ -->
+<div id="screen-navigate" class="screen hidden">
+  <div id="map-navigate"></div>
+  <div class="nav-progress"><div class="nav-progress-fill" id="nav-progress-fill"></div></div>
+
+  <div class="hud-top">
+    <div class="hud-bar">
+      <button class="hud-back" onclick="exitNavigation()">←</button>
+      <div class="hud-title" id="nav-route-name">TOURNÉE</div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat"><div class="hud-val green" id="nav-delivered">0</div><div class="hud-lbl">Livrés</div></div>
+      <div class="hud-divider"></div>
+      <div class="hud-stat"><div class="hud-val yellow" id="nav-remaining">0</div><div class="hud-lbl">Restants</div></div>
+      <div class="hud-divider"></div>
+      <button class="btn-sm cy" style="height:30px;font-size:9px;width:60px;padding:0 6px;" onclick="toggleVoice()">🔊 <span id="voice-status-btn">ON</span></button>
+    </div>
+  </div>
+
+  <div class="nav-dist-badge" id="nav-dist-badge">— m</div>
+
+  <div class="nav-stop-panel">
+    <div class="nav-card">
+      <div class="nav-counter" id="nav-counter">ARRÊT 1 / 1</div>
+      <div class="nav-client" id="nav-client">—</div>
+      <div class="nav-address" id="nav-address">—</div>
+      <div class="nav-products-list" id="nav-products-list"></div>
+      <div class="nav-details" id="nav-details"></div>
+      <div class="nav-notes" id="nav-notes"></div>
+      <div class="nav-actions">
+        <button class="btn-skip" onclick="skipStop()">⟳ Passer</button>
+        <button class="btn-delivered" onclick="markDelivered()">✓ LIVRÉ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-done-screen hidden" id="nav-done-screen">
+    <div class="done-icon">🎉</div>
+    <div class="done-title">TOURNÉE TERMINÉE</div>
+    <div class="done-stats" id="done-stats"></div>
+    <button class="btn-sm gn" style="height:48px;width:100%;font-size:12px;" onclick="exitNavigation()">← Retour à l'accueil</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: ROUTES LIBRARY
+══════════════════════════════════════════════════════ -->
+<div id="screen-routes" class="screen hidden">
+  <div class="routes-header">
+    <button class="hud-back" onclick="showScreen('home')" style="font-size:16px">←</button>
+    <div class="routes-title">MES TOURNÉES</div>
+  </div>
+  <div id="routes-list-container" style="flex:1;overflow-y:auto;"></div>
+  <div class="routes-footer">
+    <button class="btn-sm cy" style="flex:1;height:44px;" onclick="importRoute()">↑ Importer JSON</button>
+  </div>
+  <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImport(event)">
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
 <script>
-// ════════════════════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════════════════════
-const STOP_SPEED_THRESHOLD = 0.3;  // m/s (~1 km/h)
-const STOP_MIN_DURATION    = 5;    // secondes
-const STOP_MERGE_RADIUS    = 8;    // mètres
-const SEGMENT_DURATION_MS  = 10 * 60 * 1000; // 10 min par segment audio
+// ════════════════════════════════════════════════════════════
+// NEWSPAPERS DEFAULTS
+// ════════════════════════════════════════════════════════════
+const DEFAULT_PAPERS = ['Le Monde','Le Figaro','La Provence','L\'Équipe','Libération','Le Parisien','Nice-Matin','La Croix','Les Échos','20 Minutes'];
 
-// ════════════════════════════════════════════════════════════════
-// STATE GPS
-// ════════════════════════════════════════════════════════════════
-let isRunning = false;
-let watchId   = null;
-let positions = [];
-let stops     = [];
-let currentStopCandidate = null;
-let lastPos   = null;
-let totalDistance = 0;
-let sessionStart  = null;
-let clockInterval = null;
-let map, polyline, posMarker;
-let stopMarkers = [];
+// ════════════════════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════════════════════
+let currentScreen = 'home';
+let mapRec = null, mapNav = null;
+let recPolyline, recPosMarker, recStopMarkers = [];
+let navPolyline, navPosMarker, navStopMarkers = [];
 
-// ════════════════════════════════════════════════════════════════
-// STATE AUDIO
-// ════════════════════════════════════════════════════════════════
-let mediaRecorder  = null;
-let audioChunks    = [];
-let audioBlobs     = [];   // { blob, mimeType, startTs }
-let audioStream    = null;
-let segmentTimer   = null;
-let analyserNode   = null;
-let dataArray      = null;
-let vizInterval    = null;
-let audioCtx       = null;
-let currentSegStartTs = null;  // timestamp de début du segment EN COURS
-let currentSegIdx     = 0;     // index du segment EN COURS (avant push)
+// Recording state
+let recRunning = false, recWatchId = null, recInterval = null;
+let recPositions = [], recStops = [], recStart = null, recDist = 0, recLastPos = null;
 
-// ════════════════════════════════════════════════════════════════
-// MAP INIT
-// ════════════════════════════════════════════════════════════════
-function initMap() {
-  map = L.map('map', { zoomControl:false, attributionControl:false, tap:false })
-         .setView([43.2965, 5.3698], 15);
+// Stop form state
+let editingStopIdx = null;
+let formProducts = {}; // { name: qty }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+// Voice
+let speechRec = null, speechRecActive = false, speechRecTarget = null;
+let voiceEnabled = true;
 
-  polyline = L.polyline([], {
-    color:'#00e5ff', weight:4, opacity:0.85, lineJoin:'round', lineCap:'round'
-  }).addTo(map);
+// Navigation state
+let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
 
-  const tooltipStyle = document.createElement('style');
-  tooltipStyle.textContent = `.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;box-shadow:none;white-space:nowrap}.stop-tooltip::before{display:none}`;
-  document.head.appendChild(tooltipStyle);
+// ════════════════════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('screen-' + name).classList.remove('hidden');
+  currentScreen = name;
+  if (name === 'record' && !mapRec) initRecMap();
+  if (name === 'navigate' && !mapNav) initNavMap();
+  if (name === 'routes') renderRoutesList();
 }
 
-// ════════════════════════════════════════════════════════════════
-// MAIN ACTION
-// ════════════════════════════════════════════════════════════════
-function mainAction() {
-  if (!isRunning) startTour();
-  else stopTour();
+// ════════════════════════════════════════════════════════════
+// RECORD MAP
+// ════════════════════════════════════════════════════════════
+function initRecMap() {
+  mapRec = L.map('map-record', { zoomControl:false, attributionControl:false, tap:false })
+            .setView([43.2965, 5.3698], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapRec);
+  recPolyline = L.polyline([], { color:'#ff4d6d', weight:4, opacity:.85 }).addTo(mapRec);
+  injectTooltipStyle();
 }
 
-async function startTour() {
-  // Désactiver immédiatement le bouton pour éviter le double-tap (startTour est async)
-  document.getElementById('btn-main').style.pointerEvents = 'none';
+function centerRecMap() { if (recLastPos) mapRec.setView([recLastPos.lat, recLastPos.lng], 17, { animate:true }); }
 
-  // ── Permission GPS ──
-  if (!navigator.geolocation) {
-    document.getElementById('btn-main').style.pointerEvents = '';
-    alert('GPS non disponible.'); return;
+// ════════════════════════════════════════════════════════════
+// RECORDING LOGIC
+// ════════════════════════════════════════════════════════════
+function goRecord() {
+  recStops = []; recPositions = []; recDist = 0; recLastPos = null; recStart = null;
+  showScreen('record');
+  if (mapRec) {
+    recPolyline.setLatLngs([]);
+    if (recPosMarker) { recPosMarker.remove(); recPosMarker = null; }
+    recStopMarkers.forEach(m => m.remove()); recStopMarkers = [];
   }
-  try {
-    await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:30000, maximumAge:0 })
-    );
-  } catch(e) {
-    document.getElementById('btn-main').style.pointerEvents = '';
-    alert('GPS refusé. Active la localisation dans les réglages.'); return;
-  }
-
-  // ── Permission Micro ──
-  try {
-    audioStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
-  } catch(e) {
-    document.getElementById('btn-main').style.pointerEvents = '';
-    alert('Microphone refusé. Active le micro dans les réglages.'); return;
-  }
-
-  // Réactiver les interactions (le bouton changera de classe ensuite)
-  document.getElementById('btn-main').style.pointerEvents = '';
-
-  // ── Reset état ──
-  isRunning = true;
-  sessionStart = Date.now();
-  positions = []; stops = []; audioBlobs = [];
-  totalDistance = 0; currentStopCandidate = null; lastPos = null;
-  currentSegStartTs = null; currentSegIdx = 0;
-
-  if (polyline) polyline.setLatLngs([]);
-  if (posMarker) { posMarker.remove(); posMarker = null; }
-  stopMarkers.forEach(e => e.marker.remove());
-  stopMarkers = [];
-
-  document.getElementById('hud-stops').textContent = '0';
-  document.getElementById('hud-dist').textContent  = '0 m';
-  document.getElementById('hud-time').textContent  = '00:00';
-  document.getElementById('hud-segs').textContent  = '0';
-  document.getElementById('btn-export-txt').disabled   = true;
-  document.getElementById('btn-export-gpx').disabled   = true;
-  document.getElementById('btn-export-audio').disabled = true;
-  // ── Audio analyser (visu barre) ──
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    const src = audioCtx.createMediaStreamSource(audioStream);
-    analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 32;
-    dataArray = new Uint8Array(analyserNode.frequencyBinCount);
-    src.connect(analyserNode);
-  } catch(e) {
-    // Échec AudioContext : nettoyer et abandonner proprement
-    isRunning = false;
-    if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    alert('Impossible de démarrer le contexte audio. Réessaie.');
-    return;
-  }
-
-  // ── UI ──
-  updateMainBtn('running', '■', 'ARRÊTER');
-  document.getElementById('rec-gps').className   = 'rec-dot gps';
-  document.getElementById('rec-audio').className = 'rec-dot audio';
-  document.getElementById('btn-poi').disabled    = false;
-  document.getElementById('btn-finish').disabled = false;
-  document.getElementById('acc-badge').classList.add('show');
-  document.getElementById('audio-bar').classList.add('show');
-  document.getElementById('seg-indicator').classList.remove('hidden');
-
-  // ── Démarrer segment audio ──
-  startAudioSegment();
-  segmentTimer = setInterval(rotateAudioSegment, SEGMENT_DURATION_MS);
-
-  // ── Visualiseur barre audio ──
-  vizInterval = setInterval(() => {
-    if (!analyserNode) return;
-    analyserNode.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((s, v) => s + v, 0) / dataArray.length;
-    document.getElementById('audio-fill').style.width = Math.min(100, avg * 2.5) + '%';
-  }, 100);
-
-  // ── Horloge ──
-  clockInterval = setInterval(updateClock, 1000);
-
-  // ── WakeLock ──
-  await requestWakeLock();
-
-  // ── GPS watch ──
-  watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {
-    enableHighAccuracy:true, timeout:30000, maximumAge:0
-  });
+  updateRecUI();
+  renderRecStopsList();
 }
 
-function stopTour() {
-  if (!isRunning) return;
-  isRunning = false;
+function recMainAction() {
+  if (!recRunning) startRec();
+  else stopRec();
+}
 
-  clearInterval(clockInterval);
-  clearInterval(segmentTimer);
-  clearInterval(vizInterval);
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+async function startRec() {
+  if (!navigator.geolocation) { alert('GPS non disponible.'); return; }
+  try {
+    await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:30000}));
+  } catch(e) { alert('GPS refusé. Active la localisation.'); return; }
+  recRunning = true; recStart = Date.now();
+  document.getElementById('btn-rec-main').className = 'btn-main';
+  document.getElementById('rec-icon').textContent = '■';
+  document.getElementById('rec-label').textContent = 'ARRÊTER';
+  document.getElementById('btn-add-stop').disabled = false;
+  document.getElementById('btn-rec-finish').disabled = false;
+  recInterval = setInterval(updateRecClock, 1000);
+  recWatchId = navigator.geolocation.watchPosition(onRecPos, err => console.warn(err), { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
+  requestWakeLock();
+}
 
-  // Arrêter enregistrement audio
-  // Le handler onstop de startAudioSegment pousse le dernier blob dans audioBlobs.
-  // On injecte un callback "après onstop" pour mettre à jour l'UI et libérer les ressources.
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    const origOnStop = mediaRecorder.onstop;
-    const streamToStop = audioStream; // capture avant nullification
-    const ctxToClose   = audioCtx;
-    audioStream = null; // nullifier immédiatement pour éviter double-stop
-    audioCtx    = null;
-    mediaRecorder.onstop = (e) => {
-      if (origOnStop) origOnStop(e); // push blob + updateSegUI (utilise closure locale)
-      // Stopper les tracks APRÈS que le blob soit sauvegardé
-      if (streamToStop) streamToStop.getTracks().forEach(t => t.stop());
-      if (ctxToClose)   ctxToClose.close();
-      // Maintenant audioBlobs contient le dernier segment
-      document.getElementById('btn-export-audio').disabled = false;
-      updateExportInfo();
-    };
-    mediaRecorder.stop();
-  } else {
-    // Pas de segment en cours — libérer quand même
-    if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
-    if (audioCtx)    { audioCtx.close(); audioCtx = null; }
-    document.getElementById('btn-export-audio').disabled = audioBlobs.length === 0;
-    updateExportInfo();
-  }
-
-  // Clôturer les arrêts manuels sans endTs (durée réelle)
-  stops.forEach(s => {
-    if (s.manual && !s.endTs) { s.endTs = Date.now(); s.duration = Math.round((s.endTs - s.startTs)/1000); }
-  });
-
-  // Valider arrêt GPS en cours
-  if (currentStopCandidate) {
-    const dur = (Date.now() - currentStopCandidate.startTs) / 1000;
-    if (dur >= STOP_MIN_DURATION) validateStop(currentStopCandidate, dur);
-    currentStopCandidate = null;
-  }
-
-  updateMainBtn('', '▶', 'DÉMARRER');
-  document.getElementById('rec-gps').className   = 'rec-dot';
-  document.getElementById('rec-audio').className = 'rec-dot';
-  document.getElementById('btn-poi').disabled    = true;
-  document.getElementById('btn-finish').disabled = true;
-  document.getElementById('audio-bar').classList.remove('show');
-  document.getElementById('audio-fill').style.width = '0%';
-  document.getElementById('seg-indicator').classList.add('hidden');
-
-  document.getElementById('btn-export-txt').disabled   = false;
-  document.getElementById('btn-export-gpx').disabled   = false;
-
+function stopRec() {
+  recRunning = false;
+  clearInterval(recInterval);
+  if (recWatchId !== null) { navigator.geolocation.clearWatch(recWatchId); recWatchId = null; }
+  document.getElementById('btn-rec-main').className = 'btn-main idle';
+  document.getElementById('rec-icon').textContent = '▶';
+  document.getElementById('rec-label').textContent = 'REPRENDRE';
   releaseWakeLock();
-  analyserNode = null; // nœud lié à l'ancien AudioContext (fermé) — doit être recréé à la prochaine session
-  dataArray    = null;
 }
 
-function finishTour() {
-  stopTour();
-  // Afficher un état intermédiaire pendant que onstop finalise le dernier blob (~100ms)
-  document.getElementById('export-info').innerHTML = '⏳ Finalisation de l\'enregistrement…';
-  switchTab('export');
+function finishRecording() {
+  stopRec();
+  // Pre-fill addresses from GPS for stops without address
+  recStops.forEach(s => { if (!s.address) s.address = `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`; });
+  renderReviewList();
+  showScreen('review');
+  document.getElementById('review-summary').textContent = `${recStops.length} arrêt(s) · ${formatDist(recDist)}`;
+  const d = new Date();
+  document.getElementById('route-name-input').value = `Tournée du ${d.toLocaleDateString('fr-FR')}`;
 }
 
-// ════════════════════════════════════════════════════════════════
-// AUDIO SEGMENTS
-// ════════════════════════════════════════════════════════════════
-function getSupportedMime() {
-  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
-  return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+function onRecPos(pos) {
+  const { latitude:lat, longitude:lng, accuracy } = pos.coords;
+  if (accuracy > 50) return;
+  const point = { lat, lng, ts: pos.timestamp };
+  recPositions.push(point);
+  if (recLastPos) recDist += haversine(recLastPos.lat, recLastPos.lng, lat, lng);
+  recLastPos = point;
+  recPolyline.addLatLng([lat, lng]);
+  if (!recPosMarker) {
+    recPosMarker = L.marker([lat, lng], { icon: divIcon('pos-marker') }).addTo(mapRec);
+  } else { recPosMarker.setLatLng([lat, lng]); }
+  if (recPositions.length <= 3) mapRec.setView([lat, lng], 17);
+  else mapRec.panTo([lat, lng], { animate:true, duration:.5 });
+  document.getElementById('rec-dist').textContent = formatDist(recDist);
 }
 
-function startAudioSegment() {
-  const localChunks  = []; // closure locale — pas de conflit avec la rotation
-  const localStartTs = Date.now(); // capturé par closure — immunisé contre les mises à jour de currentSegStartTs
-  audioChunks       = localChunks;
-  currentSegStartTs = localStartTs;
-  currentSegIdx     = audioBlobs.length;
-  const opts = getSupportedMime() ? { mimeType: getSupportedMime() } : {};
-  try { mediaRecorder = new MediaRecorder(audioStream, opts); }
-  catch(e) { mediaRecorder = new MediaRecorder(audioStream); }
-
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) localChunks.push(e.data); };
-  mediaRecorder.start(1000);
-  const localMime = mediaRecorder.mimeType || 'audio/webm'; // capturé après start() — garanti stable, en closure
-  mediaRecorder.onstop = () => {
-    // localStartTs et localMime sont capturés par closure → immunisés contre la réassignation de mediaRecorder
-    const blob = new Blob(localChunks, { type: localMime });
-    audioBlobs.push({ blob, mimeType: localMime, startTs: localStartTs });
-    updateSegUI();
-  };
-  updateSegUI();
+function updateRecClock() {
+  document.getElementById('rec-time').textContent = formatElapsed(Date.now() - recStart);
+}
+function updateRecUI() {
+  document.getElementById('rec-stops').textContent = recStops.length;
 }
 
-function stopAudioSegment() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-}
-
-function rotateAudioSegment() {
-  stopAudioSegment();
-  setTimeout(() => { if (isRunning) startAudioSegment(); }, 300);
-}
-
-function updateSegUI() {
-  const n = audioBlobs.length + 1;
-  document.getElementById('seg-num').textContent  = n;
-  document.getElementById('hud-segs').textContent = audioBlobs.length;
-  const totalMb = audioBlobs.reduce((s, b) => s + b.blob.size, 0) / 1024 / 1024;
-  document.getElementById('seg-size').textContent = totalMb.toFixed(1) + ' MB';
-}
-
-// ════════════════════════════════════════════════════════════════
-// GPS
-// ════════════════════════════════════════════════════════════════
-function onPosition(pos) {
-  const { latitude:lat, longitude:lng, speed, accuracy } = pos.coords;
-  const ts  = pos.timestamp;
-  const spd = speed !== null ? speed : 0;
-
-  document.getElementById('acc-badge').textContent = `GPS ±${Math.round(accuracy)}m${accuracy > 40 ? ' ⚠' : ''}`;
-
-  if (accuracy > 40) {
-    // Position imprécise : mettre à jour le badge mais NE PAS modifier lastPos
-    // pour ne pas fausser le calcul de distance au prochain bon fix
-    return;
-  }
-
-  const point = { lat, lng, ts, speed:spd, accuracy };
-  positions.push(point);
-  if (lastPos) totalDistance += haversine(lastPos.lat, lastPos.lng, lat, lng);
-  lastPos = point;
-
-  polyline.addLatLng([lat, lng]);
-
-  if (!posMarker) {
-    const icon = L.divIcon({ className:'', html:'<div class="pos-marker"></div>', iconSize:[12,12], iconAnchor:[6,6] });
-    posMarker = L.marker([lat, lng], { icon, zIndexOffset:1000 }).addTo(map);
+// ════════════════════════════════════════════════════════════
+// STOP FORM
+// ════════════════════════════════════════════════════════════
+function openStopForm(idx) {
+  editingStopIdx = idx;
+  formProducts = {};
+  document.getElementById('form-title').textContent = idx === null ? 'NOUVEL ARRÊT' : `MODIFIER ARRÊT #${idx+1}`;
+  // Pre-fill if editing
+  if (idx !== null) {
+    const s = recStops[idx];
+    document.getElementById('f-client').value = s.clientName || '';
+    document.getElementById('f-address').value = s.address || '';
+    document.getElementById('f-floor').value = s.floor || '';
+    document.getElementById('f-code').value = s.doorCode || '';
+    document.getElementById('f-note').value = s.notes || '';
+    (s.products || []).forEach(p => { formProducts[p.name] = p.qty; });
   } else {
-    posMarker.setLatLng([lat, lng]);
+    document.getElementById('f-client').value = '';
+    document.getElementById('f-address').value = '';
+    document.getElementById('f-floor').value = '';
+    document.getElementById('f-code').value = '';
+    document.getElementById('f-note').value = '';
+    // Try to reverse geocode current position
+    if (recLastPos) reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
+      document.getElementById('f-address').value = addr || '';
+    });
   }
-
-  if (positions.length <= 3 || map.getZoom() < 15) map.setView([lat, lng], 17);
-  else map.panTo([lat, lng], { animate:true, duration:0.5 });
-
-  document.getElementById('hud-dist').textContent = formatDist(totalDistance);
-  detectStop(point);
+  renderChips();
+  document.getElementById('stop-form-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('f-client').focus(), 200);
 }
 
-function onGpsError(err) {
-  console.warn('GPS:', err.message);
-  // Prévenir l'utilisateur si erreur critique pendant la tournée
-  if (isRunning) {
-    if (err.code === 1) { // PERMISSION_DENIED
-      showToast('⚠️ GPS refusé — vérifie les permissions');
-    } else if (err.code === 2) { // POSITION_UNAVAILABLE
-      showToast('⚠️ Signal GPS perdu…');
-    } else if (err.code === 3) { // TIMEOUT
-      showToast('⚠️ GPS timeout — repositionnement…');
-    }
-  }
+function closeStopForm() {
+  stopVoice();
+  document.getElementById('stop-form-modal').classList.add('hidden');
+  editingStopIdx = null;
+  formProducts = {};
 }
 
-// ════════════════════════════════════════════════════════════════
-// STOP DETECTION
-// ════════════════════════════════════════════════════════════════
-function detectStop(point) {
-  const spd = point.speed;
-
-  if (spd <= STOP_SPEED_THRESHOLD) {
-    if (!currentStopCandidate) {
-      currentStopCandidate = { startTs:point.ts, lat:point.lat, lng:point.lng, positions:[point],
-        audioSegIdx: currentSegIdx, audioSegStartTs: currentSegStartTs };
-      showToast(`Arrêt… ${STOP_MIN_DURATION}s pour valider`);
-    } else {
-      currentStopCandidate.positions.push(point);
-      const dur = (point.ts - currentStopCandidate.startTs) / 1000;
-      const rem = Math.max(0, STOP_MIN_DURATION - dur);
-      if (rem > 0) {
-        showToast(`Arrêt en cours… ${Math.round(rem)}s`);
-      } else if (!currentStopCandidate.validated) {
-        currentStopCandidate.validated = true;
-        validateStop(currentStopCandidate, dur);
-        hideToast();
-      }
-    }
-  } else {
-    if (currentStopCandidate) {
-      if (!currentStopCandidate.validated) {
-        currentStopCandidate = null; hideToast();
-      } else {
-        const dur = (point.ts - currentStopCandidate.startTs) / 1000;
-        // Utiliser la référence directe au stop — évite la corruption si validateStop a mergé
-        const stopObj = currentStopCandidate.stopRef;
-        if (stopObj && !stopObj.endTs) {
-          stopObj.endTs = point.ts;
-          stopObj.duration = Math.round(dur);
-          refreshStopsList();
-        }
-        currentStopCandidate = null;
-      }
-    }
-  }
-}
-
-function validateStop(candidate, duration) {
-  const pts = candidate.positions || [candidate];
-  const lat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
-  const lng = pts.reduce((s, p) => s + p.lng, 0) / pts.length;
-
-  for (const s of stops) {
-    if (haversine(s.lat, s.lng, lat, lng) < STOP_MERGE_RADIUS) {
-      // Arrêt trop proche d'un existant : marquer comme merged pour éviter la corruption endTs
-      candidate.mergedStop = s;
-      return;
-    }
-  }
-
-  // Référence audio : segment en cours au moment de l'arrêt
-  const segIdx     = candidate.audioSegIdx !== undefined ? candidate.audioSegIdx : currentSegIdx;
-  const segStartTs = candidate.audioSegStartTs || currentSegStartTs;
-  const offsetSec  = segStartTs ? Math.max(0, Math.round((candidate.startTs - segStartTs) / 1000)) : null;
+function saveStopForm() {
+  const clientName = document.getElementById('f-client').value.trim();
+  if (!clientName) { document.getElementById('f-client').focus(); document.getElementById('f-client').style.borderColor='var(--accent2)'; return; }
+  document.getElementById('f-client').style.borderColor = '';
 
   const stop = {
-    id: stops.length + 1,
-    lat, lng,
-    startTs: candidate.startTs,
-    endTs: null,
-    duration: Math.round(duration),
-    address: null,
-    manual: false,
-    audioSegIdx: segIdx,
-    audioOffsetSec: offsetSec
+    id: editingStopIdx !== null ? recStops[editingStopIdx].id : recStops.length + 1,
+    clientName,
+    address: document.getElementById('f-address').value.trim(),
+    floor: document.getElementById('f-floor').value.trim(),
+    doorCode: document.getElementById('f-code').value.trim(),
+    notes: document.getElementById('f-note').value.trim(),
+    products: Object.entries(formProducts).filter(([,q])=>q>0).map(([name,qty])=>({name,qty})),
+    lat: recLastPos ? recLastPos.lat : 43.2965,
+    lng: recLastPos ? recLastPos.lng : 5.3698,
+    delivered: false
   };
 
-  stops.push(stop);
-  candidate.stopRef = stop; // référence directe pour mise à jour endTs
-  addStopMarker(stop);
-  reverseGeocode(stop);
-  refreshStopsList();
-  document.getElementById('hud-stops').textContent = stops.length;
-  vibrate([50, 30, 50]);
-}
-
-function addManualStop() {
-  if (!lastPos) return;
-  const offsetSec = currentSegStartTs ? Math.max(0, Math.round((Date.now() - currentSegStartTs) / 1000)) : null;
-  const stop = {
-    id: stops.length + 1,
-    lat: lastPos.lat, lng: lastPos.lng,
-    startTs: Date.now(), endTs: null,
-    duration: 0, address: null, manual: true,
-    audioSegIdx: currentSegIdx, audioOffsetSec: offsetSec
-  };
-  stops.push(stop);
-  addStopMarker(stop);
-  reverseGeocode(stop);
-  refreshStopsList();
-  document.getElementById('hud-stops').textContent = stops.length;
-  vibrate([80]);
-}
-
-// ════════════════════════════════════════════════════════════════
-// MAP MARKERS
-// ════════════════════════════════════════════════════════════════
-function addStopMarker(stop) {
-  const icon = L.divIcon({ className:'', html:'<div class="stop-pulse"></div>', iconSize:[14,14], iconAnchor:[7,7] });
-  const m = L.marker([stop.lat, stop.lng], { icon }).addTo(map);
-  m.bindTooltip(`#${stop.id}`, { permanent:true, direction:'top', offset:[0,-8], className:'stop-tooltip' });
-  stopMarkers.push({ stop, marker:m });
-}
-
-function updateStopMarkerLabel(stop) {
-  const e = stopMarkers.find(e => e.stop.id === stop.id);
-  if (e && stop.address) e.marker.setTooltipContent(`#${stop.id} ${stop.address.substring(0,18)}`);
-}
-
-// ════════════════════════════════════════════════════════════════
-// REVERSE GEOCODE
-// ════════════════════════════════════════════════════════════════
-async function reverseGeocode(stop) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${stop.lat}&lon=${stop.lng}&format=json&addressdetails=1`;
-    const signal = AbortSignal.timeout ? AbortSignal.timeout(10000) : (() => { const c = new AbortController(); setTimeout(() => c.abort(), 10000); return c.signal; })();
-    const r = await fetch(url, { signal, headers:{ 'Accept-Language':'fr', 'User-Agent':'TourneeGPS/1.0' } });
-    const d = await r.json();
-    const a = d.address || {};
-    stop.address = [a.house_number, a.road].filter(Boolean).join(' ')
-      || a.suburb || a.neighbourhood || d.display_name?.split(',')[0] || null;
-    refreshStopsList();
-    updateStopMarkerLabel(stop);
-  } catch(e) {}
-}
-
-// ════════════════════════════════════════════════════════════════
-// STOPS LIST
-// ════════════════════════════════════════════════════════════════
-function refreshStopsList() {
-  const list = document.getElementById('stops-list');
-  if (stops.length === 0) {
-    list.innerHTML = '<div class="empty-stops">Les arrêts détectés<br>apparaîtront ici</div>';
-    return;
+  if (editingStopIdx !== null) {
+    stop.lat = recStops[editingStopIdx].lat;
+    stop.lng = recStops[editingStopIdx].lng;
+    recStops[editingStopIdx] = stop;
+  } else {
+    recStops.push(stop);
+    addRecStopMarker(stop);
   }
-  list.innerHTML = stops.slice().reverse().map(s => {
-    const durStr = s.duration >= 60
-      ? `${Math.floor(s.duration/60)}min ${s.duration%60}s`
-      : (s.endTs || s.duration > 0) ? `${s.duration}s` : '…s';
-    const audioRef = s.audioOffsetSec !== null
-      ? `🎙 seg.${s.audioSegIdx+1} @${formatSec(s.audioOffsetSec)}`
-      : '';
-    return `
-    <div class="stop-item">
-      <div class="stop-num">${String(s.id).padStart(2,'0')}</div>
-      <div class="stop-info">
-        <div class="stop-addr">${s.address || `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`}</div>
-        <div class="stop-meta">
-          <span class="stop-dur">${durStr}</span>
-          <span>${new Date(s.startTs).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
-          ${s.manual ? '<span style="color:var(--accent)">manuel</span>' : ''}
-          ${audioRef ? `<span style="color:var(--purple)">${audioRef}</span>` : ''}
-        </div>
-      </div>
+  updateRecUI();
+  renderRecStopsList();
+  closeStopForm();
+  vibrate([60,30,60]);
+}
+
+function renderChips() {
+  const el = document.getElementById('products-chips');
+  const allPapers = [...DEFAULT_PAPERS, ...Object.keys(formProducts).filter(k=>!DEFAULT_PAPERS.includes(k))];
+  el.innerHTML = allPapers.map(name => {
+    const qty = formProducts[name] || 0;
+    const sel = qty > 0 ? 'selected' : '';
+    return `<div class="chip ${sel}" onclick="toggleChip('${name.replace(/'/g,"\\'")}')">
+      ${name}
+      ${qty > 0 ? `<span class="chip-qty">${qty}</span>` : ''}
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════════════════════
-// EXPORT
-// ════════════════════════════════════════════════════════════════
-function updateExportInfo() {
-  const totalAudioMb = audioBlobs.reduce((s, b) => s + b.blob.size, 0) / 1024 / 1024;
-  const dur = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
-  document.getElementById('export-info').innerHTML =
-    `<strong>Session terminée</strong><br>` +
-    `Durée : <strong>${dur}</strong><br>` +
-    `Distance : <strong>${formatDist(totalDistance)}</strong><br>` +
-    `Arrêts : <strong>${stops.length}</strong><br>` +
-    `Audio : <strong>${audioBlobs.length} segment(s)</strong> — ${totalAudioMb.toFixed(1)} MB`;
+function toggleChip(name) {
+  if (!formProducts[name]) formProducts[name] = 1;
+  else if (formProducts[name] < 9) formProducts[name]++;
+  else delete formProducts[name];
+  renderChips();
 }
 
-function exportTxt() {
-  const date = new Date().toLocaleDateString('fr-FR');
-  const dur  = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
-  let txt = `TOURNÉE DE DISTRIBUTION — ${date}\n${'═'.repeat(48)}\n\n`;
-  txt += `Durée       : ${dur}\n`;
-  txt += `Distance    : ${formatDist(totalDistance)}\n`;
-  txt += `Points GPS  : ${positions.length}\n`;
-  txt += `Arrêts      : ${stops.length}\n`;
-  txt += `Segments audio : ${audioBlobs.length}\n\n`;
-  txt += `${'─'.repeat(48)}\nLISTE DES ARRÊTS\n${'─'.repeat(48)}\n\n`;
-
-  stops.forEach((s, i) => {
-    const time = new Date(s.startTs).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const dur  = s.duration >= 60 ? `${Math.floor(s.duration/60)}min ${s.duration%60}s` : `${s.duration}s`;
-    txt += `Arrêt #${String(i+1).padStart(2,'0')}  ${time}\n`;
-    txt += `  Adresse  : ${s.address || 'N/A'}\n`;
-    txt += `  GPS      : ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}\n`;
-    txt += `  Durée    : ${dur}\n`;
-    txt += `  Type     : ${s.manual ? 'Manuel' : 'Auto'}\n`;
-    if (s.audioOffsetSec !== null) {
-      txt += `  Audio    : Segment ${s.audioSegIdx+1}, à ${formatSec(s.audioOffsetSec)} dans le fichier\n`;
-    }
-    txt += '\n';
-  });
-
-  dlText(`tournee_${new Date().toISOString().slice(0,10)}.txt`, txt, 'text/plain');
+function addCustomProduct() {
+  const name = document.getElementById('f-custom-product').value.trim();
+  const qty = parseInt(document.getElementById('f-custom-qty').value) || 1;
+  if (!name) return;
+  formProducts[name] = qty;
+  document.getElementById('f-custom-product').value = '';
+  document.getElementById('f-custom-qty').value = '1';
+  renderChips();
 }
 
-function exportAudio() {
-  if (audioBlobs.length === 0) { alert('Aucun audio enregistré.'); return; }
-  // Désactiver le bouton pendant les téléchargements pour éviter le double-clic
-  const btn = document.getElementById('btn-export-audio');
-  btn.disabled = true;
-  // Délai entre chaque téléchargement — Chrome Android bloque les downloads simultanés
-  audioBlobs.forEach((b, i) => {
-    setTimeout(() => {
-      const ext = b.mimeType.includes('mp4') ? 'm4a' : b.mimeType.includes('ogg') ? 'ogg' : 'webm';
-      const url = URL.createObjectURL(b.blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tournee_audio_seg${String(i+1).padStart(2,'0')}.${ext}`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      // Réactiver le bouton après le dernier téléchargement
-      if (i === audioBlobs.length - 1) setTimeout(() => { btn.disabled = false; }, 1200);
-    }, i * 800);
-  });
+function addRecStopMarker(stop) {
+  const m = L.marker([stop.lat, stop.lng], { icon: divIcon('stop-dot') }).addTo(mapRec);
+  m.bindTooltip(`#${stop.id} ${stop.clientName}`, { permanent:true, direction:'top', offset:[0,-8], className:'stop-tooltip' });
+  recStopMarkers.push(m);
 }
 
-function exportGpx() {
-  const date = new Date().toISOString();
-  let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TourneeGPS" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><time>${date}</time></metadata>\n  <trk><name>Tournée ${new Date().toLocaleDateString('fr-FR')}</name><trkseg>\n`;
-  positions.forEach(p => {
-    gpx += `    <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lng.toFixed(7)}"><time>${new Date(p.ts).toISOString()}</time></trkpt>\n`;
-  });
-  gpx += `  </trkseg></trk>\n`;
-  stops.forEach(s => {
-    gpx += `  <wpt lat="${s.lat.toFixed(7)}" lon="${s.lng.toFixed(7)}"><name>${escapeXml('Arrêt #' + s.id)}</name><desc>${escapeXml((s.address || '') + ' — ' + s.duration + 's')}</desc><time>${new Date(s.startTs).toISOString()}</time></wpt>\n`;
-  });
-  gpx += `</gpx>`;
-  dlText(`tournee_${new Date().toISOString().slice(0,10)}.gpx`, gpx, 'application/gpx+xml');
+function renderRecStopsList() {
+  const el = document.getElementById('rec-stops-list');
+  if (recStops.length === 0) { el.innerHTML = '<div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>'; return; }
+  el.innerHTML = recStops.map((s,i) => `
+    <div class="stop-item" onclick="openStopForm(${i})">
+      <div class="stop-num">${String(s.id).padStart(2,'0')}</div>
+      <div class="stop-body">
+        <div class="stop-client">${s.clientName}</div>
+        <div class="stop-addr">${s.address || '—'}</div>
+        <div class="stop-products">${s.products.map(p=>`${p.name} ×${p.qty}`).join(' · ') || 'Aucun journal'}</div>
+      </div>
+    </div>`).join('');
 }
 
-function dlText(name, text, type) {
-  const url = URL.createObjectURL(new Blob([text], { type }));
+// ════════════════════════════════════════════════════════════
+// REVIEW
+// ════════════════════════════════════════════════════════════
+function renderReviewList() {
+  const el = document.getElementById('review-list');
+  if (recStops.length === 0) { el.innerHTML = '<div class="empty-stops">Aucun arrêt enregistré</div>'; return; }
+  el.innerHTML = recStops.map((s,i) => `
+    <div class="review-item" onclick="editReviewStop(${i})">
+      <div class="review-num">${String(s.id).padStart(2,'0')}</div>
+      <div class="review-body">
+        <div class="review-client">${s.clientName}</div>
+        <div class="review-addr">${s.address || '—'}</div>
+        <div class="review-products">${s.products.map(p=>`${p.name} ×${p.qty}`).join(' · ') || 'Aucun journal'}</div>
+        <div class="review-meta">${s.floor?'Ét: '+s.floor:''}${s.doorCode?' · Code: '+s.doorCode:''}${s.notes?' · '+s.notes:''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function editReviewStop(idx) {
+  showScreen('record');
+  setTimeout(() => { showScreen('review'); openStopForm(idx); }, 50);
+}
+
+function saveRoute() {
+  const name = document.getElementById('route-name-input').value.trim() || `Tournée ${new Date().toLocaleDateString('fr-FR')}`;
+  const route = {
+    id: 'route_' + Date.now(),
+    name,
+    date: new Date().toISOString(),
+    stops: recStops,
+    waypoints: recPositions,
+    distance: recDist
+  };
+  const routes = getRoutes();
+  routes.unshift(route);
+  localStorage.setItem('tournee_routes', JSON.stringify(routes));
+  alert(`✅ "${name}" sauvegardée avec ${recStops.length} arrêt(s) !`);
+  showScreen('home');
+}
+
+function discardRecording() {
+  if (confirm('Annuler et perdre tous les arrêts ?')) showScreen('home');
+}
+
+function confirmBack() {
+  if (recStops.length > 0 || recRunning) {
+    if (confirm('Revenir à l\'accueil ? Les données seront perdues.')) { stopRec(); showScreen('home'); }
+  } else { stopRec(); showScreen('home'); }
+}
+
+// ════════════════════════════════════════════════════════════
+// ROUTES LIBRARY
+// ════════════════════════════════════════════════════════════
+function getRoutes() {
+  try { return JSON.parse(localStorage.getItem('tournee_routes') || '[]'); } catch(e) { return []; }
+}
+
+function renderRoutesList() {
+  const routes = getRoutes();
+  const container = document.getElementById('routes-list-container');
+  if (routes.length === 0) {
+    container.innerHTML = '<div class="routes-empty">📋<br><br>Aucune tournée sauvegardée.<br>Enregistre ta première tournée<br>pour la retrouver ici.</div>';
+    return;
+  }
+  container.innerHTML = routes.map((r,i) => `
+    <div class="route-card">
+      <div class="route-card-header">
+        <div>
+          <div class="route-card-name">${r.name}</div>
+          <div class="route-card-meta">${new Date(r.date).toLocaleDateString('fr-FR')} · ${r.stops.length} arrêts · ${formatDist(r.distance||0)}</div>
+        </div>
+      </div>
+      <div class="route-card-actions">
+        <button class="route-btn nav" onclick="startNavigation(${i})">🗺️ Naviguer</button>
+        <button class="route-btn" onclick="exportRoute(${i})">↓ JSON</button>
+        <button class="route-btn del" onclick="deleteRoute(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteRoute(idx) {
+  const routes = getRoutes();
+  if (!confirm(`Supprimer "${routes[idx].name}" ?`)) return;
+  routes.splice(idx, 1);
+  localStorage.setItem('tournee_routes', JSON.stringify(routes));
+  renderRoutesList();
+}
+
+function exportRoute(idx) {
+  const route = getRoutes()[idx];
+  const json = JSON.stringify(route, null, 2);
+  const url = URL.createObjectURL(new Blob([json], { type:'application/json' }));
   const a = document.createElement('a');
-  a.href = url; a.download = name; a.click();
+  a.href = url; a.download = route.name.replace(/\s+/g,'_') + '.json'; a.click();
   URL.revokeObjectURL(url);
 }
 
-function escapeXml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+function importRoute() { document.getElementById('import-file-input').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const route = JSON.parse(ev.target.result);
+      if (!route.stops || !route.name) { alert('Fichier invalide.'); return; }
+      route.id = route.id || 'route_' + Date.now();
+      const routes = getRoutes();
+      routes.unshift(route);
+      localStorage.setItem('tournee_routes', JSON.stringify(routes));
+      renderRoutesList();
+      alert(`✅ "${route.name}" importée !`);
+    } catch(err) { alert('Erreur lors de l\'import.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 }
 
-// ════════════════════════════════════════════════════════════════
+function goLibraryForNav() { showScreen('routes'); }
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION MAP
+// ════════════════════════════════════════════════════════════
+function initNavMap() {
+  mapNav = L.map('map-navigate', { zoomControl:false, attributionControl:false, tap:false })
+            .setView([43.2965, 5.3698], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapNav);
+  navPolyline = L.polyline([], { color:'#4a5568', weight:3, opacity:.6, dashArray:'6,4' }).addTo(mapNav);
+  injectTooltipStyle();
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION LOGIC
+// ════════════════════════════════════════════════════════════
+function startNavigation(routeIdx) {
+  const routes = getRoutes();
+  navRoute = JSON.parse(JSON.stringify(routes[routeIdx])); // deep copy
+  navRoute.stops.forEach(s => s.delivered = false);
+  navStopIdx = 0;
+  navStart = Date.now();
+  showScreen('navigate');
+  if (!mapNav) { setTimeout(() => initNavAndStart(), 300); return; }
+  initNavAndStart();
+}
+
+function initNavAndStart() {
+  if (!mapNav) initNavMap();
+  // Draw route waypoints
+  navPolyline.setLatLngs(navRoute.waypoints.map(p => [p.lat, p.lng]));
+  // Clear old markers
+  navStopMarkers.forEach(m => m.remove()); navStopMarkers = [];
+  if (navPosMarker) { navPosMarker.remove(); navPosMarker = null; }
+  // Add stop markers
+  navRoute.stops.forEach((s, i) => {
+    const m = L.marker([s.lat, s.lng], { icon: divIcon(i === 0 ? 'next-dot' : 'stop-dot') }).addTo(mapNav);
+    m.bindTooltip(`#${s.id} ${s.clientName}`, { permanent:false, direction:'top', offset:[0,-8], className:'stop-tooltip' });
+    navStopMarkers.push(m);
+  });
+  // Center on first stop
+  if (navRoute.stops.length > 0) {
+    const first = navRoute.stops[0];
+    mapNav.setView([first.lat, first.lng], 16);
+  }
+  // Update UI
+  document.getElementById('nav-route-name').textContent = navRoute.name.toUpperCase().substring(0, 16);
+  document.getElementById('nav-done-screen').classList.add('hidden');
+  updateNavUI();
+  // Start GPS watch
+  if (navigator.geolocation) {
+    navWatchId = navigator.geolocation.watchPosition(onNavPos, err => {}, { enableHighAccuracy:true, maximumAge:0 });
+  }
+  // Announce first stop
+  setTimeout(() => announceStop(navRoute.stops[0]), 800);
+  requestWakeLock();
+}
+
+function updateNavUI() {
+  const stops = navRoute.stops;
+  const delivered = stops.filter(s => s.delivered).length;
+  const remaining = stops.length - delivered;
+  document.getElementById('nav-delivered').textContent = delivered;
+  document.getElementById('nav-remaining').textContent = remaining;
+  document.getElementById('nav-progress-fill').style.width = (delivered / stops.length * 100) + '%';
+
+  const s = stops[navStopIdx];
+  if (!s) return;
+
+  document.getElementById('nav-counter').textContent = `ARRÊT ${navStopIdx+1} / ${stops.length}`;
+  document.getElementById('nav-client').textContent = s.clientName;
+  document.getElementById('nav-address').textContent = s.address || '—';
+
+  // Products
+  const pl = document.getElementById('nav-products-list');
+  if (s.products && s.products.length > 0) {
+    pl.innerHTML = s.products.map(p => `
+      <div class="nav-product-row">
+        <div class="nav-product-name">${p.name}</div>
+        <div class="nav-product-qty">×${p.qty}</div>
+      </div>`).join('');
+  } else {
+    pl.innerHTML = '<div style="font-size:10px;color:var(--muted)">Aucun journal spécifié</div>';
+  }
+
+  // Details chips
+  const dl = document.getElementById('nav-details');
+  const chips = [];
+  if (s.floor) chips.push(`🏢 ${s.floor}`);
+  if (s.doorCode) chips.push(`🔑 ${s.doorCode}`);
+  dl.innerHTML = chips.map(c => `<div class="nav-detail-chip">${c}</div>`).join('');
+
+  // Notes
+  const notes = document.getElementById('nav-notes');
+  if (s.notes) { notes.textContent = '📝 ' + s.notes; notes.style.display = 'block'; }
+  else { notes.style.display = 'none'; }
+
+  // Highlight current marker on map
+  navStopMarkers.forEach((m, i) => {
+    m.setIcon(divIcon(
+      stops[i].delivered ? 'delivered-dot' :
+      i === navStopIdx ? 'next-dot' : 'stop-dot'
+    ));
+  });
+  // Pan to current stop
+  mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
+}
+
+function markDelivered() {
+  navRoute.stops[navStopIdx].delivered = true;
+  vibrate([60, 30, 60]);
+  // Find next undelivered stop
+  let next = -1;
+  for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
+    if (!navRoute.stops[i].delivered) { next = i; break; }
+  }
+  if (next === -1) {
+    // All delivered
+    finishNavigation();
+  } else {
+    navStopIdx = next;
+    updateNavUI();
+    announceStop(navRoute.stops[navStopIdx]);
+  }
+}
+
+function skipStop() {
+  let next = -1;
+  for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
+    if (!navRoute.stops[i].delivered) { next = i; break; }
+  }
+  if (next === -1) { alert('Plus d\'arrêt suivant.'); return; }
+  navStopIdx = next;
+  updateNavUI();
+}
+
+function finishNavigation() {
+  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
+  releaseWakeLock();
+  const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
+  document.getElementById('done-stats').innerHTML =
+    `<strong>${navRoute.stops.length}</strong> arrêts livrés<br>Durée : <strong>${dur}</strong>`;
+  document.getElementById('nav-done-screen').classList.remove('hidden');
+  speak('Tournée terminée ! Bravo.');
+}
+
+function exitNavigation() {
+  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
+  releaseWakeLock();
+  showScreen('home');
+}
+
+function onNavPos(pos) {
+  const { latitude:lat, longitude:lng } = pos.coords;
+  if (!navPosMarker) {
+    navPosMarker = L.marker([lat, lng], { icon: divIcon('pos-marker') }).addTo(mapNav);
+  } else { navPosMarker.setLatLng([lat, lng]); }
+  // Distance to current stop
+  const s = navRoute.stops[navStopIdx];
+  if (s) {
+    const dist = haversine(lat, lng, s.lat, s.lng);
+    document.getElementById('nav-dist-badge').textContent = formatDist(dist);
+    // Auto-announce when close
+    if (dist < 30 && !s._announced) { s._announced = true; vibrate([100, 50, 100]); }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// VOICE (TTS + STT)
+// ════════════════════════════════════════════════════════════
+function announceStop(stop) {
+  if (!voiceEnabled || !stop) return;
+  let text = `Arrêt ${stop.id} : ${stop.clientName}. `;
+  if (stop.products && stop.products.length > 0) {
+    text += stop.products.map(p => `${p.name}, ${p.qty} exemplaire${p.qty>1?'s':''}`).join(', ') + '. ';
+  }
+  if (stop.floor) text += `Étage : ${stop.floor}. `;
+  if (stop.doorCode) text += `Code : ${stop.doorCode.split('').join(' ')}. `;
+  if (stop.notes) text += stop.notes;
+  speak(text);
+}
+
+function speak(text) {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'fr-FR'; u.rate = 0.95; u.pitch = 1;
+  speechSynthesis.speak(u);
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  document.getElementById('voice-status-btn').textContent = voiceEnabled ? 'ON' : 'OFF';
+  if (!voiceEnabled) speechSynthesis.cancel();
+}
+
+function startVoice(targetId) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) { alert('Reconnaissance vocale non supportée sur ce navigateur.'); return; }
+  if (speechRecActive) { stopVoice(); return; }
+  speechRecTarget = targetId;
+  speechRec = new SpeechRec();
+  speechRec.lang = 'fr-FR'; speechRec.continuous = false; speechRec.interimResults = true;
+  speechRec.onstart = () => {
+    speechRecActive = true;
+    document.getElementById('btn-voice-client').classList.add('active');
+    document.getElementById('voice-status').textContent = '🎙 Parle maintenant…';
+  };
+  speechRec.onresult = e => {
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById(speechRecTarget).value = transcript;
+    if (e.results[e.results.length-1].isFinal) {
+      document.getElementById('voice-status').textContent = '✓ Transcrit';
+      stopVoice();
+    }
+  };
+  speechRec.onerror = () => { stopVoice(); document.getElementById('voice-status').textContent = '⚠ Erreur micro'; };
+  speechRec.onend = () => stopVoice();
+  speechRec.start();
+}
+
+function stopVoice() {
+  if (speechRec) { try { speechRec.stop(); } catch(e) {} speechRec = null; }
+  speechRecActive = false;
+  const btn = document.getElementById('btn-voice-client');
+  if (btn) btn.classList.remove('active');
+}
+
+// ════════════════════════════════════════════════════════════
 // UTILS
-// ════════════════════════════════════════════════════════════════
-function updateClock() {
-  const e = Date.now() - sessionStart;
-  const h = Math.floor(e/3600000), m = Math.floor((e%3600000)/60000), s = Math.floor((e%60000)/1000);
-  document.getElementById('hud-time').textContent = h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
-}
-
-function formatDist(m) { return m < 1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km'; }
-function formatElapsed(ms) {
-  const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000), s=Math.floor((ms%60000)/1000);
-  return h > 0 ? `${h}h ${pad(m)}min` : `${m}min ${pad(s)}s`;
-}
-function formatSec(s) { return Math.floor(s/60)+':'+ String(s%60).padStart(2,'0'); }
-function pad(n) { return String(n).padStart(2,'0'); }
-
+// ════════════════════════════════════════════════════════════
 function haversine(lat1,lon1,lat2,lon2) {
-  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-function centerMap() { if (lastPos) map.setView([lastPos.lat,lastPos.lng],17,{animate:true}); }
-function updateMainBtn(cls,icon,label) {
-  document.getElementById('btn-main').className = 'btn-main '+cls;
-  document.getElementById('btn-icon').textContent = icon;
-  document.getElementById('btn-label').textContent = label;
+function formatDist(m) { return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km'; }
+function formatElapsed(ms) {
+  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
+  return `${pad(m)}:${pad(s)}`;
 }
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['controls','stops','export'][i] === name);
-  });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
+function formatElapsedLong(ms) {
+  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
+  return h>0 ? `${h}h ${pad(m)}min` : `${m}min ${pad(s)}s`;
 }
+function pad(n) { return String(n).padStart(2,'0'); }
 function vibrate(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
-// TOAST
-let toastTmt = null;
-function showToast(msg) {
-  document.getElementById('toast-text').textContent = msg;
-  document.getElementById('stop-toast').classList.add('visible');
-  clearTimeout(toastTmt);
-  toastTmt = setTimeout(() => document.getElementById('stop-toast').classList.remove('visible'), 4000);
+function divIcon(cls) {
+  return L.divIcon({ className:'', html:`<div class="${cls}"></div>`, iconSize:[14,14], iconAnchor:[7,7] });
 }
-function hideToast() { document.getElementById('stop-toast').classList.remove('visible'); }
 
-// WAKE LOCK + reprise audio après appel téléphonique
+function injectTooltipStyle() {
+  if (document.getElementById('tooltip-style')) return;
+  const s = document.createElement('style');
+  s.id = 'tooltip-style';
+  s.textContent = `.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;box-shadow:none;white-space:nowrap}.stop-tooltip::before{display:none}`;
+  document.head.appendChild(s);
+}
+
+async function reverseGeocode(lat, lng, cb) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
+    const r = await fetch(url, { headers:{'Accept-Language':'fr','User-Agent':'TourneeGuide/2.0'} });
+    const d = await r.json();
+    const a = d.address || {};
+    const addr = [a.house_number, a.road].filter(Boolean).join(' ') || a.suburb || d.display_name?.split(',')[0] || '';
+    cb(addr);
+  } catch(e) { cb(''); }
+}
+
+function switchRecTab(name) {
+  document.querySelectorAll('#screen-record .tab').forEach((t,i)=>{
+    t.classList.toggle('active',['ctrl','list'][i]===name);
+  });
+  document.querySelectorAll('#screen-record .tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('rec-tab-'+name).classList.add('active');
+}
+
+// Wake Lock
 let wakeLock = null;
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
-  }
+  if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
 }
 function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
 
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState !== 'visible' || !isRunning) return;
-
-  // Re-acquérir le wakeLock
-  if (!wakeLock) await requestWakeLock();
-
-  // Vérifier si l'audio est toujours actif — Android peut couper l'enregistrement pendant un appel
-  if (mediaRecorder && mediaRecorder.state === 'inactive' && audioStream) {
-    // MediaRecorder stoppé de force par Android → relancer un nouveau segment
-    console.warn('MediaRecorder stoppé par Android — relancement du segment audio');
-    startAudioSegment();
-  } else if (!mediaRecorder && audioStream) {
-    // Cas extrême : mediaRecorder perdu
-    startAudioSegment();
-  }
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  showScreen('home');
 });
-
-window.addEventListener('load', initMap);
 </script>
 </body>
 </html>
