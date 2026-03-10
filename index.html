@@ -36,7 +36,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .home-btn.lib{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
 .home-version{font-size:8px;color:var(--muted);letter-spacing:1px;}
 
-/* ── MAP SCREENS (record + navigate) ── */
+/* ── MAP SCREENS ── */
 #map-record,#map-navigate{position:absolute;inset:0;z-index:0;}
 .leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.85) saturate(.6);}
 .leaflet-container{background:#0a0c12;}
@@ -49,8 +49,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .hud-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;}
 .hud-stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
 .hud-val{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;line-height:1;}
-.hud-val.cyan{color:var(--accent);} .hud-val.green{color:var(--green);} .hud-val.yellow{color:var(--yellow);} .hud-val.red{color:var(--accent2);}
-.hud-lbl{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
+.hud-val.cyan{color:var(--accent);}.hud-val.green{color:var(--green);}.hud-val.yellow{color:var(--yellow);}
 
 /* ── HUD BOTTOM PANEL ── */
 .hud-bottom{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
@@ -58,8 +57,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .tabs{display:flex;border-bottom:1px solid var(--border);}
 .tab{flex:1;padding:8px 4px;text-align:center;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'Space Mono',monospace;transition:color .2s,background .2s;}
 .tab.active{color:var(--accent);background:rgba(0,229,255,.06);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+.tab-content{display:none;}.tab-content.active{display:block;}
 
 /* ── CONTROLS ── */
 .ctrl{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
@@ -68,8 +66,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .btn-main:active{transform:scale(.97);}
 .btn-row{display:flex;gap:8px;}
 .btn-sm{flex:1;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color .15s,background .15s;}
-.btn-sm:active{background:var(--border);}
-.btn-sm:disabled{opacity:.3;pointer-events:none;}
+.btn-sm:active{background:var(--border);}.btn-sm:disabled{opacity:.3;pointer-events:none;}
 .btn-sm.yl{border-color:var(--yellow);color:var(--yellow);}
 .btn-sm.gn{border-color:var(--green);color:var(--green);}
 .btn-sm.cy{border-color:var(--accent);color:var(--accent);}
@@ -87,23 +84,24 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .empty-stops{padding:18px 12px;text-align:center;font-size:10px;color:var(--muted);line-height:2;letter-spacing:1px;}
 
 /* ── STOP FORM MODAL ── */
-#stop-form-modal{position:absolute;inset:0;z-index:200;background:rgba(0,0,0,.7);display:flex;flex-direction:column;justify-content:flex-end;}
+#stop-form-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);display:flex;flex-direction:column;justify-content:flex-end;}
 #stop-form-modal.hidden{display:none!important;}
-.form-panel{background:var(--panel);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:16px 16px max(16px,calc(env(safe-area-inset-bottom)+8px));max-height:90vh;overflow-y:auto;}
+.form-panel{background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;padding:16px 16px max(16px,calc(env(safe-area-inset-bottom)+8px));max-height:92vh;overflow-y:auto;}
 .form-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:12px;}
 .form-row{display:flex;gap:8px;margin-bottom:8px;}
 .form-group{flex:1;display:flex;flex-direction:column;gap:4px;}
 .form-label{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
 .form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
 .form-input:focus{border-color:var(--accent);}
+.form-input.error{border-color:#ff4d6d;}
 .voice-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:rgba(181,122,255,.1);color:var(--purple);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end;}
-.voice-btn.active{background:rgba(255,77,109,.2);border-color:var(--accent2);color:var(--accent2);animation:pulse .8s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.voice-btn.active{background:rgba(255,77,109,.2);border-color:#ff4d6d;color:#ff4d6d;animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .products-section{margin-bottom:8px;}
-.products-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.chip{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s;}
+.products-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:32px;}
+.chip{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;user-select:none;}
 .chip:active{background:var(--border);}
-.chip .chip-qty{background:var(--yellow);color:#000;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.chip .chip-qty{background:var(--yellow);color:#000;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
 .chip.selected{border-color:var(--yellow);color:var(--yellow);}
 .custom-product-row{display:flex;gap:6px;}
 .qty-input{width:56px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;text-align:center;outline:none;}
@@ -111,13 +109,13 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .form-btn{flex:1;height:48px;border-radius:12px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
 .form-btn.save{background:var(--green);color:#000;}
 .form-btn.cancel{background:rgba(255,255,255,.07);color:var(--text);font-size:14px;}
-.voice-status{font-size:9px;color:var(--purple);letter-spacing:1px;min-height:14px;margin-bottom:4px;}
+.voice-status{font-size:9px;color:var(--purple);letter-spacing:1px;min-height:14px;margin-bottom:6px;}
 
 /* ── REVIEW SCREEN ── */
 #screen-review{background:var(--bg);}
-.review-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.review-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .review-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
-.review-list{flex:1;overflow-y:auto;padding:8px 0;}
+.review-list{flex:1;overflow-y:auto;}
 .review-item{padding:12px 16px;border-bottom:1px solid rgba(28,33,48,.5);display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
 .review-item:active{background:rgba(0,229,255,.04);}
 .review-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);width:30px;flex-shrink:0;line-height:1;}
@@ -126,7 +124,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .review-addr{font-size:10px;color:var(--muted);margin-top:2px;}
 .review-products{font-size:10px;color:var(--yellow);margin-top:3px;}
 .review-meta{font-size:9px;color:var(--muted);margin-top:2px;}
-.review-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.review-edit-hint{font-size:8px;color:var(--accent);opacity:.6;margin-top:2px;letter-spacing:1px;}
+.review-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
 .route-name-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
 .route-name-input:focus{border-color:var(--accent);}
 
@@ -142,46 +141,48 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .nav-product-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.15);border-radius:8px;}
 .nav-product-name{flex:1;font-size:12px;color:var(--text);}
 .nav-product-qty{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);line-height:1;}
-.nav-details{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.nav-details{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
 .nav-detail-chip{padding:4px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;font-size:9px;color:var(--text);}
-.nav-notes{font-size:10px;color:var(--purple);padding:6px 10px;background:rgba(181,122,255,.07);border:1px solid rgba(181,122,255,.2);border-radius:8px;margin-bottom:10px;display:none;}
+.nav-notes{font-size:10px;color:var(--purple);padding:6px 10px;background:rgba(181,122,255,.07);border:1px solid rgba(181,122,255,.2);border-radius:8px;margin-bottom:10px;}
 .nav-actions{display:flex;gap:8px;}
 .btn-delivered{flex:2;height:54px;border-radius:14px;border:none;cursor:pointer;background:var(--green);color:#000;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
 .btn-delivered:active{opacity:.8;}
 .btn-skip{flex:1;height:54px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;}
 .btn-skip:active{background:var(--border);}
-.nav-dist-badge{position:absolute;top:70px;right:12px;z-index:101;background:rgba(7,9,13,.9);border:1px solid var(--border);border-radius:10px;padding:5px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;}
-.nav-done-screen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;}
+.nav-dist-badge{position:absolute;top:64px;right:12px;z-index:101;background:rgba(7,9,13,.92);border:1px solid var(--border);border-radius:10px;padding:5px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;}
+
+/* ── NAV DONE ── */
+.nav-done-screen{position:absolute;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;}
 .nav-done-screen.hidden{display:none!important;}
 .done-icon{font-size:64px;}
 .done-title{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);letter-spacing:3px;}
-.done-stats{text-align:center;font-size:11px;color:var(--muted);line-height:2;}
+.done-stats{text-align:center;font-size:11px;color:var(--muted);line-height:2.2;}
 
 /* ── ROUTES LIBRARY ── */
 #screen-routes{background:var(--bg);}
-.routes-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.routes-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .routes-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
-.routes-list{flex:1;overflow-y:auto;}
+#routes-list-container{flex:1;overflow-y:auto;}
 .route-card{padding:14px 16px;border-bottom:1px solid rgba(28,33,48,.5);}
-.route-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.route-card-name{flex:1;font-size:13px;font-weight:700;color:var(--text);}
-.route-card-meta{font-size:9px;color:var(--muted);letter-spacing:1px;}
+.route-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.route-card-meta{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;}
 .route-card-actions{display:flex;gap:6px;}
 .route-btn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;}
-.route-btn.nav{border-color:var(--accent);color:var(--accent);}
-.route-btn.del{border-color:var(--accent2);color:var(--accent2);}
+.route-btn.nav-btn{border-color:var(--accent);color:var(--accent);}
+.route-btn.del{border-color:#ff4d6d;color:#ff4d6d;}
 .route-btn:active{background:var(--border);}
-.routes-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:10px;letter-spacing:1px;text-align:center;padding:32px;}
-.routes-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.routes-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:10px;letter-spacing:1px;text-align:center;padding:32px;line-height:2;}
+.routes-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
 
-/* ── MISC ── */
+/* ── MAP MARKERS ── */
 .pos-marker{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 10px var(--accent),0 0 20px rgba(0,229,255,.3);}
-.stop-dot{width:14px;height:14px;border-radius:50%;background:var(--accent2);border:2px solid #fff;box-shadow:0 0 6px rgba(255,77,109,.5);}
+.stop-dot{width:14px;height:14px;border-radius:50%;background:#ff4d6d;border:2px solid #fff;box-shadow:0 0 6px rgba(255,77,109,.5);}
 .next-dot{width:18px;height:18px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4);animation:glow 1.2s infinite;}
-@keyframes glow{0%,100%{box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4)}50%{box-shadow:0 0 20px var(--green),0 0 40px rgba(0,255,135,.6)}}
+@keyframes glow{0%,100%{box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4)}50%{box-shadow:0 0 22px var(--green),0 0 44px rgba(0,255,135,.6)}}
 .delivered-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);border:2px solid rgba(255,255,255,.2);}
-.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid var(--accent2);color:var(--accent2);font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;white-space:nowrap;}
-.stop-tooltip::before{display:none}
+.stop-tooltip-lbl{background:rgba(7,9,13,.92);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;white-space:nowrap;}
+.stop-tooltip-lbl::before{display:none}
+
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
@@ -189,36 +190,30 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: HOME
-══════════════════════════════════════════════════════ -->
+<!-- ══ HOME ══ -->
 <div id="screen-home" class="screen">
   <div class="home-logo">TournéeGuide</div>
   <div class="home-sub">GESTION DE TOURNÉE GPS</div>
   <div class="home-btns">
     <button class="home-btn rec" onclick="goRecord()">
       <span class="icon">🔴</span>
-      <span class="desc">Enregistrer une tournée<span>Parcours + clients + journaux</span></span>
+      <div class="desc">Enregistrer une tournée<span>GPS + clients + journaux</span></div>
     </button>
-    <button class="home-btn nav" onclick="goLibraryForNav()">
+    <button class="home-btn nav" onclick="showScreen('routes')">
       <span class="icon">🗺️</span>
-      <span class="desc">Suivre une tournée<span>Navigation guidée arrêt par arrêt</span></span>
+      <div class="desc">Suivre une tournée<span>Navigation guidée arrêt par arrêt</span></div>
     </button>
     <button class="home-btn lib" onclick="showScreen('routes')">
       <span class="icon">📋</span>
-      <span class="desc">Mes tournées<span>Gérer, exporter, importer</span></span>
+      <div class="desc">Mes tournées<span>Gérer, exporter, importer</span></div>
     </button>
   </div>
-  <div class="home-version">v2.0 — TournéeGuide</div>
+  <div class="home-version">v2.1 — TournéeGuide</div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: RECORD
-══════════════════════════════════════════════════════ -->
+<!-- ══ RECORD ══ -->
 <div id="screen-record" class="screen hidden">
   <div id="map-record"></div>
-
-  <!-- HUD TOP -->
   <div class="hud-top">
     <div class="hud-bar">
       <button class="hud-back" onclick="confirmBack()">←</button>
@@ -228,22 +223,19 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
       <div class="hud-divider"></div>
       <div class="hud-stat"><div class="hud-val green" id="rec-dist">0 m</div><div class="hud-lbl">Distance</div></div>
       <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val yellow" id="rec-stops">0</div><div class="hud-lbl">Arrêts</div></div>
+      <div class="hud-stat"><div class="hud-val yellow" id="rec-stops-hud">0</div><div class="hud-lbl">Arrêts</div></div>
     </div>
   </div>
-
-  <!-- HUD BOTTOM -->
   <div class="hud-bottom">
     <div class="bottom-panel">
       <div class="tabs">
         <button class="tab active" onclick="switchRecTab('ctrl')">⚙ Contrôles</button>
         <button class="tab" onclick="switchRecTab('list')">📍 Arrêts</button>
       </div>
-      <!-- Controls tab -->
       <div class="tab-content active" id="rec-tab-ctrl">
         <div class="ctrl">
           <button class="btn-main idle" id="btn-rec-main" onclick="recMainAction()">
-            <span id="rec-icon">▶</span> <span id="rec-label">DÉMARRER</span>
+            <span id="rec-icon">▶</span><span id="rec-label">DÉMARRER</span>
           </button>
           <div class="btn-row">
             <button class="btn-sm yl" id="btn-add-stop" disabled onclick="openStopForm(null)">＋ Arrêt</button>
@@ -252,7 +244,6 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
           </div>
         </div>
       </div>
-      <!-- List tab -->
       <div class="tab-content" id="rec-tab-list">
         <div class="stops-scroll" id="rec-stops-list">
           <div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>
@@ -262,54 +253,47 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     STOP FORM MODAL
-══════════════════════════════════════════════════════ -->
+<!-- ══ STOP FORM MODAL (fixed, couvre tout) ══ -->
 <div id="stop-form-modal" class="hidden">
-  <div class="form-panel">
+  <div class="form-panel" onclick="event.stopPropagation()">
     <div class="form-title" id="form-title">NOUVEL ARRÊT</div>
-
     <div class="form-row">
       <div class="form-group" style="flex:3">
-        <div class="form-label">Nom du client</div>
-        <input class="form-input" id="f-client" type="text" placeholder="Ex: M. Dupont" autocomplete="off">
+        <div class="form-label">Nom du client *</div>
+        <input class="form-input" id="f-client" type="text" placeholder="Ex: M. Dupont" autocomplete="off" autocorrect="off">
       </div>
       <button class="voice-btn" id="btn-voice-client" onclick="startVoice('f-client')" title="Dicter">🎙</button>
     </div>
-
     <div class="form-row">
       <div class="form-group" style="flex:2">
         <div class="form-label">Adresse</div>
         <input class="form-input" id="f-address" type="text" placeholder="15 rue Victor Hugo" autocomplete="off">
       </div>
       <div class="form-group" style="flex:1">
-        <div class="form-label">Étage</div>
+        <div class="form-label">Étage / Porte</div>
         <input class="form-input" id="f-floor" type="text" placeholder="2e G">
       </div>
     </div>
-
     <div class="form-row">
-      <div class="form-group" style="flex:1">
+      <div class="form-group">
         <div class="form-label">Code / Interphone</div>
-        <input class="form-input" id="f-code" type="text" placeholder="1234A">
+        <input class="form-input" id="f-code" type="text" placeholder="1234A" inputmode="numeric">
       </div>
       <div class="form-group" style="flex:2">
         <div class="form-label">Note</div>
         <input class="form-input" id="f-note" type="text" placeholder="Sonner 2 fois…">
       </div>
     </div>
-
     <div class="products-section">
       <div class="form-label" style="margin-bottom:6px">Journaux / Publications</div>
       <div class="voice-status" id="voice-status"></div>
       <div class="products-chips" id="products-chips"></div>
       <div class="custom-product-row">
-        <input class="form-input" id="f-custom-product" type="text" placeholder="Autre publication…" style="flex:3">
-        <input class="qty-input" id="f-custom-qty" type="number" min="1" max="99" value="1">
-        <button class="btn-sm cy" style="flex:none;width:44px;height:40px;" onclick="addCustomProduct()">＋</button>
+        <input class="form-input" id="f-custom-product" type="text" placeholder="Autre publication…" style="flex:3" autocomplete="off">
+        <input class="qty-input" id="f-custom-qty" type="number" min="1" max="99" value="1" inputmode="numeric">
+        <button class="btn-sm cy" style="flex:none;width:44px;height:40px;padding:0" onclick="addCustomProduct()">＋</button>
       </div>
     </div>
-
     <div class="form-btns">
       <button class="form-btn cancel" onclick="closeStopForm()">Annuler</button>
       <button class="form-btn save" onclick="saveStopForm()">✓ Sauvegarder</button>
@@ -317,9 +301,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: REVIEW
-══════════════════════════════════════════════════════ -->
+<!-- ══ REVIEW ══ -->
 <div id="screen-review" class="screen hidden">
   <div class="review-header">
     <button class="hud-back" onclick="showScreen('record')" style="font-size:16px">←</button>
@@ -328,121 +310,114 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
   <div class="review-list" id="review-list"></div>
   <div class="review-footer">
-    <input class="route-name-input" id="route-name-input" type="text" placeholder="Nom de la tournée (ex: Marseille Centre - Matin)">
+    <input class="route-name-input" id="route-name-input" type="text" placeholder="Nom de la tournée (ex: Marseille Centre — Matin)">
     <div class="btn-row">
       <button class="btn-sm rd" onclick="discardRecording()">✕ Annuler</button>
-      <button class="btn-sm gn" style="flex:2" onclick="saveRoute()">💾 Sauvegarder la tournée</button>
+      <button class="btn-sm gn" style="flex:2" onclick="saveRoute()">💾 Sauvegarder</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: NAVIGATE
-══════════════════════════════════════════════════════ -->
+<!-- ══ NAVIGATE ══ -->
 <div id="screen-navigate" class="screen hidden">
   <div id="map-navigate"></div>
   <div class="nav-progress"><div class="nav-progress-fill" id="nav-progress-fill"></div></div>
-
   <div class="hud-top">
     <div class="hud-bar">
       <button class="hud-back" onclick="exitNavigation()">←</button>
-      <div class="hud-title" id="nav-route-name">TOURNÉE</div>
+      <div class="hud-title" id="nav-route-name" style="font-size:13px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">TOURNÉE</div>
       <div class="hud-divider"></div>
       <div class="hud-stat"><div class="hud-val green" id="nav-delivered">0</div><div class="hud-lbl">Livrés</div></div>
       <div class="hud-divider"></div>
       <div class="hud-stat"><div class="hud-val yellow" id="nav-remaining">0</div><div class="hud-lbl">Restants</div></div>
       <div class="hud-divider"></div>
-      <button class="btn-sm cy" style="height:30px;font-size:9px;width:60px;padding:0 6px;" onclick="toggleVoice()">🔊 <span id="voice-status-btn">ON</span></button>
+      <button class="btn-sm cy" style="flex:none;height:30px;font-size:9px;width:54px;padding:0 6px;" onclick="toggleVoice()">🔊<span id="voice-toggle-lbl">ON</span></button>
     </div>
   </div>
-
-  <div class="nav-dist-badge" id="nav-dist-badge">— m</div>
-
-  <div class="nav-stop-panel">
+  <div class="nav-dist-badge" id="nav-dist-badge" style="display:none">— m</div>
+  <div class="nav-stop-panel" id="nav-stop-panel">
     <div class="nav-card">
       <div class="nav-counter" id="nav-counter">ARRÊT 1 / 1</div>
       <div class="nav-client" id="nav-client">—</div>
       <div class="nav-address" id="nav-address">—</div>
       <div class="nav-products-list" id="nav-products-list"></div>
       <div class="nav-details" id="nav-details"></div>
-      <div class="nav-notes" id="nav-notes"></div>
+      <div class="nav-notes" id="nav-notes" style="display:none"></div>
       <div class="nav-actions">
         <button class="btn-skip" onclick="skipStop()">⟳ Passer</button>
         <button class="btn-delivered" onclick="markDelivered()">✓ LIVRÉ</button>
       </div>
     </div>
   </div>
-
   <div class="nav-done-screen hidden" id="nav-done-screen">
     <div class="done-icon">🎉</div>
     <div class="done-title">TOURNÉE TERMINÉE</div>
     <div class="done-stats" id="done-stats"></div>
-    <button class="btn-sm gn" style="height:48px;width:100%;font-size:12px;" onclick="exitNavigation()">← Retour à l'accueil</button>
+    <button class="btn-sm gn" style="height:50px;width:100%;font-size:12px;max-width:300px" onclick="exitNavigation()">← Retour à l'accueil</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: ROUTES LIBRARY
-══════════════════════════════════════════════════════ -->
+<!-- ══ ROUTES LIBRARY ══ -->
 <div id="screen-routes" class="screen hidden">
   <div class="routes-header">
     <button class="hud-back" onclick="showScreen('home')" style="font-size:16px">←</button>
     <div class="routes-title">MES TOURNÉES</div>
   </div>
-  <div id="routes-list-container" style="flex:1;overflow-y:auto;"></div>
+  <div id="routes-list-container"></div>
   <div class="routes-footer">
-    <button class="btn-sm cy" style="flex:1;height:44px;" onclick="importRoute()">↑ Importer JSON</button>
+    <button class="btn-sm cy" style="flex:1;height:44px;font-size:10px;" onclick="importRoute()">↑ Importer JSON</button>
   </div>
   <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImport(event)">
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════ -->
 <script>
-// ════════════════════════════════════════════════════════════
-// NEWSPAPERS DEFAULTS
-// ════════════════════════════════════════════════════════════
-const DEFAULT_PAPERS = ['Le Monde','Le Figaro','La Provence','L\'Équipe','Libération','Le Parisien','Nice-Matin','La Croix','Les Échos','20 Minutes'];
+// ══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const DEFAULT_PAPERS = ['Le Monde','Le Figaro','La Provence','L\'Équipe','Libération',
+  'Le Parisien','Nice-Matin','La Croix','Les Échos','20 Minutes'];
 
-// ════════════════════════════════════════════════════════════
-// APP STATE
-// ════════════════════════════════════════════════════════════
-let currentScreen = 'home';
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
 let mapRec = null, mapNav = null;
-let recPolyline, recPosMarker, recStopMarkers = [];
-let navPolyline, navPosMarker, navStopMarkers = [];
+let recPolyline = null, recPosMarker = null, recStopMarkers = [];
+let navPolyline = null, navPosMarker = null, navStopMarkers = [];
 
-// Recording state
+// Recording
 let recRunning = false, recWatchId = null, recInterval = null;
 let recPositions = [], recStops = [], recStart = null, recDist = 0, recLastPos = null;
 
-// Stop form state
+// Stop form
 let editingStopIdx = null;
-let formProducts = {}; // { name: qty }
+let formProducts = {};
 
 // Voice
-let speechRec = null, speechRecActive = false, speechRecTarget = null;
+let speechRec = null, speechRecActive = false;
 let voiceEnabled = true;
 
-// Navigation state
+// Navigation
 let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // SCREEN MANAGEMENT
-// ════════════════════════════════════════════════════════════
+// FIX #1: invalidateSize après affichage de la carte nav
+// ══════════════════════════════════════════════════════════════
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('screen-' + name).classList.remove('hidden');
-  currentScreen = name;
   if (name === 'record' && !mapRec) initRecMap();
-  if (name === 'navigate' && !mapNav) initNavMap();
+  if (name === 'navigate') {
+    if (!mapNav) initNavMap();
+    // FIX #1 : forcer le recalcul de la taille Leaflet après affichage
+    setTimeout(() => { if (mapNav) mapNav.invalidateSize(); }, 100);
+  }
   if (name === 'routes') renderRoutesList();
 }
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // RECORD MAP
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 function initRecMap() {
   mapRec = L.map('map-record', { zoomControl:false, attributionControl:false, tap:false })
             .setView([43.2965, 5.3698], 15);
@@ -451,118 +426,152 @@ function initRecMap() {
   injectTooltipStyle();
 }
 
-function centerRecMap() { if (recLastPos) mapRec.setView([recLastPos.lat, recLastPos.lng], 17, { animate:true }); }
+function centerRecMap() {
+  if (recLastPos && mapRec) mapRec.setView([recLastPos.lat, recLastPos.lng], 17, { animate:true });
+}
 
-// ════════════════════════════════════════════════════════════
-// RECORDING LOGIC
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// RECORDING
+// FIX #2: goRecord() appelle stopRec() avant de réinitialiser
+// FIX #3: recStopMarkers toujours réinitialisé
+// ══════════════════════════════════════════════════════════════
 function goRecord() {
+  // FIX #2 : arrêter proprement si un enregistrement est en cours
+  stopRec();
   recStops = []; recPositions = []; recDist = 0; recLastPos = null; recStart = null;
-  showScreen('record');
+  // FIX #3 : réinitialiser le tableau des marqueurs dans tous les cas
   if (mapRec) {
     recPolyline.setLatLngs([]);
     if (recPosMarker) { recPosMarker.remove(); recPosMarker = null; }
-    recStopMarkers.forEach(m => m.remove()); recStopMarkers = [];
+    recStopMarkers.forEach(m => m.remove());
   }
-  updateRecUI();
+  recStopMarkers = [];
+  // Remettre les boutons à l'état initial
+  document.getElementById('btn-rec-main').className = 'btn-main idle';
+  document.getElementById('rec-icon').textContent = '▶';
+  document.getElementById('rec-label').textContent = 'DÉMARRER';
+  document.getElementById('btn-add-stop').disabled = true;
+  document.getElementById('btn-rec-finish').disabled = true;
+  document.getElementById('rec-time').textContent = '00:00';
+  document.getElementById('rec-dist').textContent = '0 m';
+  document.getElementById('rec-stops-hud').textContent = '0';
   renderRecStopsList();
+  showScreen('record');
+  if (mapRec) setTimeout(() => mapRec.invalidateSize(), 100);
 }
 
 function recMainAction() {
-  if (!recRunning) startRec();
-  else stopRec();
+  if (!recRunning) startRec(); else stopRec();
 }
 
 async function startRec() {
-  if (!navigator.geolocation) { alert('GPS non disponible.'); return; }
+  if (!navigator.geolocation) { alert('GPS non disponible sur cet appareil.'); return; }
+  const btn = document.getElementById('btn-rec-main');
+  btn.style.opacity = '.5';
   try {
-    await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:30000}));
-  } catch(e) { alert('GPS refusé. Active la localisation.'); return; }
-  recRunning = true; recStart = Date.now();
-  document.getElementById('btn-rec-main').className = 'btn-main';
+    await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:30000, maximumAge:0 })
+    );
+  } catch(e) { btn.style.opacity = ''; alert('GPS refusé. Active la localisation dans les réglages.'); return; }
+  btn.style.opacity = '';
+  recRunning = true;
+  recStart = Date.now();
+  btn.className = 'btn-main';
   document.getElementById('rec-icon').textContent = '■';
   document.getElementById('rec-label').textContent = 'ARRÊTER';
   document.getElementById('btn-add-stop').disabled = false;
   document.getElementById('btn-rec-finish').disabled = false;
   recInterval = setInterval(updateRecClock, 1000);
-  recWatchId = navigator.geolocation.watchPosition(onRecPos, err => console.warn(err), { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
+  recWatchId = navigator.geolocation.watchPosition(onRecPos, onRecGpsError,
+    { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
   requestWakeLock();
 }
 
 function stopRec() {
+  if (!recRunning) return;
   recRunning = false;
-  clearInterval(recInterval);
+  clearInterval(recInterval); recInterval = null;
   if (recWatchId !== null) { navigator.geolocation.clearWatch(recWatchId); recWatchId = null; }
-  document.getElementById('btn-rec-main').className = 'btn-main idle';
-  document.getElementById('rec-icon').textContent = '▶';
-  document.getElementById('rec-label').textContent = 'REPRENDRE';
   releaseWakeLock();
 }
 
 function finishRecording() {
   stopRec();
-  // Pre-fill addresses from GPS for stops without address
-  recStops.forEach(s => { if (!s.address) s.address = `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`; });
+  recStops.forEach(s => { if (!s.address || s.address === '') s.address = `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`; });
   renderReviewList();
-  showScreen('review');
-  document.getElementById('review-summary').textContent = `${recStops.length} arrêt(s) · ${formatDist(recDist)}`;
   const d = new Date();
   document.getElementById('route-name-input').value = `Tournée du ${d.toLocaleDateString('fr-FR')}`;
+  document.getElementById('review-summary').textContent = `${recStops.length} arrêt(s) — ${formatDist(recDist)}`;
+  showScreen('review');
 }
 
 function onRecPos(pos) {
   const { latitude:lat, longitude:lng, accuracy } = pos.coords;
-  if (accuracy > 50) return;
+  if (accuracy > 60) return;
   const point = { lat, lng, ts: pos.timestamp };
   recPositions.push(point);
   if (recLastPos) recDist += haversine(recLastPos.lat, recLastPos.lng, lat, lng);
   recLastPos = point;
-  recPolyline.addLatLng([lat, lng]);
+  if (recPolyline) recPolyline.addLatLng([lat, lng]);
   if (!recPosMarker) {
-    recPosMarker = L.marker([lat, lng], { icon: divIcon('pos-marker') }).addTo(mapRec);
+    recPosMarker = L.marker([lat, lng], { icon: makeIcon('pos-marker', 14) }).addTo(mapRec);
   } else { recPosMarker.setLatLng([lat, lng]); }
-  if (recPositions.length <= 3) mapRec.setView([lat, lng], 17);
+  if (recPositions.length <= 2) mapRec.setView([lat, lng], 17);
   else mapRec.panTo([lat, lng], { animate:true, duration:.5 });
   document.getElementById('rec-dist').textContent = formatDist(recDist);
 }
 
-function updateRecClock() {
-  document.getElementById('rec-time').textContent = formatElapsed(Date.now() - recStart);
-}
-function updateRecUI() {
-  document.getElementById('rec-stops').textContent = recStops.length;
+function onRecGpsError(err) {
+  console.warn('GPS error:', err.code, err.message);
 }
 
-// ════════════════════════════════════════════════════════════
+function updateRecClock() {
+  if (!recStart) return;
+  document.getElementById('rec-time').textContent = formatElapsed(Date.now() - recStart);
+}
+
+// ══════════════════════════════════════════════════════════════
 // STOP FORM
-// ════════════════════════════════════════════════════════════
+// FIX #4: borderColor utilise la valeur hex, pas une var CSS
+// FIX #5: editReviewStop n'a plus besoin de changer d'écran
+// FIX #6: chips avec data-name pour éviter les problèmes d'apostrophes
+// ══════════════════════════════════════════════════════════════
 function openStopForm(idx) {
   editingStopIdx = idx;
   formProducts = {};
-  document.getElementById('form-title').textContent = idx === null ? 'NOUVEL ARRÊT' : `MODIFIER ARRÊT #${idx+1}`;
-  // Pre-fill if editing
+  document.getElementById('form-title').textContent = idx === null ? 'NOUVEL ARRÊT' : `MODIFIER ARRÊT #${idx + 1}`;
+  // Réinitialiser le champ client
+  const clientInput = document.getElementById('f-client');
+  clientInput.value = '';
+  clientInput.classList.remove('error');
+
   if (idx !== null) {
+    // Mode édition : pré-remplir avec les données existantes
     const s = recStops[idx];
-    document.getElementById('f-client').value = s.clientName || '';
+    clientInput.value = s.clientName || '';
     document.getElementById('f-address').value = s.address || '';
     document.getElementById('f-floor').value = s.floor || '';
     document.getElementById('f-code').value = s.doorCode || '';
     document.getElementById('f-note').value = s.notes || '';
     (s.products || []).forEach(p => { formProducts[p.name] = p.qty; });
   } else {
-    document.getElementById('f-client').value = '';
+    // Nouveau arrêt : vider tous les champs
     document.getElementById('f-address').value = '';
     document.getElementById('f-floor').value = '';
     document.getElementById('f-code').value = '';
     document.getElementById('f-note').value = '';
-    // Try to reverse geocode current position
-    if (recLastPos) reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
-      document.getElementById('f-address').value = addr || '';
-    });
+    // Géocodage inverse de la position actuelle
+    if (recLastPos) {
+      reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
+        const el = document.getElementById('f-address');
+        if (el && el.value === '') el.value = addr;
+      });
+    }
   }
   renderChips();
+  document.getElementById('voice-status').textContent = '';
   document.getElementById('stop-form-modal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('f-client').focus(), 200);
+  setTimeout(() => clientInput.focus(), 250);
 }
 
 function closeStopForm() {
@@ -573,9 +582,15 @@ function closeStopForm() {
 }
 
 function saveStopForm() {
-  const clientName = document.getElementById('f-client').value.trim();
-  if (!clientName) { document.getElementById('f-client').focus(); document.getElementById('f-client').style.borderColor='var(--accent2)'; return; }
-  document.getElementById('f-client').style.borderColor = '';
+  const clientInput = document.getElementById('f-client');
+  const clientName = clientInput.value.trim();
+  if (!clientName) {
+    // FIX #4 : utiliser la classe CSS au lieu de style inline avec var()
+    clientInput.classList.add('error');
+    clientInput.focus();
+    return;
+  }
+  clientInput.classList.remove('error');
 
   const stop = {
     id: editingStopIdx !== null ? recStops[editingStopIdx].id : recStops.length + 1,
@@ -584,40 +599,54 @@ function saveStopForm() {
     floor: document.getElementById('f-floor').value.trim(),
     doorCode: document.getElementById('f-code').value.trim(),
     notes: document.getElementById('f-note').value.trim(),
-    products: Object.entries(formProducts).filter(([,q])=>q>0).map(([name,qty])=>({name,qty})),
-    lat: recLastPos ? recLastPos.lat : 43.2965,
-    lng: recLastPos ? recLastPos.lng : 5.3698,
+    products: Object.entries(formProducts).filter(([, q]) => q > 0).map(([name, qty]) => ({ name, qty })),
+    lat: null,
+    lng: null,
     delivered: false
   };
 
   if (editingStopIdx !== null) {
+    // Conserver les coordonnées GPS du stop existant
     stop.lat = recStops[editingStopIdx].lat;
     stop.lng = recStops[editingStopIdx].lng;
     recStops[editingStopIdx] = stop;
+    // Mettre à jour le tooltip du marqueur sur la carte
+    if (recStopMarkers[editingStopIdx]) {
+      recStopMarkers[editingStopIdx].setTooltipContent(`#${stop.id} ${stop.clientName}`);
+    }
+    // FIX #5 : mettre à jour la liste de révision si elle est visible
+    renderReviewList();
   } else {
+    // Utiliser la position GPS courante
+    stop.lat = recLastPos ? recLastPos.lat : 43.2965;
+    stop.lng = recLastPos ? recLastPos.lng : 5.3698;
     recStops.push(stop);
     addRecStopMarker(stop);
   }
-  updateRecUI();
+
+  document.getElementById('rec-stops-hud').textContent = recStops.length;
   renderRecStopsList();
   closeStopForm();
-  vibrate([60,30,60]);
+  vibrate([60, 30, 60]);
 }
 
 function renderChips() {
   const el = document.getElementById('products-chips');
-  const allPapers = [...DEFAULT_PAPERS, ...Object.keys(formProducts).filter(k=>!DEFAULT_PAPERS.includes(k))];
+  const customKeys = Object.keys(formProducts).filter(k => !DEFAULT_PAPERS.includes(k));
+  const allPapers = [...DEFAULT_PAPERS, ...customKeys];
+  // FIX #6 : utiliser data-name pour éviter les problèmes d'apostrophes dans onclick
   el.innerHTML = allPapers.map(name => {
     const qty = formProducts[name] || 0;
-    const sel = qty > 0 ? 'selected' : '';
-    return `<div class="chip ${sel}" onclick="toggleChip('${name.replace(/'/g,"\\'")}')">
-      ${name}
-      ${qty > 0 ? `<span class="chip-qty">${qty}</span>` : ''}
+    const safeNameAttr = name.replace(/"/g, '&quot;');
+    return `<div class="chip${qty > 0 ? ' selected' : ''}" data-name="${safeNameAttr}" onclick="toggleChipEl(this)">
+      ${escHtml(name)}${qty > 0 ? `<span class="chip-qty">${qty}</span>` : ''}
     </div>`;
   }).join('');
 }
 
-function toggleChip(name) {
+// FIX #6 : utiliser dataset.name pour récupérer le nom
+function toggleChipEl(el) {
+  const name = el.dataset.name;
   if (!formProducts[name]) formProducts[name] = 1;
   else if (formProducts[name] < 9) formProducts[name]++;
   else delete formProducts[name];
@@ -625,60 +654,69 @@ function toggleChip(name) {
 }
 
 function addCustomProduct() {
-  const name = document.getElementById('f-custom-product').value.trim();
+  const nameEl = document.getElementById('f-custom-product');
+  const name = nameEl.value.trim();
   const qty = parseInt(document.getElementById('f-custom-qty').value) || 1;
-  if (!name) return;
+  if (!name) { nameEl.focus(); return; }
   formProducts[name] = qty;
-  document.getElementById('f-custom-product').value = '';
+  nameEl.value = '';
   document.getElementById('f-custom-qty').value = '1';
   renderChips();
 }
 
 function addRecStopMarker(stop) {
-  const m = L.marker([stop.lat, stop.lng], { icon: divIcon('stop-dot') }).addTo(mapRec);
-  m.bindTooltip(`#${stop.id} ${stop.clientName}`, { permanent:true, direction:'top', offset:[0,-8], className:'stop-tooltip' });
+  if (!mapRec) return;
+  const m = L.marker([stop.lat, stop.lng], { icon: makeIcon('stop-dot', 14) }).addTo(mapRec);
+  m.bindTooltip(`#${stop.id} ${stop.clientName}`,
+    { permanent:true, direction:'top', offset:[0, -10], className:'stop-tooltip-lbl' });
   recStopMarkers.push(m);
 }
 
 function renderRecStopsList() {
   const el = document.getElementById('rec-stops-list');
-  if (recStops.length === 0) { el.innerHTML = '<div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>'; return; }
-  el.innerHTML = recStops.map((s,i) => `
+  if (recStops.length === 0) {
+    el.innerHTML = '<div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>';
+    return;
+  }
+  el.innerHTML = recStops.map((s, i) => `
     <div class="stop-item" onclick="openStopForm(${i})">
-      <div class="stop-num">${String(s.id).padStart(2,'0')}</div>
+      <div class="stop-num">${String(s.id).padStart(2, '0')}</div>
       <div class="stop-body">
-        <div class="stop-client">${s.clientName}</div>
-        <div class="stop-addr">${s.address || '—'}</div>
-        <div class="stop-products">${s.products.map(p=>`${p.name} ×${p.qty}`).join(' · ') || 'Aucun journal'}</div>
+        <div class="stop-client">${escHtml(s.clientName)}</div>
+        <div class="stop-addr">${escHtml(s.address || '—')}</div>
+        <div class="stop-products">${s.products.length > 0 ? s.products.map(p => `${escHtml(p.name)} ×${p.qty}`).join(' · ') : 'Aucun journal'}</div>
       </div>
     </div>`).join('');
 }
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // REVIEW
-// ════════════════════════════════════════════════════════════
+// FIX #5 : editReviewStop n'a plus besoin de changer d'écran
+// ══════════════════════════════════════════════════════════════
 function renderReviewList() {
   const el = document.getElementById('review-list');
-  if (recStops.length === 0) { el.innerHTML = '<div class="empty-stops">Aucun arrêt enregistré</div>'; return; }
-  el.innerHTML = recStops.map((s,i) => `
-    <div class="review-item" onclick="editReviewStop(${i})">
-      <div class="review-num">${String(s.id).padStart(2,'0')}</div>
+  if (!el) return;
+  if (recStops.length === 0) {
+    el.innerHTML = '<div class="empty-stops">Aucun arrêt enregistré.<br>Retourne en arrière pour en ajouter.</div>';
+    return;
+  }
+  el.innerHTML = recStops.map((s, i) => `
+    <div class="review-item" onclick="openStopForm(${i})">
+      <div class="review-num">${String(s.id).padStart(2, '0')}</div>
       <div class="review-body">
-        <div class="review-client">${s.clientName}</div>
-        <div class="review-addr">${s.address || '—'}</div>
-        <div class="review-products">${s.products.map(p=>`${p.name} ×${p.qty}`).join(' · ') || 'Aucun journal'}</div>
-        <div class="review-meta">${s.floor?'Ét: '+s.floor:''}${s.doorCode?' · Code: '+s.doorCode:''}${s.notes?' · '+s.notes:''}</div>
+        <div class="review-client">${escHtml(s.clientName)}</div>
+        <div class="review-addr">${escHtml(s.address || '—')}</div>
+        <div class="review-products">${s.products.length > 0 ? s.products.map(p => `${escHtml(p.name)} ×${p.qty}`).join(' · ') : '<span style="color:var(--muted)">Aucun journal</span>'}</div>
+        <div class="review-meta">${s.floor ? '🏢 ' + escHtml(s.floor) : ''}${s.doorCode ? ' · 🔑 ' + escHtml(s.doorCode) : ''}${s.notes ? ' · ' + escHtml(s.notes) : ''}</div>
+        <div class="review-edit-hint">Tap pour modifier ›</div>
       </div>
     </div>`).join('');
-}
-
-function editReviewStop(idx) {
-  showScreen('record');
-  setTimeout(() => { showScreen('review'); openStopForm(idx); }, 50);
 }
 
 function saveRoute() {
-  const name = document.getElementById('route-name-input').value.trim() || `Tournée ${new Date().toLocaleDateString('fr-FR')}`;
+  const name = document.getElementById('route-name-input').value.trim()
+    || `Tournée ${new Date().toLocaleDateString('fr-FR')}`;
+  if (recStops.length === 0) { alert('Aucun arrêt à sauvegarder !'); return; }
   const route = {
     id: 'route_' + Date.now(),
     name,
@@ -695,39 +733,42 @@ function saveRoute() {
 }
 
 function discardRecording() {
-  if (confirm('Annuler et perdre tous les arrêts ?')) showScreen('home');
+  if (confirm('Annuler et perdre tous les arrêts enregistrés ?')) showScreen('home');
 }
 
 function confirmBack() {
   if (recStops.length > 0 || recRunning) {
-    if (confirm('Revenir à l\'accueil ? Les données seront perdues.')) { stopRec(); showScreen('home'); }
-  } else { stopRec(); showScreen('home'); }
+    if (confirm('Revenir à l\'accueil ? Les données non sauvegardées seront perdues.')) {
+      stopRec();
+      showScreen('home');
+    }
+  } else {
+    stopRec();
+    showScreen('home');
+  }
 }
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // ROUTES LIBRARY
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 function getRoutes() {
-  try { return JSON.parse(localStorage.getItem('tournee_routes') || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem('tournee_routes') || '[]'); }
+  catch(e) { return []; }
 }
 
 function renderRoutesList() {
   const routes = getRoutes();
   const container = document.getElementById('routes-list-container');
   if (routes.length === 0) {
-    container.innerHTML = '<div class="routes-empty">📋<br><br>Aucune tournée sauvegardée.<br>Enregistre ta première tournée<br>pour la retrouver ici.</div>';
+    container.innerHTML = '<div class="routes-empty">📋<br>Aucune tournée sauvegardée.<br>Enregistre ta première tournée<br>pour la retrouver ici.</div>';
     return;
   }
-  container.innerHTML = routes.map((r,i) => `
+  container.innerHTML = routes.map((r, i) => `
     <div class="route-card">
-      <div class="route-card-header">
-        <div>
-          <div class="route-card-name">${r.name}</div>
-          <div class="route-card-meta">${new Date(r.date).toLocaleDateString('fr-FR')} · ${r.stops.length} arrêts · ${formatDist(r.distance||0)}</div>
-        </div>
-      </div>
+      <div class="route-card-name">${escHtml(r.name)}</div>
+      <div class="route-card-meta">${new Date(r.date).toLocaleDateString('fr-FR')} · ${r.stops.length} arrêt(s) · ${formatDist(r.distance || 0)}</div>
       <div class="route-card-actions">
-        <button class="route-btn nav" onclick="startNavigation(${i})">🗺️ Naviguer</button>
+        <button class="route-btn nav-btn" onclick="startNavigation(${i})">🗺️ Naviguer</button>
         <button class="route-btn" onclick="exportRoute(${i})">↓ JSON</button>
         <button class="route-btn del" onclick="deleteRoute(${i})">✕</button>
       </div>
@@ -744,11 +785,12 @@ function deleteRoute(idx) {
 
 function exportRoute(idx) {
   const route = getRoutes()[idx];
-  const json = JSON.stringify(route, null, 2);
-  const url = URL.createObjectURL(new Blob([json], { type:'application/json' }));
+  const url = URL.createObjectURL(new Blob([JSON.stringify(route, null, 2)], { type:'application/json' }));
   const a = document.createElement('a');
-  a.href = url; a.download = route.name.replace(/\s+/g,'_') + '.json'; a.click();
-  URL.revokeObjectURL(url);
+  a.href = url;
+  a.download = route.name.replace(/[^a-z0-9]/gi, '_') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function importRoute() { document.getElementById('import-file-input').click(); }
@@ -759,78 +801,102 @@ function handleImport(e) {
   reader.onload = ev => {
     try {
       const route = JSON.parse(ev.target.result);
-      if (!route.stops || !route.name) { alert('Fichier invalide.'); return; }
-      route.id = route.id || 'route_' + Date.now();
+      if (!route.stops || !Array.isArray(route.stops) || !route.name) {
+        alert('Fichier JSON invalide ou format incorrect.'); return;
+      }
+      route.id = 'route_' + Date.now();
       const routes = getRoutes();
       routes.unshift(route);
       localStorage.setItem('tournee_routes', JSON.stringify(routes));
       renderRoutesList();
-      alert(`✅ "${route.name}" importée !`);
-    } catch(err) { alert('Erreur lors de l\'import.'); }
+      alert(`✅ "${route.name}" importée avec succès (${route.stops.length} arrêts) !`);
+    } catch(err) { alert('Erreur de lecture du fichier JSON.'); }
   };
   reader.readAsText(file);
   e.target.value = '';
 }
 
-function goLibraryForNav() { showScreen('routes'); }
-
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // NAVIGATION MAP
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 function initNavMap() {
   mapNav = L.map('map-navigate', { zoomControl:false, attributionControl:false, tap:false })
             .setView([43.2965, 5.3698], 15);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapNav);
-  navPolyline = L.polyline([], { color:'#4a5568', weight:3, opacity:.6, dashArray:'6,4' }).addTo(mapNav);
+  navPolyline = L.polyline([], { color:'#4a5568', weight:3, opacity:.5, dashArray:'6,4' }).addTo(mapNav);
   injectTooltipStyle();
 }
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // NAVIGATION LOGIC
-// ════════════════════════════════════════════════════════════
+// FIX #7: startNavigation arrête l'éventuel watch GPS précédent
+// FIX #8: null check dans onNavPos
+// ══════════════════════════════════════════════════════════════
 function startNavigation(routeIdx) {
   const routes = getRoutes();
+  if (!routes[routeIdx]) { alert('Tournée introuvable.'); return; }
+
+  // FIX #7 : arrêter le watch GPS précédent si navigation en cours
+  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
+
   navRoute = JSON.parse(JSON.stringify(routes[routeIdx])); // deep copy
-  navRoute.stops.forEach(s => s.delivered = false);
+  navRoute.stops.forEach(s => { s.delivered = false; delete s._announced; });
   navStopIdx = 0;
   navStart = Date.now();
-  showScreen('navigate');
-  if (!mapNav) { setTimeout(() => initNavAndStart(), 300); return; }
-  initNavAndStart();
+
+  showScreen('navigate'); // initialise mapNav + invalidateSize via setTimeout
+
+  setTimeout(() => {
+    setupNavMap();
+    updateNavUI();
+    // Démarrer GPS
+    if (navigator.geolocation) {
+      navWatchId = navigator.geolocation.watchPosition(onNavPos,
+        err => console.warn('GPS nav:', err.message),
+        { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
+    }
+    // Annoncer premier arrêt
+    setTimeout(() => announceStop(navRoute.stops[0]), 600);
+    requestWakeLock();
+  }, 150); // laisser le temps à Leaflet de s'initialiser
 }
 
-function initNavAndStart() {
-  if (!mapNav) initNavMap();
-  // Draw route waypoints
-  navPolyline.setLatLngs(navRoute.waypoints.map(p => [p.lat, p.lng]));
-  // Clear old markers
+function setupNavMap() {
+  if (!mapNav) return;
+  // Effacer anciens marqueurs
   navStopMarkers.forEach(m => m.remove()); navStopMarkers = [];
   if (navPosMarker) { navPosMarker.remove(); navPosMarker = null; }
-  // Add stop markers
+
+  // Tracer le parcours enregistré
+  if (navRoute.waypoints && navRoute.waypoints.length > 0) {
+    navPolyline.setLatLngs(navRoute.waypoints.map(p => [p.lat, p.lng]));
+  } else {
+    navPolyline.setLatLngs([]);
+  }
+
+  // Ajouter les marqueurs d'arrêt
   navRoute.stops.forEach((s, i) => {
-    const m = L.marker([s.lat, s.lng], { icon: divIcon(i === 0 ? 'next-dot' : 'stop-dot') }).addTo(mapNav);
-    m.bindTooltip(`#${s.id} ${s.clientName}`, { permanent:false, direction:'top', offset:[0,-8], className:'stop-tooltip' });
+    if (!s.lat || !s.lng) return;
+    const m = L.marker([s.lat, s.lng],
+      { icon: makeIcon(i === 0 ? 'next-dot' : 'stop-dot', i === 0 ? 18 : 14) }).addTo(mapNav);
+    m.bindTooltip(`#${s.id} ${s.clientName}`,
+      { permanent:false, direction:'top', offset:[0, -10], className:'stop-tooltip-lbl' });
     navStopMarkers.push(m);
   });
-  // Center on first stop
-  if (navRoute.stops.length > 0) {
-    const first = navRoute.stops[0];
-    mapNav.setView([first.lat, first.lng], 16);
-  }
-  // Update UI
-  document.getElementById('nav-route-name').textContent = navRoute.name.toUpperCase().substring(0, 16);
+
+  // Centrer sur le premier arrêt
+  const first = navRoute.stops.find(s => s.lat && s.lng);
+  if (first) mapNav.setView([first.lat, first.lng], 16);
+
+  // UI
+  document.getElementById('nav-route-name').textContent = navRoute.name.toUpperCase();
   document.getElementById('nav-done-screen').classList.add('hidden');
-  updateNavUI();
-  // Start GPS watch
-  if (navigator.geolocation) {
-    navWatchId = navigator.geolocation.watchPosition(onNavPos, err => {}, { enableHighAccuracy:true, maximumAge:0 });
-  }
-  // Announce first stop
-  setTimeout(() => announceStop(navRoute.stops[0]), 800);
-  requestWakeLock();
+  document.getElementById('nav-stop-panel').style.display = '';
+  document.getElementById('nav-dist-badge').style.display = '';
 }
 
 function updateNavUI() {
+  if (!navRoute) return;
   const stops = navRoute.stops;
   const delivered = stops.filter(s => s.delivered).length;
   const remaining = stops.length - delivered;
@@ -841,55 +907,57 @@ function updateNavUI() {
   const s = stops[navStopIdx];
   if (!s) return;
 
-  document.getElementById('nav-counter').textContent = `ARRÊT ${navStopIdx+1} / ${stops.length}`;
-  document.getElementById('nav-client').textContent = s.clientName;
+  document.getElementById('nav-counter').textContent = `ARRÊT ${navStopIdx + 1} / ${stops.length}`;
+  document.getElementById('nav-client').textContent = s.clientName || '—';
   document.getElementById('nav-address').textContent = s.address || '—';
 
-  // Products
+  // Produits
   const pl = document.getElementById('nav-products-list');
   if (s.products && s.products.length > 0) {
     pl.innerHTML = s.products.map(p => `
       <div class="nav-product-row">
-        <div class="nav-product-name">${p.name}</div>
+        <div class="nav-product-name">${escHtml(p.name)}</div>
         <div class="nav-product-qty">×${p.qty}</div>
       </div>`).join('');
   } else {
-    pl.innerHTML = '<div style="font-size:10px;color:var(--muted)">Aucun journal spécifié</div>';
+    pl.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 0">Aucun journal spécifié</div>';
   }
 
-  // Details chips
-  const dl = document.getElementById('nav-details');
+  // Détails
   const chips = [];
-  if (s.floor) chips.push(`🏢 ${s.floor}`);
-  if (s.doorCode) chips.push(`🔑 ${s.doorCode}`);
-  dl.innerHTML = chips.map(c => `<div class="nav-detail-chip">${c}</div>`).join('');
+  if (s.floor) chips.push(`🏢 ${escHtml(s.floor)}`);
+  if (s.doorCode) chips.push(`🔑 ${escHtml(s.doorCode)}`);
+  document.getElementById('nav-details').innerHTML = chips.map(c => `<div class="nav-detail-chip">${c}</div>`).join('');
 
   // Notes
-  const notes = document.getElementById('nav-notes');
-  if (s.notes) { notes.textContent = '📝 ' + s.notes; notes.style.display = 'block'; }
-  else { notes.style.display = 'none'; }
+  const notesEl = document.getElementById('nav-notes');
+  if (s.notes) { notesEl.textContent = '📝 ' + s.notes; notesEl.style.display = 'block'; }
+  else { notesEl.style.display = 'none'; }
 
-  // Highlight current marker on map
+  // Mettre à jour les icônes des marqueurs
   navStopMarkers.forEach((m, i) => {
-    m.setIcon(divIcon(
-      stops[i].delivered ? 'delivered-dot' :
-      i === navStopIdx ? 'next-dot' : 'stop-dot'
-    ));
+    const cls = stops[i].delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
+    const size = (i === navStopIdx && !stops[i].delivered) ? 18 : 14;
+    m.setIcon(makeIcon(cls, size));
   });
-  // Pan to current stop
-  mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
+
+  // Centrer carte sur l'arrêt en cours
+  if (s.lat && s.lng) mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
 }
 
 function markDelivered() {
+  if (!navRoute) return;
   navRoute.stops[navStopIdx].delivered = true;
   vibrate([60, 30, 60]);
-  // Find next undelivered stop
+
+  // Trouver le prochain arrêt non livré
   let next = -1;
   for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
     if (!navRoute.stops[i].delivered) { next = i; break; }
   }
   if (next === -1) {
-    // All delivered
+    // Tout livré
+    updateNavUI(); // mise à jour finale des marqueurs
     finishNavigation();
   } else {
     navStopIdx = next;
@@ -899,11 +967,12 @@ function markDelivered() {
 }
 
 function skipStop() {
+  if (!navRoute) return;
   let next = -1;
   for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
     if (!navRoute.stops[i].delivered) { next = i; break; }
   }
-  if (next === -1) { alert('Plus d\'arrêt suivant.'); return; }
+  if (next === -1) { alert('Pas d\'arrêt suivant disponible.'); return; }
   navStopIdx = next;
   updateNavUI();
 }
@@ -912,8 +981,11 @@ function finishNavigation() {
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
   const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
+  const delivered = navRoute.stops.filter(s => s.delivered).length;
   document.getElementById('done-stats').innerHTML =
-    `<strong>${navRoute.stops.length}</strong> arrêts livrés<br>Durée : <strong>${dur}</strong>`;
+    `<strong>${delivered}</strong> / <strong>${navRoute.stops.length}</strong> arrêts livrés<br>Durée : <strong>${dur}</strong>`;
+  document.getElementById('nav-stop-panel').style.display = 'none';
+  document.getElementById('nav-dist-badge').style.display = 'none';
   document.getElementById('nav-done-screen').classList.remove('hidden');
   speak('Tournée terminée ! Bravo.');
 }
@@ -921,76 +993,95 @@ function finishNavigation() {
 function exitNavigation() {
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
+  speechSynthesis && speechSynthesis.cancel();
   showScreen('home');
 }
 
+// FIX #8 : null check sur navRoute au début
 function onNavPos(pos) {
+  if (!navRoute) return;
   const { latitude:lat, longitude:lng } = pos.coords;
   if (!navPosMarker) {
-    navPosMarker = L.marker([lat, lng], { icon: divIcon('pos-marker') }).addTo(mapNav);
+    navPosMarker = L.marker([lat, lng], { icon: makeIcon('pos-marker', 14) }).addTo(mapNav);
   } else { navPosMarker.setLatLng([lat, lng]); }
-  // Distance to current stop
+
   const s = navRoute.stops[navStopIdx];
-  if (s) {
+  if (s && s.lat && s.lng) {
     const dist = haversine(lat, lng, s.lat, s.lng);
     document.getElementById('nav-dist-badge').textContent = formatDist(dist);
-    // Auto-announce when close
+    // Vibrer quand on arrive à moins de 30m
     if (dist < 30 && !s._announced) { s._announced = true; vibrate([100, 50, 100]); }
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// VOICE (TTS + STT)
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// VOICE TTS + STT
+// ══════════════════════════════════════════════════════════════
 function announceStop(stop) {
   if (!voiceEnabled || !stop) return;
   let text = `Arrêt ${stop.id} : ${stop.clientName}. `;
+  if (stop.address) text += `Adresse : ${stop.address}. `;
   if (stop.products && stop.products.length > 0) {
-    text += stop.products.map(p => `${p.name}, ${p.qty} exemplaire${p.qty>1?'s':''}`).join(', ') + '. ';
+    text += stop.products.map(p =>
+      `${p.name} : ${p.qty} exemplaire${p.qty > 1 ? 's' : ''}`
+    ).join(', ') + '. ';
   }
   if (stop.floor) text += `Étage : ${stop.floor}. `;
   if (stop.doorCode) text += `Code : ${stop.doorCode.split('').join(' ')}. `;
-  if (stop.notes) text += stop.notes;
+  if (stop.notes) text += stop.notes + '.';
   speak(text);
 }
 
 function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
-  speechSynthesis.cancel();
+  window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'fr-FR'; u.rate = 0.95; u.pitch = 1;
-  speechSynthesis.speak(u);
+  u.lang = 'fr-FR'; u.rate = 0.9; u.pitch = 1.0;
+  // Préférer une voix française si disponible
+  const voices = window.speechSynthesis.getVoices();
+  const frVoice = voices.find(v => v.lang.startsWith('fr') && !v.name.includes('Compact'));
+  if (frVoice) u.voice = frVoice;
+  window.speechSynthesis.speak(u);
 }
 
 function toggleVoice() {
   voiceEnabled = !voiceEnabled;
-  document.getElementById('voice-status-btn').textContent = voiceEnabled ? 'ON' : 'OFF';
-  if (!voiceEnabled) speechSynthesis.cancel();
+  document.getElementById('voice-toggle-lbl').textContent = voiceEnabled ? 'ON' : 'OFF';
+  if (!voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
 }
 
 function startVoice(targetId) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) { alert('Reconnaissance vocale non supportée sur ce navigateur.'); return; }
+  if (!SpeechRec) {
+    alert('Reconnaissance vocale non supportée.\nUtilise Chrome pour cette fonctionnalité.');
+    return;
+  }
   if (speechRecActive) { stopVoice(); return; }
-  speechRecTarget = targetId;
   speechRec = new SpeechRec();
-  speechRec.lang = 'fr-FR'; speechRec.continuous = false; speechRec.interimResults = true;
+  speechRec.lang = 'fr-FR';
+  speechRec.continuous = false;
+  speechRec.interimResults = true;
   speechRec.onstart = () => {
     speechRecActive = true;
     document.getElementById('btn-voice-client').classList.add('active');
     document.getElementById('voice-status').textContent = '🎙 Parle maintenant…';
   };
   speechRec.onresult = e => {
-    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
-    document.getElementById(speechRecTarget).value = transcript;
-    if (e.results[e.results.length-1].isFinal) {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    const el = document.getElementById(targetId);
+    if (el) el.value = transcript;
+    if (e.results[e.results.length - 1].isFinal) {
       document.getElementById('voice-status').textContent = '✓ Transcrit';
       stopVoice();
     }
   };
-  speechRec.onerror = () => { stopVoice(); document.getElementById('voice-status').textContent = '⚠ Erreur micro'; };
+  speechRec.onerror = err => {
+    console.warn('STT error:', err.error);
+    document.getElementById('voice-status').textContent = `⚠ ${err.error === 'not-allowed' ? 'Micro refusé' : 'Erreur micro'}`;
+    stopVoice();
+  };
   speechRec.onend = () => stopVoice();
-  speechRec.start();
+  try { speechRec.start(); } catch(e) { stopVoice(); }
 }
 
 function stopVoice() {
@@ -1000,71 +1091,113 @@ function stopVoice() {
   if (btn) btn.classList.remove('active');
 }
 
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // UTILS
-// ════════════════════════════════════════════════════════════
-function haversine(lat1,lon1,lat2,lon2) {
-  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+// ══════════════════════════════════════════════════════════════
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function formatDist(m) { return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km'; }
+function formatDist(m) {
+  return m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(2) + ' km';
+}
+
 function formatElapsed(ms) {
-  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
+  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
   return `${pad(m)}:${pad(s)}`;
 }
+
 function formatElapsedLong(ms) {
-  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
-  return h>0 ? `${h}h ${pad(m)}min` : `${m}min ${pad(s)}s`;
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000);
+  return h > 0 ? `${h}h ${pad(m)}min` : `${m}min ${pad(s)}s`;
 }
-function pad(n) { return String(n).padStart(2,'0'); }
+
+function pad(n) { return String(n).padStart(2, '0'); }
 function vibrate(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
-function divIcon(cls) {
-  return L.divIcon({ className:'', html:`<div class="${cls}"></div>`, iconSize:[14,14], iconAnchor:[7,7] });
+// FIX #9 : makeIcon gère correctement la taille pour next-dot (18px)
+function makeIcon(cls, size) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="${cls}"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2]
+  });
 }
 
 function injectTooltipStyle() {
-  if (document.getElementById('tooltip-style')) return;
+  if (document.getElementById('tt-style')) return;
   const s = document.createElement('style');
-  s.id = 'tooltip-style';
-  s.textContent = `.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;box-shadow:none;white-space:nowrap}.stop-tooltip::before{display:none}`;
+  s.id = 'tt-style';
+  s.textContent = `.stop-tooltip-lbl{background:rgba(7,9,13,.92);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:none}.stop-tooltip-lbl::before{display:none}`;
   document.head.appendChild(s);
 }
 
 async function reverseGeocode(lat, lng, cb) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
-    const r = await fetch(url, { headers:{'Accept-Language':'fr','User-Agent':'TourneeGuide/2.0'} });
+    const r = await fetch(url, {
+      headers: { 'Accept-Language':'fr', 'User-Agent':'TourneeGuide/2.1' }
+    });
+    if (!r.ok) { cb(''); return; }
     const d = await r.json();
     const a = d.address || {};
-    const addr = [a.house_number, a.road].filter(Boolean).join(' ') || a.suburb || d.display_name?.split(',')[0] || '';
+    const addr = [a.house_number, a.road].filter(Boolean).join(' ')
+      || a.suburb || a.neighbourhood || d.display_name?.split(',')[0] || '';
     cb(addr);
   } catch(e) { cb(''); }
 }
 
+// FIX #10 : escHtml pour sécuriser l'affichage des données utilisateur
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function switchRecTab(name) {
-  document.querySelectorAll('#screen-record .tab').forEach((t,i)=>{
-    t.classList.toggle('active',['ctrl','list'][i]===name);
-  });
-  document.querySelectorAll('#screen-record .tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('rec-tab-'+name).classList.add('active');
+  const tabs = document.querySelectorAll('#screen-record .tab');
+  const names = ['ctrl', 'list'];
+  tabs.forEach((t, i) => t.classList.toggle('active', names[i] === name));
+  document.querySelectorAll('#screen-record .tab-content').forEach(c => c.classList.remove('active'));
+  const target = document.getElementById('rec-tab-' + name);
+  if (target) target.classList.add('active');
 }
 
 // Wake Lock
 let wakeLock = null;
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
 }
-function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
+function releaseWakeLock() {
+  if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; }
+}
 
-// ════════════════════════════════════════════════════════════
+// Reprendre le wakeLock si l'app revient au premier plan pendant navigation
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && (recRunning || navRoute)) {
+    if (!wakeLock) await requestWakeLock();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 window.addEventListener('load', () => {
   showScreen('home');
+  // Précharger les voix TTS
+  if (window.speechSynthesis) window.speechSynthesis.getVoices();
 });
+window.speechSynthesis && window.speechSynthesis.addEventListener &&
+  window.speechSynthesis.addEventListener('voiceschanged', () => {});
 </script>
 </body>
 </html>
