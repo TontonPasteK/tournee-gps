@@ -874,7 +874,11 @@ function startNavigation(routeIdx) {
         { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
     }
     // FIX E : vérifier que la navigation est encore active avant d'annoncer
-    setTimeout(() => { if (navRoute && navRoute.stops[0]) announceStop(navRoute.stops[0]); }, 600);
+    setTimeout(() => {
+      if (!navRoute) return;
+      const s0 = navRoute.stops[0];
+      if (s0) { announceStop(s0); geocodeAndCenter(s0); }
+    }, 600);
     requestWakeLock();
   }, 150); // laisser le temps à Leaflet de s'initialiser
 }
@@ -1020,6 +1024,7 @@ function markDelivered() {
   } else {
     navStopIdx = next;
     updateNavUI();
+    geocodeAndCenter(navRoute.stops[next]);
     announceDirection(navRoute.stops[next]);
   }
 }
@@ -1119,18 +1124,61 @@ function onNavPos(pos) {
 // ══════════════════════════════════════════════════════════════
 // VOICE TTS + STT
 // ══════════════════════════════════════════════════════════════
+function freqToFr(notes) {
+  if (!notes) return '';
+  const m = ('' + notes).match(/(\d)\/7/);
+  if (!m) return '';
+  const map = {
+    7: 'livraison tous les jours',
+    6: 'du lundi au samedi',
+    5: 'du lundi au vendredi',
+    3: 'samedi, dimanche et lundi',
+    2: 'samedi et dimanche'
+  };
+  return map[+m[1]] || `${m[1]} jours sur 7`;
+}
+
+async function geocodeAndCenter(stop) {
+  if (!mapNav) return;
+  if (stop.lat && stop.lng) {
+    mapNav.setView([stop.lat, stop.lng], 17, { animate: true });
+    return;
+  }
+  if (!stop.address) return;
+  try {
+    const q = encodeURIComponent(stop.address);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+    const data = await res.json();
+    if (data && data[0]) {
+      stop.lat = parseFloat(data[0].lat);
+      stop.lng = parseFloat(data[0].lon);
+      mapNav.setView([stop.lat, stop.lng], 17, { animate: true });
+      // Ajouter un marqueur si pas encore présent
+      if (!navStopMarkers[navStopIdx]) {
+        const m = L.marker([stop.lat, stop.lng],
+          { icon: makeIcon('next-dot', 18) }).addTo(mapNav);
+        m.bindTooltip(`#${stop.id} ${stop.clientName}`,
+          { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip-lbl' });
+        navStopMarkers[navStopIdx] = m;
+      }
+      updateNavPolylines();
+    }
+  } catch(e) { console.warn('Geocodage échoué:', e); }
+}
+
 function announceStop(stop) {
   if (!voiceEnabled || !stop) return;
   let text = `Arrêt ${stop.id} : ${stop.clientName}. `;
-  if (stop.address) text += `Adresse : ${stop.address}. `;
+  if (stop.address) text += `${stop.address}. `;
   if (stop.products && stop.products.length > 0) {
     text += stop.products.map(p =>
       `${p.name} : ${p.qty} exemplaire${p.qty > 1 ? 's' : ''}`
     ).join(', ') + '. ';
   }
-  if (stop.floor) text += `Étage : ${stop.floor}. `;
+  if (stop.floor) text += `${stop.floor}. `;
   if (stop.doorCode) text += `Code : ${stop.doorCode.split('').join(' ')}. `;
-  if (stop.notes) text += stop.notes + '.';
+  const freq = freqToFr(stop.notes);
+  if (freq) text += freq + '. ';
   speak(text);
 }
 
