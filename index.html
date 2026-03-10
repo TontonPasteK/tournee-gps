@@ -1124,6 +1124,14 @@ function announceDirection(stop) {
     const dm   = dist >= 100 ? `${Math.round(dist / 50) * 50} mètres` : `${Math.round(dist / 10) * 10} mètres`;
     text += `Direction ${dir}, ${dm}. `;
   }
+  // Détection de changement de secteur : annonce le nb de journaux à préparer
+  const prevDelivered = navRoute.stops.slice(0, navStopIdx).reverse().find(s => s.delivered);
+  const prevKey = prevDelivered ? getStreetKey(prevDelivered.address) : null;
+  const nextKey = getStreetKey(stop.address);
+  if (nextKey && nextKey !== prevKey) {
+    const secText = getSectorText(navStopIdx);
+    if (secText) text += secText + ' ';
+  }
   text += `Prochain arrêt : ${stop.clientName}.`;
   speak(text);
 }
@@ -1181,6 +1189,40 @@ function freqToFr(notes) {
   return map[+m[1]] || `${m[1]} jours sur 7`;
 }
 
+// ── Résumé de secteur (rue / résidence) ────────────────────────
+function getStreetKey(address) {
+  if (!address) return '';
+  // Enlève le numéro de voie en début (ex: "14bis ")
+  let s = address.replace(/^\d+\s*(bis|ter|quater)?\s*/i, '');
+  // Enlève le code postal et la ville en fin (ex: ", 13011 Marseille")
+  s = s.replace(/[,\s]+\d{5}.*$/, '');
+  return s.trim().toLowerCase();
+}
+
+function getSectorText(fromIdx) {
+  if (!navRoute) return '';
+  const stops = navRoute.stops;
+  if (fromIdx >= stops.length) return '';
+  const key = getStreetKey(stops[fromIdx].address);
+  if (!key) return '';
+  // Nom lisible de la rue (sans numéro ni code postal)
+  const streetName = stops[fromIdx].address
+    .replace(/^\d+\s*(bis|ter|quater)?\s*/i, '')
+    .replace(/[,\s]+\d{5}.*$/, '')
+    .trim();
+  let totalJournaux = 0, nClients = 0;
+  for (let i = fromIdx; i < stops.length; i++) {
+    if (getStreetKey(stops[i].address) !== key) break;
+    if (!stops[i].delivered) {
+      nClients++;
+      if (stops[i].products)
+        totalJournaux += stops[i].products.reduce((sum, p) => sum + (p.qty || 0), 0);
+    }
+  }
+  if (nClients === 0) return '';
+  return `${streetName} : préparez ${totalJournaux} journal${totalJournaux > 1 ? 'x' : ''} pour ${nClients} client${nClients > 1 ? 's' : ''}.`;
+}
+
 async function geocodeAndCenter(stop) {
   if (!mapNav) return;
   if (stop.lat && stop.lng) {
@@ -1222,6 +1264,11 @@ function announceStop(stop) {
   if (stop.doorCode) text += `Code : ${stop.doorCode.split('').join(' ')}. `;
   const freq = freqToFr(stop.notes);
   if (freq) text += freq + '. ';
+  // Pour le tout premier arrêt, annoncer le résumé du secteur de départ
+  if (navStopIdx === 0) {
+    const secText = getSectorText(0);
+    if (secText) text += secText + ' ';
+  }
   speak(text);
 }
 
