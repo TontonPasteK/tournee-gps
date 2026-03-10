@@ -238,9 +238,9 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
             <span id="rec-icon">▶</span><span id="rec-label">DÉMARRER</span>
           </button>
           <div class="btn-row">
-            <button class="btn-sm yl" id="btn-add-stop" disabled onclick="openStopForm(null)">＋ Arrêt</button>
+            <button class="btn-sm yl" id="btn-add-stop" onclick="openStopForm(null)">＋ Arrêt</button>
             <button class="btn-sm cy" onclick="centerRecMap()">◎ Centrer</button>
-            <button class="btn-sm gn" id="btn-rec-finish" disabled onclick="finishRecording()">✓ Terminer</button>
+            <button class="btn-sm gn" id="btn-rec-finish" onclick="finishRecording()">✓ Terminer</button>
           </div>
         </div>
       </div>
@@ -451,8 +451,7 @@ function goRecord() {
   document.getElementById('btn-rec-main').className = 'btn-main idle';
   document.getElementById('rec-icon').textContent = '▶';
   document.getElementById('rec-label').textContent = 'DÉMARRER';
-  document.getElementById('btn-add-stop').disabled = true;
-  document.getElementById('btn-rec-finish').disabled = true;
+  // ＋ Arrêt et Terminer toujours accessibles, même sans GPS actif
   document.getElementById('rec-time').textContent = '00:00';
   document.getElementById('rec-dist').textContent = '0 m';
   document.getElementById('rec-stops-hud').textContent = '0';
@@ -484,8 +483,7 @@ async function startRec() {
   btn.className = 'btn-main';
   document.getElementById('rec-icon').textContent = '■';
   document.getElementById('rec-label').textContent = 'ARRÊTER';
-  document.getElementById('btn-add-stop').disabled = false;
-  document.getElementById('btn-rec-finish').disabled = false;
+  // boutons déjà actifs depuis le début
   recInterval = setInterval(updateRecClock, 1000);
   recWatchId = navigator.geolocation.watchPosition(onRecPos, onRecGpsError,
     { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
@@ -567,12 +565,23 @@ function openStopForm(idx) {
     document.getElementById('f-floor').value = '';
     document.getElementById('f-code').value = '';
     document.getElementById('f-note').value = '';
-    // Géocodage inverse de la position actuelle
+    // Géocodage inverse : utiliser la dernière position connue
+    // ou en demander une nouvelle si GPS pas encore actif
     if (recLastPos) {
       reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
         const el = document.getElementById('f-address');
         if (el && el.value === '') el.value = addr;
       });
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        recLastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: pos.timestamp };
+        reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
+          const el = document.getElementById('f-address');
+          if (el && el.value === '') el.value = addr;
+        });
+        // Centrer la carte sur la position
+        if (mapRec) mapRec.setView([recLastPos.lat, recLastPos.lng], 17);
+      }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
     }
   }
   renderChips();
