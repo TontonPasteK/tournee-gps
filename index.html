@@ -1103,13 +1103,12 @@ function onNavPos(pos) {
   if (dist < 30) {
     // Annonce vocale d'arrivée (une seule fois)
     if (!s._announced) { s._announced = true; vibrate([100, 50, 100]); announceStop(s); }
-    // Détecter l'arrêt : vitesse < 3 m/s ou info indisponible
-    const stopped = (speed == null || speed < 3);
-    if (stopped && !navArrivalTimer) {
+    // 4 secondes dans les 30m → livraison auto (même en roulant au pas)
+    if (!navArrivalTimer) {
       navArrivalTimer = setTimeout(() => {
         navArrivalTimer = null;
         if (navRoute && !navRoute.stops[navStopIdx].delivered) markDelivered();
-      }, 10000); // 10 secondes dans la zone → livraison automatique
+      }, 4000);
     }
   } else {
     // On est sorti de la zone : annuler le timer
