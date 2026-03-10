@@ -877,7 +877,8 @@ function startNavigation(routeIdx) {
     setTimeout(() => {
       if (!navRoute) return;
       const s0 = navRoute.stops[0];
-      if (s0) { announceStop(s0); geocodeAndCenter(s0); }
+      if (s0) announceStop(s0);
+      geocodeAllStops(); // géocode tout le parcours en arrière-plan
     }, 600);
     requestWakeLock();
   }, 150); // laisser le temps à Leaflet de s'initialiser
@@ -885,32 +886,70 @@ function startNavigation(routeIdx) {
 
 function setupNavMap() {
   if (!mapNav) return;
-  // Effacer anciens marqueurs
-  navStopMarkers.forEach(m => m.remove()); navStopMarkers = [];
+  // Effacer anciens marqueurs (tableau indexé sur les stops)
+  navStopMarkers.forEach(m => m && m.remove());
+  navStopMarkers = new Array(navRoute.stops.length).fill(null);
   if (navPosMarker) { navPosMarker.remove(); navPosMarker = null; }
 
-  // Tracer le parcours avec coloration progressive
+  // Ajouter les marqueurs pour les stops qui ont déjà des coordonnées
+  navRoute.stops.forEach((s, i) => { if (s.lat && s.lng) addNavMarker(i); });
+
+  // Tracer le parcours coloré
   updateNavPolylines();
 
-  // Ajouter les marqueurs d'arrêt
-  navRoute.stops.forEach((s, i) => {
-    if (!s.lat || !s.lng) return;
-    const m = L.marker([s.lat, s.lng],
-      { icon: makeIcon(i === 0 ? 'next-dot' : 'stop-dot', i === 0 ? 18 : 14) }).addTo(mapNav);
-    m.bindTooltip(`#${s.id} ${s.clientName}`,
-      { permanent:false, direction:'top', offset:[0, -10], className:'stop-tooltip-lbl' });
-    navStopMarkers.push(m);
-  });
-
-  // Centrer sur le premier arrêt
+  // Centrer sur le premier arrêt connu
   const first = navRoute.stops.find(s => s.lat && s.lng);
-  if (first) mapNav.setView([first.lat, first.lng], 16);
+  if (first) mapNav.setView([first.lat, first.lng], 15);
 
   // UI
   document.getElementById('nav-route-name').textContent = navRoute.name.toUpperCase();
   document.getElementById('nav-done-screen').classList.add('hidden');
   document.getElementById('nav-stop-panel').style.display = '';
   document.getElementById('nav-dist-badge').style.display = '';
+}
+
+// Ajouter un marqueur pour le stop i (si coordonnées disponibles)
+function addNavMarker(i) {
+  if (!mapNav || navStopMarkers[i]) return;
+  const s = navRoute.stops[i];
+  if (!s || !s.lat || !s.lng) return;
+  const cls  = s.delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
+  const size = (i === navStopIdx && !s.delivered) ? 18 : 14;
+  const m = L.marker([s.lat, s.lng], { icon: makeIcon(cls, size) }).addTo(mapNav);
+  m.bindTooltip(`#${s.id} ${s.clientName}`,
+    { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip-lbl' });
+  navStopMarkers[i] = m;
+}
+
+// Géocoder TOUS les arrêts en arrière-plan et construire le tracé au fil de l'eau
+async function geocodeAllStops() {
+  if (!navRoute) return;
+  const n = navRoute.stops.length;
+  // Commencer par l'arrêt courant, puis les suivants, puis les précédents
+  const order = [];
+  for (let i = navStopIdx; i < n; i++) order.push(i);
+  for (let i = 0; i < navStopIdx; i++) order.push(i);
+
+  for (const i of order) {
+    if (!navRoute) return; // navigation terminée entre-temps
+    const s = navRoute.stops[i];
+    if (s.lat && s.lng) { addNavMarker(i); continue; } // déjà géocodé
+    if (!s.address) continue;
+    try {
+      const q = encodeURIComponent(s.address);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+      const data = await res.json();
+      if (data && data[0]) {
+        s.lat = parseFloat(data[0].lat);
+        s.lng = parseFloat(data[0].lon);
+        addNavMarker(i);
+        updateNavPolylines();
+        // Centrer sur l'arrêt courant dès qu'il est géocodé
+        if (i === navStopIdx && mapNav) mapNav.setView([s.lat, s.lng], 16, { animate:true });
+      }
+    } catch(e) { console.warn('Géocodage stop', i, e); }
+    await new Promise(r => setTimeout(r, 1100)); // max 1 req/s Nominatim
+  }
 }
 
 function updateNavUI() {
@@ -952,10 +991,12 @@ function updateNavUI() {
   if (s.notes) { notesEl.textContent = '📝 ' + s.notes; notesEl.style.display = 'block'; }
   else { notesEl.style.display = 'none'; }
 
-  // Mettre à jour les icônes des marqueurs
-  navStopMarkers.forEach((m, i) => {
-    const cls = stops[i].delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
-    const size = (i === navStopIdx && !stops[i].delivered) ? 18 : 14;
+  // Mettre à jour les icônes des marqueurs (tableau indexé = même index que stops)
+  stops.forEach((s, i) => {
+    const m = navStopMarkers[i];
+    if (!m) return;
+    const cls  = s.delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
+    const size = (i === navStopIdx && !s.delivered) ? 18 : 14;
     m.setIcon(makeIcon(cls, size));
   });
 
@@ -1024,8 +1065,10 @@ function markDelivered() {
   } else {
     navStopIdx = next;
     updateNavUI();
-    geocodeAndCenter(navRoute.stops[next]);
-    announceDirection(navRoute.stops[next]);
+    // Centrer la carte sur le prochain arrêt s'il est déjà géocodé
+    const ns = navRoute.stops[next];
+    if (ns.lat && ns.lng && mapNav) mapNav.setView([ns.lat, ns.lng], 16, { animate:true });
+    announceDirection(ns);
   }
 }
 
