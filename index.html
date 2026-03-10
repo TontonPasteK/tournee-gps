@@ -384,6 +384,7 @@ const DEFAULT_PAPERS = ['Le Monde','Le Figaro','La Provence','L\'Équipe','Libé
 let mapRec = null, mapNav = null;
 let recPolyline = null, recPosMarker = null, recStopMarkers = [];
 let navDonePolyline = null, navTodoPolyline = null, navPosMarker = null, navStopMarkers = [];
+let navLastPos = null, navArrivalTimer = null;
 
 // Recording
 let recRunning = false, recWatchId = null, recInterval = null;
@@ -1003,6 +1004,7 @@ function updateNavPolylines() {
 
 function markDelivered() {
   if (!navRoute) return;
+  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   navRoute.stops[navStopIdx].delivered = true;
   updateNavPolylines();
   vibrate([60, 30, 60]);
@@ -1013,13 +1015,12 @@ function markDelivered() {
     if (!navRoute.stops[i].delivered) { next = i; break; }
   }
   if (next === -1) {
-    // Tout livré
-    updateNavUI(); // mise à jour finale des marqueurs
+    updateNavUI();
     finishNavigation();
   } else {
     navStopIdx = next;
     updateNavUI();
-    announceStop(navRoute.stops[navStopIdx]);
+    announceDirection(navRoute.stops[next]);
   }
 }
 
@@ -1035,6 +1036,7 @@ function skipStop() {
 }
 
 function finishNavigation() {
+  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
   const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
@@ -1048,26 +1050,70 @@ function finishNavigation() {
 }
 
 function exitNavigation() {
+  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
   speechSynthesis && speechSynthesis.cancel();
   showScreen('home');
 }
 
+// ── Direction & annonce prochain arrêt ──────────────────────────
+function getBearing(lat1, lng1, lat2, lng2) {
+  const dL = (lng2 - lng1) * Math.PI / 180;
+  const f1 = lat1 * Math.PI / 180, f2 = lat2 * Math.PI / 180;
+  const y = Math.sin(dL) * Math.cos(f2);
+  const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dL);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+function bearingToFr(b) {
+  return ['nord','nord-est','est','sud-est','sud','sud-ouest','ouest','nord-ouest'][Math.round(b / 45) % 8];
+}
+function announceDirection(stop) {
+  let text = 'Livré. ';
+  if (navLastPos && stop.lat && stop.lng) {
+    const dist = haversine(navLastPos.lat, navLastPos.lng, stop.lat, stop.lng);
+    const dir  = bearingToFr(getBearing(navLastPos.lat, navLastPos.lng, stop.lat, stop.lng));
+    const dm   = dist >= 100 ? `${Math.round(dist / 50) * 50} mètres` : `${Math.round(dist / 10) * 10} mètres`;
+    text += `Direction ${dir}, ${dm}. `;
+  }
+  text += `Prochain arrêt : ${stop.clientName}.`;
+  speak(text);
+}
+
 // FIX #8 : null check sur navRoute au début
 function onNavPos(pos) {
   if (!navRoute) return;
-  const { latitude:lat, longitude:lng } = pos.coords;
+  const { latitude:lat, longitude:lng, speed } = pos.coords;
+  navLastPos = { lat, lng };
+
+  // Mettre à jour le marqueur de position
   if (!navPosMarker) {
     navPosMarker = L.marker([lat, lng], { icon: makeIcon('pos-marker', 14) }).addTo(mapNav);
   } else { navPosMarker.setLatLng([lat, lng]); }
 
+  // La carte suit la position GPS en temps réel
+  if (mapNav) mapNav.panTo([lat, lng], { animate:true, duration:0.8, easeLinearity:0.5 });
+
   const s = navRoute.stops[navStopIdx];
-  if (s && s.lat && s.lng) {
-    const dist = haversine(lat, lng, s.lat, s.lng);
-    document.getElementById('nav-dist-badge').textContent = formatDist(dist);
-    // Vibrer quand on arrive à moins de 30m
-    if (dist < 30 && !s._announced) { s._announced = true; vibrate([100, 50, 100]); }
+  if (!s || !s.lat || !s.lng) return;
+
+  const dist = haversine(lat, lng, s.lat, s.lng);
+  document.getElementById('nav-dist-badge').textContent = formatDist(dist);
+
+  if (dist < 30) {
+    // Annonce vocale d'arrivée (une seule fois)
+    if (!s._announced) { s._announced = true; vibrate([100, 50, 100]); announceStop(s); }
+    // Détecter l'arrêt : vitesse < 3 m/s ou info indisponible
+    const stopped = (speed == null || speed < 3);
+    if (stopped && !navArrivalTimer) {
+      navArrivalTimer = setTimeout(() => {
+        navArrivalTimer = null;
+        if (navRoute && !navRoute.stops[navStopIdx].delivered) markDelivered();
+      }, 10000); // 10 secondes dans la zone → livraison automatique
+    }
+  } else {
+    // On est sorti de la zone : annuler le timer
+    if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   }
 }
 
@@ -1093,7 +1139,7 @@ function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'fr-FR'; u.rate = 0.9; u.pitch = 1.0;
+  u.lang = 'fr-FR'; u.rate = 1.4; u.pitch = 1.0;
   // Préférer une voix française si disponible
   const voices = window.speechSynthesis.getVoices();
   const frVoice = voices.find(v => v.lang.startsWith('fr') && !v.name.includes('Compact'));
