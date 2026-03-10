@@ -1052,7 +1052,7 @@ function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'fr-FR'; u.rate = 0.9; u.pitch = 1.0;
+  u.lang = 'fr-FR'; u.rate = 1.4; u.pitch = 1.0;
   // Préférer une voix française si disponible
   const voices = window.speechSynthesis.getVoices();
   const frVoice = voices.find(v => v.lang.startsWith('fr') && !v.name.includes('Compact'));
