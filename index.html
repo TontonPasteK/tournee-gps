@@ -254,7 +254,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <!-- ══ STOP FORM MODAL (fixed, couvre tout) ══ -->
-<div id="stop-form-modal" class="hidden">
+<!-- FIX D : clic sur le fond sombre ferme le modal -->
+<div id="stop-form-modal" class="hidden" onclick="closeStopForm()">
   <div class="form-panel" onclick="event.stopPropagation()">
     <div class="form-title" id="form-title">NOUVEL ARRÊT</div>
     <div class="form-row">
@@ -466,13 +467,17 @@ function recMainAction() {
 
 async function startRec() {
   if (!navigator.geolocation) { alert('GPS non disponible sur cet appareil.'); return; }
+  // FIX A : empêcher le double-tap pendant que GPS initialise
+  if (recRunning) return;
   const btn = document.getElementById('btn-rec-main');
+  btn.disabled = true;
   btn.style.opacity = '.5';
   try {
     await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:30000, maximumAge:0 })
     );
-  } catch(e) { btn.style.opacity = ''; alert('GPS refusé. Active la localisation dans les réglages.'); return; }
+  } catch(e) { btn.disabled = false; btn.style.opacity = ''; alert('GPS refusé. Active la localisation dans les réglages.'); return; }
+  btn.disabled = false;
   btn.style.opacity = '';
   recRunning = true;
   recStart = Date.now();
@@ -506,6 +511,8 @@ function finishRecording() {
 }
 
 function onRecPos(pos) {
+  // FIX B : null-check mapRec (sécurité si GPS répond après fermeture)
+  if (!mapRec || !recRunning) return;
   const { latitude:lat, longitude:lng, accuracy } = pos.coords;
   if (accuracy > 60) return;
   const point = { lat, lng, ts: pos.timestamp };
@@ -855,8 +862,8 @@ function startNavigation(routeIdx) {
         err => console.warn('GPS nav:', err.message),
         { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
     }
-    // Annoncer premier arrêt
-    setTimeout(() => announceStop(navRoute.stops[0]), 600);
+    // FIX E : vérifier que la navigation est encore active avant d'annoncer
+    setTimeout(() => { if (navRoute && navRoute.stops[0]) announceStop(navRoute.stops[0]); }, 600);
     requestWakeLock();
   }, 150); // laisser le temps à Leaflet de s'initialiser
 }
@@ -941,8 +948,8 @@ function updateNavUI() {
     m.setIcon(makeIcon(cls, size));
   });
 
-  // Centrer carte sur l'arrêt en cours
-  if (s.lat && s.lng) mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
+  // FIX C : null-check mapNav avant panTo
+  if (s.lat && s.lng && mapNav) mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
 }
 
 function markDelivered() {
