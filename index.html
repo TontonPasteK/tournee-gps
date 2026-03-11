@@ -1689,43 +1689,45 @@ function autoDetectStop(lat, lng) {
   const dist = haversine(recDwellPos.lat, recDwellPos.lng, lat, lng);
 
   if (dist < AUTO_RADIUS) {
-    // 1. Filtre feux rouges
+    // 1. Filtre feux rouges (annule le timer même s'il tourne — vrai feu rouge)
     if (isNearTrafficLight(lat, lng)) {
       setAutoStatusLbl('🚦 Feu — ignoré');
       if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
       return;
     }
-    // 2. Si une tournée de référence est chargée : corroborer avec une adresse connue
-    if (recRefStops.length > 0) {
+
+    // Si le timer tourne déjà → ne pas ré-évaluer la correspondance
+    // (évite l'annulation du timer par dérive GPS — Bug A)
+    if (recDwellTimer) return;
+
+    // 2. Corroboration référence SEULEMENT si au moins un arrêt est géocodé
+    // (si géocodage pas encore terminé → fallback dwell générique — Bug B)
+    const hasGeocoded = recRefStops.some(s => s.lat && s.lng);
+    if (hasGeocoded) {
       const match = findNearestRefStop(lat, lng);
       if (!match) {
         setAutoStatusLbl('📍 Hors tournée — ignoré');
-        if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
         return;
       }
       // Adresse reconnue : démarrer le timer avec les infos de référence
-      if (!recDwellTimer) {
-        recDwellStart = Date.now();
-        updateDwellBar();
-        setAutoStatusLbl(`✔ ${match.clientName || match.address}`);
-        recDwellTimer = setTimeout(() => {
-          recDwellTimer = null; recDwellStart = null;
-          document.getElementById('auto-dwell-fill').style.width = '0%';
-          addAutoStop(lat, lng, match);
-        }, AUTO_DELAY);
-      }
+      recDwellStart = Date.now();
+      updateDwellBar();
+      setAutoStatusLbl(`✔ ${match.clientName || match.address}`);
+      recDwellTimer = setTimeout(() => {
+        recDwellTimer = null; recDwellStart = null;
+        document.getElementById('auto-dwell-fill').style.width = '0%';
+        addAutoStop(lat, lng, match);
+      }, AUTO_DELAY);
     } else {
-      // Pas de référence chargée : comportement générique (dwell simple)
-      if (!recDwellTimer) {
-        recDwellStart = Date.now();
-        updateDwellBar();
-        setAutoStatusLbl('Arrêt détecté… 4s');
-        recDwellTimer = setTimeout(() => {
-          recDwellTimer = null; recDwellStart = null;
-          document.getElementById('auto-dwell-fill').style.width = '0%';
-          addAutoStop(lat, lng, null);
-        }, AUTO_DELAY);
-      }
+      // Pas d'arrêts de référence géocodés : comportement générique (dwell simple)
+      recDwellStart = Date.now();
+      updateDwellBar();
+      setAutoStatusLbl('Arrêt détecté… 4s');
+      recDwellTimer = setTimeout(() => {
+        recDwellTimer = null; recDwellStart = null;
+        document.getElementById('auto-dwell-fill').style.width = '0%';
+        addAutoStop(lat, lng, null);
+      }, AUTO_DELAY);
     }
   } else {
     // L'utilisateur a bougé → réinitialiser
