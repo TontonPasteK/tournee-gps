@@ -1163,6 +1163,7 @@ function finishNavigation() {
   document.getElementById('nav-stop-panel').style.display = 'none';
   document.getElementById('nav-dist-badge').style.display = 'none';
   document.getElementById('nav-done-screen').classList.remove('hidden');
+  navRoute = null; // arrête geocodeAllStops() et empêche le double rapport dans exitNavigation()
   speak('Tournée terminée ! Bravo.');
 }
 
@@ -1172,6 +1173,8 @@ function exitNavigation() {
   releaseWakeLock();
   stopAudioRec();
   if (navRoute && navRoute.stops.some(s => s.delivered)) generateReport();
+  navRoute = null; // arrête geocodeAllStops() en cours éventuel
+  navLastPos = null;
   speechSynthesis && speechSynthesis.cancel();
   showScreen('home');
 }
@@ -1834,6 +1837,7 @@ function toggleNavPause() {
 // ENREGISTREMENT AUDIO (tranches de 10 min)
 // ══════════════════════════════════════════════════════════════
 async function startAudioRec() {
+  stopAudioRec(); // couper un éventuel enregistrement précédent (évite la fuite micro)
   audioChunkNum = 0;
   try {
     audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
