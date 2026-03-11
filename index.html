@@ -234,6 +234,17 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
       </div>
       <div class="tab-content active" id="rec-tab-ctrl">
         <div class="ctrl">
+          <!-- Chargement tournée de référence -->
+          <input type="file" id="ref-file-input" accept=".json" style="display:none" onchange="loadRefRoute(event)">
+          <div id="ref-route-bar" style="width:100%;margin-bottom:8px;border-radius:10px;border:1px dashed var(--border);background:rgba(255,255,255,.02);padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="document.getElementById('ref-file-input').click()">
+            <span style="font-size:14px;">📂</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:9px;color:var(--muted);letter-spacing:1px;">TOURNÉE DE RÉFÉRENCE</div>
+              <div id="ref-route-lbl" style="font-size:10px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Appuyer pour charger le JSON…</div>
+            </div>
+            <div id="ref-geocode-badge" style="display:none;font-size:9px;color:var(--yellow);white-space:nowrap;"></div>
+          </div>
+
           <button class="btn-main idle" id="btn-rec-main" onclick="recMainAction()">
             <span id="rec-icon">▶</span><span id="rec-label">DÉMARRER</span>
           </button>
@@ -414,7 +425,10 @@ let recDwellPos     = null;         // position de référence pour le dwell
 let recDwellTimer   = null;         // timer 4s avant enregistrement auto
 let recDwellStart   = null;         // timestamp de début du dwell (pour la barre de progression)
 let recAutoCooldown = false;        // cooldown 25s après un arrêt auto
-let recTrafficLights = [];          // [[lng,lat], ...] feux rouges chargés depuis Overpass
+let recTrafficLights = [];          // feux rouges chargés depuis Overpass
+let recRefStops     = [];           // arrêts de référence chargés depuis JSON (avec coords géocodées)
+let recRefGeocoding = false;        // géocodage en cours
+let recRefMarkers   = [];           // marqueurs des arrêts de référence sur la carte
 
 // Navigation
 let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
@@ -466,6 +480,7 @@ function goRecord() {
   recDwellPos = null; recAutoCooldown = false;
   if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
   recDwellStart = null; recTrafficLights = [];
+  // Ne pas réinitialiser recRefStops/recRefMarkers ici — on veut conserver le fichier chargé entre sessions
   // FIX #3 : réinitialiser le tableau des marqueurs dans tous les cas
   if (mapRec) {
     recPolyline.setLatLngs([]);
@@ -1516,6 +1531,103 @@ function toggleAutoStop() {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// TOURNÉE DE RÉFÉRENCE — chargement + géocodage + matching
+// ══════════════════════════════════════════════════════════════
+function loadRefRoute(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const stops = data.stops || (Array.isArray(data) ? data : null);
+      if (!stops || stops.length === 0) { alert('Fichier JSON invalide ou aucun arrêt trouvé.'); return; }
+
+      // Nettoyer l'état précédent
+      recRefMarkers.forEach(m => m && m.remove());
+      recRefMarkers = [];
+      recRefStops = stops.map(s => ({ ...s, _matched: false }));
+
+      const lbl = document.getElementById('ref-route-lbl');
+      lbl.textContent = `${data.name || file.name} — ${stops.length} arrêts`;
+      lbl.style.color = 'var(--green)';
+      document.getElementById('ref-geocode-badge').style.display = 'block';
+
+      // Lancer le géocodage en arrière-plan
+      geocodeRefStops();
+    } catch(err) {
+      alert('Erreur de lecture du fichier JSON.');
+    }
+  };
+  reader.readAsText(file);
+  // Reset input pour pouvoir re-charger le même fichier si besoin
+  event.target.value = '';
+}
+
+// Géocode les arrêts de référence qui n'ont pas encore de coordonnées (1 req/s Nominatim)
+async function geocodeRefStops() {
+  recRefGeocoding = true;
+  const badge = document.getElementById('ref-geocode-badge');
+  const toGeocode = recRefStops.filter(s => !s.lat || !s.lng);
+  let done = 0;
+
+  for (const stop of toGeocode) {
+    badge.textContent = `📡 ${done}/${toGeocode.length}`;
+    let addr = stop.address || '';
+    addr = addr.replace(/\bBlvd\b/gi, 'Boulevard').replace(/\bAv\.\b/gi, 'Avenue');
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`;
+      const r = await fetch(url, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.length > 0) {
+          const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
+          // Filtre outliers (> 4km du centre)
+          if (haversine(43.2824, 5.4386, lat, lng) < 4) {
+            stop.lat = lat; stop.lng = lng;
+            addRefMarker(stop);
+          }
+        }
+      }
+    } catch(e) { /* skip */ }
+    done++;
+    await new Promise(res => setTimeout(res, 1100)); // respect Nominatim 1 req/s
+  }
+
+  const geocoded = recRefStops.filter(s => s.lat && s.lng).length;
+  badge.textContent = `✓ ${geocoded}/${recRefStops.length}`;
+  badge.style.color = 'var(--green)';
+  recRefGeocoding = false;
+
+  // Afficher les marqueurs sur la carte
+  if (mapRec) mapRec.invalidateSize();
+}
+
+// Ajoute un marqueur discret sur la carte pour un arrêt de référence
+function addRefMarker(stop) {
+  if (!mapRec || !stop.lat || !stop.lng) return;
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:rgba(0,229,255,.5);border:1px solid var(--accent);"></div>`,
+    iconSize: [10, 10], iconAnchor: [5, 5]
+  });
+  const m = L.marker([stop.lat, stop.lng], { icon, interactive: false }).addTo(mapRec);
+  recRefMarkers.push(m);
+}
+
+// Trouve le stop de référence le plus proche (≤ 30m) non encore matché
+function findNearestRefStop(lat, lng) {
+  const REF_MATCH_RADIUS = 30;
+  let best = null, bestDist = Infinity;
+  for (const s of recRefStops) {
+    if (s._matched || !s.lat || !s.lng) continue;
+    const d = haversine(lat, lng, s.lat, s.lng);
+    if (d < REF_MATCH_RADIUS && d < bestDist) { best = s; bestDist = d; }
+  }
+  return best;
+}
+
 // Charge les feux rouges de la zone via Overpass API (en arrière-plan, silencieux)
 async function fetchTrafficLights() {
   // Bbox légèrement élargie autour de la tournée
@@ -1568,23 +1680,43 @@ function autoDetectStop(lat, lng) {
   const dist = haversine(recDwellPos.lat, recDwellPos.lng, lat, lng);
 
   if (dist < AUTO_RADIUS) {
-    // Vérifier si on est sur un feu rouge (rayon 20m)
+    // 1. Filtre feux rouges
     if (isNearTrafficLight(lat, lng)) {
       setAutoStatusLbl('🚦 Feu — ignoré');
       if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
       return;
     }
-    // Toujours dans la zone — démarrer ou maintenir le timer
-    if (!recDwellTimer) {
-      recDwellStart = Date.now();
-      updateDwellBar();
-      setAutoStatusLbl('Arrêt détecté… 4s');
-      recDwellTimer = setTimeout(() => {
-        recDwellTimer = null;
-        recDwellStart = null;
-        document.getElementById('auto-dwell-fill').style.width = '0%';
-        addAutoStop(lat, lng);
-      }, AUTO_DELAY);
+    // 2. Si une tournée de référence est chargée : corroborer avec une adresse connue
+    if (recRefStops.length > 0) {
+      const match = findNearestRefStop(lat, lng);
+      if (!match) {
+        setAutoStatusLbl('📍 Hors tournée — ignoré');
+        if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
+        return;
+      }
+      // Adresse reconnue : démarrer le timer avec les infos de référence
+      if (!recDwellTimer) {
+        recDwellStart = Date.now();
+        updateDwellBar();
+        setAutoStatusLbl(`✔ ${match.clientName || match.address}`);
+        recDwellTimer = setTimeout(() => {
+          recDwellTimer = null; recDwellStart = null;
+          document.getElementById('auto-dwell-fill').style.width = '0%';
+          addAutoStop(lat, lng, match);
+        }, AUTO_DELAY);
+      }
+    } else {
+      // Pas de référence chargée : comportement générique (dwell simple)
+      if (!recDwellTimer) {
+        recDwellStart = Date.now();
+        updateDwellBar();
+        setAutoStatusLbl('Arrêt détecté… 4s');
+        recDwellTimer = setTimeout(() => {
+          recDwellTimer = null; recDwellStart = null;
+          document.getElementById('auto-dwell-fill').style.width = '0%';
+          addAutoStop(lat, lng, null);
+        }, AUTO_DELAY);
+      }
     }
   } else {
     // L'utilisateur a bougé → réinitialiser
@@ -1599,10 +1731,12 @@ function autoDetectStop(lat, lng) {
   }
 }
 
-function addAutoStop(lat, lng) {
+function addAutoStop(lat, lng, refStop) {
   // Cooldown pour éviter double-enregistrement
   recAutoCooldown = true;
   recDwellPos = null;
+  // Marquer le refStop comme déjà utilisé pour ne pas le re-matcher
+  if (refStop) refStop._matched = true;
   setTimeout(() => {
     recAutoCooldown = false;
     recDwellPos = null;
@@ -1610,7 +1744,21 @@ function addAutoStop(lat, lng) {
   }, AUTO_COOLDOWN);
 
   const stopNum = recStops.length + 1;
-  const stop = {
+
+  // Si on a une adresse de référence → pré-remplir avec toutes les données connues
+  const stop = refStop ? {
+    id: stopNum,
+    clientName: refStop.clientName || `Arrêt ${stopNum}`,
+    address:    refStop.address   || `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+    floor:      refStop.floor     || '',
+    doorCode:   refStop.doorCode  || '',
+    notes:      refStop.notes     || '',
+    products:   refStop.products  || [{ name: 'La Provence', qty: 1 }],
+    lat, lng,
+    delivered: false,
+    autoDetected: true,
+    refId: refStop.id   // lien avec l'ID du fichier de référence
+  } : {
     id: stopNum,
     clientName: `Arrêt ${stopNum}`,
     address: '',
@@ -1626,14 +1774,18 @@ function addAutoStop(lat, lng) {
   document.getElementById('rec-stops-hud').textContent = recStops.length;
   renderRecStopsList();
 
-  // Reverse geocode en arrière-plan
-  reverseGeocode(lat, lng, addr => {
-    stop.address = addr || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-    renderRecStopsList();
-    setAutoStatusLbl(`✓ #${stopNum} enregistré`);
-  });
-
-  setAutoStatusLbl(`✓ Arrêt ${stopNum} — geocodage…`);
+  if (refStop) {
+    // Adresse déjà connue — pas besoin de reverse geocode
+    setAutoStatusLbl(`✓ #${stopNum} ${stop.clientName}`);
+  } else {
+    // Pas de référence → reverse geocode
+    reverseGeocode(lat, lng, addr => {
+      stop.address = addr || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      renderRecStopsList();
+      setAutoStatusLbl(`✓ #${stopNum} enregistré`);
+    });
+    setAutoStatusLbl(`✓ Arrêt ${stopNum} — geocodage…`);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
