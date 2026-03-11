@@ -333,6 +333,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
       <div class="hud-stat"><div class="hud-val yellow" id="nav-remaining">0</div><div class="hud-lbl">Restants</div></div>
       <div class="hud-divider"></div>
       <button class="btn-sm cy" style="flex:none;height:30px;font-size:9px;width:54px;padding:0 6px;" onclick="toggleVoice()">🔊<span id="voice-toggle-lbl">ON</span></button>
+      <button id="btn-nav-pause" onclick="toggleNavPause()" style="flex:none;height:30px;font-size:9px;width:76px;padding:0 6px;border-radius:8px;border:1px solid var(--yellow);background:rgba(255,214,10,.08);color:var(--yellow);font-family:'Space Mono',monospace;cursor:pointer;">⏸ PAUSE</button>
     </div>
   </div>
   <div class="nav-dist-badge" id="nav-dist-badge" style="display:none">— m</div>
@@ -400,6 +401,10 @@ let voiceEnabled = true;
 
 // Navigation
 let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
+let navPaused = false;
+
+// Audio recording
+let audioStream = null, audioRecorder = null, audioChunks = [], audioChunkNum = 0, audioChunkTimer = null;
 
 // ══════════════════════════════════════════════════════════════
 // SCREEN MANAGEMENT
@@ -858,9 +863,17 @@ function startNavigation(routeIdx) {
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
 
   navRoute = JSON.parse(JSON.stringify(routes[routeIdx])); // deep copy
-  navRoute.stops.forEach(s => { s.delivered = false; delete s._announced; });
+  navRoute.stops.forEach(s => { s.delivered = false; delete s._announced; delete s.deliveredAt; });
   navStopIdx = 0;
   navStart = Date.now();
+  navPaused = false;
+
+  // Réinitialiser le bouton pause
+  const pauseBtn = document.getElementById('btn-nav-pause');
+  if (pauseBtn) { pauseBtn.textContent = '⏸ PAUSE'; pauseBtn.style.color='var(--yellow)'; pauseBtn.style.borderColor='var(--yellow)'; pauseBtn.style.background='rgba(255,214,10,.08)'; pauseBtn.disabled=false; }
+
+  // Démarrer l'enregistrement audio en arrière-plan
+  startAudioRec();
 
   showScreen('navigate'); // initialise mapNav + invalidateSize via setTimeout
 
@@ -1051,6 +1064,7 @@ function markDelivered() {
   if (!navRoute) return;
   if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   navRoute.stops[navStopIdx].delivered = true;
+  navRoute.stops[navStopIdx].deliveredAt = Date.now();
   updateNavPolylines();
   vibrate([60, 30, 60]);
 
@@ -1087,6 +1101,8 @@ function finishNavigation() {
   if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
+  stopAudioRec();
+  generateReport();
   const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
   const delivered = navRoute.stops.filter(s => s.delivered).length;
   document.getElementById('done-stats').innerHTML =
@@ -1101,6 +1117,8 @@ function exitNavigation() {
   if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
   if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
   releaseWakeLock();
+  stopAudioRec();
+  if (navRoute && navRoute.stops.some(s => s.delivered)) generateReport();
   speechSynthesis && speechSynthesis.cancel();
   showScreen('home');
 }
@@ -1427,6 +1445,166 @@ document.addEventListener('visibilitychange', async () => {
     if (!wakeLock) await requestWakeLock();
   }
 });
+
+// ══════════════════════════════════════════════════════════════
+// PAUSE / REPRISE NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function toggleNavPause() {
+  const btn = document.getElementById('btn-nav-pause');
+  if (!navPaused) {
+    // ── PAUSE ──
+    navPaused = true;
+    btn.textContent = '▶ REPRISE';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--muted)';
+    btn.style.background = 'rgba(255,255,255,0.04)';
+    // Arrêter GPS + timer d'arrivée
+    if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
+    if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
+    speechSynthesis && speechSynthesis.cancel();
+    speak('Tournée en pause.');
+  } else {
+    // ── REPRISE ──
+    navPaused = false;
+    btn.textContent = '⏸ PAUSE';
+    btn.style.color = 'var(--yellow)';
+    btn.style.borderColor = 'var(--yellow)';
+    btn.style.background = 'rgba(255,214,10,.08)';
+    // Relancer GPS
+    if (navigator.geolocation && navRoute) {
+      navWatchId = navigator.geolocation.watchPosition(
+        onNavPos,
+        err => console.warn('GPS nav:', err.message),
+        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+      );
+    }
+    speak('Tournée reprise.');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENREGISTREMENT AUDIO (tranches de 10 min)
+// ══════════════════════════════════════════════════════════════
+async function startAudioRec() {
+  audioChunkNum = 0;
+  try {
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    startNewAudioChunk();
+  } catch(e) {
+    console.warn('Micro non disponible :', e.message);
+    // L'app continue normalement sans audio
+  }
+}
+
+function startNewAudioChunk() {
+  if (!audioStream) return;
+  audioChunks = [];
+  const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg',''].find(m => !m || MediaRecorder.isTypeSupported(m)) || '';
+  audioRecorder = new MediaRecorder(audioStream, mimeType ? { mimeType } : {});
+  audioRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+  audioRecorder.onstop = () => {
+    if (audioChunks.length === 0) return;
+    const blob = new Blob(audioChunks, { type: audioRecorder.mimeType || 'audio/webm' });
+    const ext = (audioRecorder.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+    const d = new Date();
+    const dateStr = d.toISOString().slice(0, 10);
+    const timeStr = d.toTimeString().slice(0, 5).replace(':', 'h');
+    const fname = `tournee_${dateStr}_${timeStr}_partie${audioChunkNum}.${ext}`;
+    downloadBlob(blob, fname);
+  };
+  audioRecorder.start(2000); // flush toutes les 2s
+  // Planifier la prochaine tranche dans 10 minutes
+  audioChunkTimer = setTimeout(() => {
+    audioChunkNum++;
+    if (audioRecorder && audioRecorder.state === 'recording') audioRecorder.stop();
+    setTimeout(startNewAudioChunk, 800); // petit délai pour laisser onstop se déclencher
+  }, 10 * 60 * 1000);
+}
+
+function stopAudioRec() {
+  if (audioChunkTimer) { clearTimeout(audioChunkTimer); audioChunkTimer = null; }
+  if (audioRecorder && audioRecorder.state !== 'inactive') {
+    audioChunkNum++;
+    try { audioRecorder.stop(); } catch(e) {}
+  }
+  if (audioStream) {
+    audioStream.getTracks().forEach(t => t.stop());
+    audioStream = null;
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// RAPPORT DE TOURNÉE
+// ══════════════════════════════════════════════════════════════
+function generateReport() {
+  if (!navRoute) return;
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const timeStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
+  const delivered = navRoute.stops.filter(s => s.delivered);
+  const skipped   = navRoute.stops.filter(s => !s.delivered);
+  const totalJournaux = delivered.reduce((sum, s) => sum + (s.products ? s.products.reduce((a, p) => a + p.qty, 0) : 1), 0);
+
+  let txt = '';
+  txt += `╔══════════════════════════════════════════╗\n`;
+  txt += `  RAPPORT DE TOURNÉE — ${navRoute.name}\n`;
+  txt += `╚══════════════════════════════════════════╝\n`;
+  txt += `  Date    : ${dateStr}\n`;
+  txt += `  Heure   : ${timeStr}\n`;
+  txt += `  Durée   : ${dur}\n`;
+  txt += `  Livrés  : ${delivered.length} / ${navRoute.stops.length} arrêts\n`;
+  txt += `  Journaux: ${totalJournaux} exemplaires livrés\n`;
+  txt += `──────────────────────────────────────────\n\n`;
+
+  txt += `DÉTAIL DES ARRÊTS :\n\n`;
+  navRoute.stops.forEach(s => {
+    const ok = s.delivered;
+    const qty = s.products ? s.products.reduce((a, p) => a + p.qty, 0) : 1;
+    const heure = s.deliveredAt
+      ? new Date(s.deliveredAt).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })
+      : '—';
+    txt += ok
+      ? `  ✓ #${String(s.id).padEnd(3)} ${s.clientName}\n`
+      : `  ✗ #${String(s.id).padEnd(3)} ${s.clientName}\n`;
+    txt += `       ${s.address}\n`;
+    if (ok) {
+      txt += `       Livré à ${heure}  ·  ${qty} journal${qty > 1 ? 'x' : ''}\n`;
+    } else {
+      txt += `       NON LIVRÉ\n`;
+    }
+    if (s.notes && s.notes.trim()) {
+      const noteOnly = s.notes.replace(/\s*\|\s*\d\/7/, '').trim();
+      if (noteOnly) txt += `       Note : ${noteOnly}\n`;
+    }
+    txt += '\n';
+  });
+
+  if (skipped.length > 0) {
+    txt += `──────────────────────────────────────────\n`;
+    txt += `NON LIVRÉS (${skipped.length}) :\n`;
+    skipped.forEach(s => {
+      txt += `  · #${s.id} ${s.clientName} — ${s.address}\n`;
+    });
+    txt += '\n';
+  }
+
+  txt += `══════════════════════════════════════════\n`;
+  txt += `  Généré par TournéeGuide\n`;
+
+  const dFmt = d.toISOString().slice(0, 10);
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  downloadBlob(blob, `rapport_tournee_${dFmt}.txt`);
+}
 
 // ══════════════════════════════════════════════════════════════
 // INIT
