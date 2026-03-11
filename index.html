@@ -50,6 +50,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .hud-stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
 .hud-val{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;line-height:1;}
 .hud-val.cyan{color:var(--accent);}.hud-val.green{color:var(--green);}.hud-val.yellow{color:var(--yellow);}
+.hud-lbl{font-size:8px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
 
 /* ── HUD BOTTOM PANEL ── */
 .hud-bottom{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
@@ -541,6 +542,7 @@ function stopRec() {
   clearInterval(recInterval); recInterval = null;
   if (recWatchId !== null) { navigator.geolocation.clearWatch(recWatchId); recWatchId = null; }
   if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
+  if (_dwellAnimFrame) { clearTimeout(_dwellAnimFrame); _dwellAnimFrame = null; }
   recDwellPos = null; recAutoCooldown = false; recDwellStart = null;
   releaseWakeLock();
   setAutoStatusLbl('GPS arrêté');
@@ -752,7 +754,7 @@ function renderRecStopsList() {
         ${s.autoDetected ? '<div style="font-size:7px;letter-spacing:0;color:var(--green);margin-top:1px;">AUTO</div>' : ''}
       </div>
       <div class="stop-body">
-        <div class="stop-client">${escHtml(s.clientName)}${s.autoDetected ? ' <span style="font-size:8px;color:var(--muted);font-weight:400;">— à compléter</span>' : ''}</div>
+        <div class="stop-client">${escHtml(s.clientName)}${s.autoDetected && (!s.clientName || /^Arrêt\s*\d/i.test(s.clientName)) ? ' <span style="font-size:8px;color:var(--muted);font-weight:400;">— à compléter</span>' : ''}</div>
         <div class="stop-addr">${s.address ? escHtml(s.address) : '<span style="color:var(--muted);font-style:italic">geocodage…</span>'}</div>
         <div class="stop-products">${s.products.length > 0 ? s.products.map(p => `${escHtml(p.name)} ×${p.qty}`).join(' · ') : 'Aucun journal'}</div>
       </div>
@@ -1001,7 +1003,7 @@ async function geocodeAllStops() {
     if (!s.address) continue;
     try {
       const q = encodeURIComponent(s.address);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
       const data = await res.json();
       if (data && data[0]) {
         s.lat = parseFloat(data[0].lat);
@@ -1301,7 +1303,7 @@ async function geocodeAndCenter(stop) {
   if (!stop.address) return;
   try {
     const q = encodeURIComponent(stop.address);
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
     const data = await res.json();
     if (data && data[0]) {
       stop.lat = parseFloat(data[0].lat);
@@ -1566,13 +1568,17 @@ function loadRefRoute(event) {
 }
 
 // Géocode les arrêts de référence qui n'ont pas encore de coordonnées (1 req/s Nominatim)
+// _geocodeRefVersion : incrémenté à chaque appel pour annuler les runs précédents
+let _geocodeRefVersion = 0;
 async function geocodeRefStops() {
   recRefGeocoding = true;
+  const myVersion = ++_geocodeRefVersion;
   const badge = document.getElementById('ref-geocode-badge');
   const toGeocode = recRefStops.filter(s => !s.lat || !s.lng);
   let done = 0;
 
   for (const stop of toGeocode) {
+    if (_geocodeRefVersion !== myVersion) break; // fichier rechargé entre-temps → abandon
     badge.textContent = `📡 ${done}/${toGeocode.length}`;
     let addr = stop.address || '';
     addr = addr.replace(/\bBlvd\b/gi, 'Boulevard').replace(/\bAv\.\b/gi, 'Avenue');
@@ -1583,8 +1589,8 @@ async function geocodeRefStops() {
         const d = await r.json();
         if (d.length > 0) {
           const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
-          // Filtre outliers (> 4km du centre)
-          if (haversine(43.2824, 5.4386, lat, lng) < 4) {
+          // Filtre outliers (> 4km du centre) — haversine renvoie des mètres (R=6371000)
+          if (haversine(43.2824, 5.4386, lat, lng) < 4000) {
             stop.lat = lat; stop.lng = lng;
             addRefMarker(stop);
           }
