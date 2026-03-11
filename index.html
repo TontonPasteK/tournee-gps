@@ -513,6 +513,8 @@ async function startRec() {
   recWatchId = navigator.geolocation.watchPosition(onRecPos, onRecGpsError,
     { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
   requestWakeLock();
+  // Démarrer l'enregistrement audio (conversation formateur)
+  startAudioRec();
 }
 
 function stopRec() {
@@ -525,6 +527,7 @@ function stopRec() {
   releaseWakeLock();
   setAutoStatusLbl('GPS arrêté');
   document.getElementById('auto-dwell-fill').style.width = '0%';
+  stopAudioRec();
 }
 
 function finishRecording() {
@@ -782,7 +785,10 @@ function saveRoute() {
 }
 
 function discardRecording() {
-  if (confirm('Annuler et perdre tous les arrêts enregistrés ?')) showScreen('home');
+  if (confirm('Annuler et perdre tous les arrêts enregistrés ?')) {
+    stopRec(); // arrête aussi l'audio
+    showScreen('home');
+  }
 }
 
 function confirmBack() {
@@ -1571,8 +1577,6 @@ function addAutoStop(lat, lng) {
     setAutoStatusLbl('Prêt');
   }, AUTO_COOLDOWN);
 
-  vibrate([80, 40, 80, 40, 120]);
-
   const stopNum = recStops.length + 1;
   const stop = {
     id: stopNum,
@@ -1597,7 +1601,6 @@ function addAutoStop(lat, lng) {
     setAutoStatusLbl(`✓ #${stopNum} enregistré`);
   });
 
-  speak(`Arrêt ${stopNum} enregistré.`);
   setAutoStatusLbl(`✓ Arrêt ${stopNum} — geocodage…`);
 }
 
