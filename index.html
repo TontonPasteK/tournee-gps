@@ -409,11 +409,12 @@ let speechRec = null, speechRecActive = false;
 let voiceEnabled = true;
 
 // Auto-stop detection (record mode)
-let recAutoEnabled = true;          // toggle ON/OFF
-let recDwellPos   = null;           // position de référence pour le dwell
-let recDwellTimer = null;           // timer 4s avant enregistrement auto
-let recDwellStart = null;           // timestamp de début du dwell (pour la barre de progression)
+let recAutoEnabled  = true;         // toggle ON/OFF
+let recDwellPos     = null;         // position de référence pour le dwell
+let recDwellTimer   = null;         // timer 4s avant enregistrement auto
+let recDwellStart   = null;         // timestamp de début du dwell (pour la barre de progression)
 let recAutoCooldown = false;        // cooldown 25s après un arrêt auto
+let recTrafficLights = [];          // [[lng,lat], ...] feux rouges chargés depuis Overpass
 
 // Navigation
 let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
@@ -464,7 +465,7 @@ function goRecord() {
   recStops = []; recPositions = []; recDist = 0; recLastPos = null; recStart = null;
   recDwellPos = null; recAutoCooldown = false;
   if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
-  recDwellStart = null;
+  recDwellStart = null; recTrafficLights = [];
   // FIX #3 : réinitialiser le tableau des marqueurs dans tous les cas
   if (mapRec) {
     recPolyline.setLatLngs([]);
@@ -515,6 +516,8 @@ async function startRec() {
   requestWakeLock();
   // Démarrer l'enregistrement audio (conversation formateur)
   startAudioRec();
+  // Charger les feux rouges de la zone en arrière-plan
+  fetchTrafficLights();
 }
 
 function stopRec() {
@@ -1513,6 +1516,29 @@ function toggleAutoStop() {
   }
 }
 
+// Charge les feux rouges de la zone via Overpass API (en arrière-plan, silencieux)
+async function fetchTrafficLights() {
+  // Bbox légèrement élargie autour de la tournée
+  const q = '[out:json];node["highway"="traffic_signals"](43.2680,5.4220,43.2920,5.4700);out;';
+  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
+  try {
+    const r = await fetch(url, { headers: { 'User-Agent': 'TourneeGuide/2.1' } });
+    if (!r.ok) return;
+    const data = await r.json();
+    recTrafficLights = (data.elements || []).map(el => ({ lat: el.lat, lng: el.lon }));
+    setAutoStatusLbl(`Prêt (${recTrafficLights.length} feux chargés)`);
+  } catch(e) {
+    // Overpass indisponible : on continue sans filtre feux
+    console.warn('Overpass unavailable:', e.message);
+  }
+}
+
+// Vérifie si une position GPS est à moins de 20m d'un feu rouge connu
+function isNearTrafficLight(lat, lng) {
+  const LIGHT_RADIUS = 20; // mètres
+  return recTrafficLights.some(tl => haversine(lat, lng, tl.lat, tl.lng) < LIGHT_RADIUS);
+}
+
 // Mise à jour de la barre de progression dwell (appelée ~2/s)
 let _dwellAnimFrame = null;
 function updateDwellBar() {
@@ -1542,6 +1568,12 @@ function autoDetectStop(lat, lng) {
   const dist = haversine(recDwellPos.lat, recDwellPos.lng, lat, lng);
 
   if (dist < AUTO_RADIUS) {
+    // Vérifier si on est sur un feu rouge (rayon 20m)
+    if (isNearTrafficLight(lat, lng)) {
+      setAutoStatusLbl('🚦 Feu — ignoré');
+      if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
+      return;
+    }
     // Toujours dans la zone — démarrer ou maintenir le timer
     if (!recDwellTimer) {
       recDwellStart = Date.now();
