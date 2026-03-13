@@ -598,22 +598,47 @@ html, body {
     <!-- CONTROLS -->
     <div class="tab-content active" id="tab-controls">
       <div class="ctrl">
-        <button class="btn-main" id="btn-main" onclick="mainAction()">
-          <span id="btn-icon">▶</span>
-          <span id="btn-label">DÉMARRER</span>
+
+        <!-- ── Bouton principal unique (change selon l'état) ── -->
+        <button class="btn-main" id="btn-main" onclick="mainAction()" style="margin-bottom:10px">
+          <span id="btn-icon">🧭</span>
+          <span id="btn-label">CHARGER MA TOURNÉE</span>
         </button>
-        <div class="seg-indicator hidden" id="seg-indicator">
-          🎙 Segment audio <span id="seg-num">1</span> en cours — <span id="seg-size">0 MB</span>
+
+        <!-- ── Contenu ACCUEIL ── -->
+        <div id="ctrl-home">
+          <div style="text-align:center;font-size:9px;color:var(--muted);margin-bottom:12px">Importe ton fichier JSON pour la navigation guidée</div>
+          <div class="btn-row">
+            <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
+            <button class="btn-sm" onclick="startFreeMode()" style="font-size:9px">⏺ Mode libre</button>
+          </div>
         </div>
-        <div class="btn-row">
-          <button class="btn-sm hl-yellow" id="btn-poi" disabled onclick="addManualStop()">＋ Arrêt</button>
-          <button class="btn-sm" id="btn-center" onclick="centerMap()">◎ Centrer</button>
-          <button class="btn-sm hl-green" id="btn-finish" disabled onclick="finishTour()">✓ Terminer</button>
+
+        <!-- ── Contenu PRÊT (tournée chargée) ── -->
+        <div id="ctrl-ready" style="display:none">
+          <div id="tour-info-card" style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;text-align:center">
+            <div id="tour-info-name" style="font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:1px">—</div>
+            <div id="tour-info-stops" style="font-size:10px;color:var(--muted);margin-top:3px">— arrêts</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-sm" id="btn-fit" onclick="fitBoundsToRoute()" style="font-size:9px">🗺 Vue globale</button>
+            <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
+            <button class="btn-sm" onclick="resetToHome()" style="font-size:9px;color:var(--muted)">✕ Annuler</button>
+          </div>
         </div>
-        <div class="btn-row">
-          <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
-          <button class="btn-sm" id="btn-fit" onclick="fitBoundsToRoute()" style="font-size:9px">🗺 Vue globale</button>
+
+        <!-- ── Contenu EN COURS ── -->
+        <div id="ctrl-running" style="display:none">
+          <div class="seg-indicator hidden" id="seg-indicator">
+            🎙 Segment audio <span id="seg-num">1</span> en cours — <span id="seg-size">0 MB</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn-sm hl-yellow" id="btn-poi" disabled onclick="addManualStop()">＋ Arrêt</button>
+            <button class="btn-sm" id="btn-center" onclick="centerMap()">◎ Centrer</button>
+            <button class="btn-sm hl-green" id="btn-finish" disabled onclick="finishTour()">✓ Terminer</button>
+          </div>
         </div>
+
         <input type="file" id="input-json" accept=".json" style="display:none" onchange="onJsonFileSelected(event)">
       </div>
     </div>
@@ -786,12 +811,82 @@ function initMap() {
 }
 
 // ════════════════════════════════════════════════════════════════
+// GESTION DES ÉTATS DU TAB CONTROLS
+// ════════════════════════════════════════════════════════════════
+// États : 'home' | 'ready' | 'running' | 'free' | 'free-running'
+function showCtrlState(state) {
+  ['ctrl-home','ctrl-ready','ctrl-running'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const map = {
+    'home':    'ctrl-home',
+    'ready':   'ctrl-ready',
+    'running': 'ctrl-running'
+  };
+  const target = document.getElementById(map[state]);
+  if (target) target.style.display = '';
+
+  // Adapter le bouton principal à chaque état
+  const btn = document.getElementById('btn-main');
+  if (!btn) return;
+  if (state === 'home') {
+    btn.className = 'btn-main';
+    btn.style.background = 'var(--accent2)'; btn.style.color = '#fff';
+    btn.onclick = triggerLoadJson;
+    document.getElementById('btn-icon').textContent = '🧭';
+    document.getElementById('btn-label').textContent = 'CHARGER MA TOURNÉE';
+  } else if (state === 'ready') {
+    btn.className = 'btn-main';
+    btn.style.background = 'var(--green)'; btn.style.color = '#000';
+    btn.onclick = mainAction;
+    document.getElementById('btn-icon').textContent = '▶';
+    document.getElementById('btn-label').textContent = 'COMMENCER TOURNÉE';
+  } else if (state === 'running') {
+    btn.className = 'btn-main running';
+    btn.style.background = ''; btn.style.color = '';
+    btn.onclick = mainAction;
+    document.getElementById('btn-icon').textContent = '■';
+    document.getElementById('btn-label').textContent = 'ARRÊTER';
+  }
+}
+
+function resetToHome() {
+  stopNavMode();
+  isRunning = false;
+  navMode = false;
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  clearInterval(clockInterval); clearInterval(segmentTimer); clearInterval(vizInterval);
+  if (polyline) polyline.setLatLngs([]);
+  stopMarkers.forEach(e => e.marker.remove()); stopMarkers = [];
+  if (posMarker) { posMarker.remove(); posMarker = null; }
+  if (startMarker) { startMarker.remove(); startMarker = null; }
+  if (endMarker) { endMarker.remove(); endMarker = null; }
+  showCtrlState('home');
+  showToast('↩ Retour à l\'accueil');
+}
+
+function startFreeMode() {
+  // Démarre directement l'enregistrement libre (GPS + micro)
+  startTour();
+}
+
+// Appelé après setupNavMode pour passer à l'état "ready"
+function setCtrlReady(tourName, stopCount) {
+  document.getElementById('tour-info-name').textContent = tourName || 'Tournée chargée';
+  document.getElementById('tour-info-stops').textContent = `${stopCount} arrêts • Rouge = à livrer`;
+  showCtrlState('ready');
+}
+
+// ════════════════════════════════════════════════════════════════
 // MAIN ACTION
 // ════════════════════════════════════════════════════════════════
 function mainAction() {
   if (navMode && !isRunning) { startNavTour(); return; }
-  if (!isRunning) startTour();
-  else stopTour();
+  if (!isRunning) { startTour(); return; }
+  if (isRunning)  { stopTour();  return; }
 }
 
 // ─── Mode navigation : démarrage GPS uniquement (pas de micro) ───
@@ -832,6 +927,7 @@ async function startNavTour() {
   document.getElementById('btn-capture-image').disabled = true;
   document.getElementById('btn-merge-audio').disabled   = true;
 
+  showCtrlState('running');
   updateMainBtn('running', '■', 'ARRÊTER');
   document.getElementById('rec-gps').className   = 'rec-dot gps';
   document.getElementById('btn-finish').disabled = false;
@@ -916,6 +1012,7 @@ async function startTour() {
     return;
   }
 
+  showCtrlState('running');
   updateMainBtn('running', '■', 'ARRÊTER');
   document.getElementById('rec-gps').className   = 'rec-dot gps';
   document.getElementById('rec-audio').className = 'rec-dot audio';
@@ -1029,8 +1126,11 @@ function stopTour() {
   // Arrêter la reconnaissance vocale
   stopSpeechRecognition();
 
-  // Fin mode navigation
+  // Fin mode navigation → retour accueil
   if (navMode) stopNavMode();
+
+  // Retour à l'écran d'accueil
+  showCtrlState('home');
 
   releaseWakeLock();
   analyserNode = null;
@@ -2494,10 +2594,12 @@ function setupNavMode(data) {
   // ⚠️ La bannière nav et le GPS ne démarrent PAS ici —
   // l'utilisateur peut explorer la carte librement.
   // Le bouton COMMENCER lance réellement la tournée.
-  updateMainBtn('', '▶', 'COMMENCER TOURNÉE');
-
   // Parcours en ROUGE en mode navigation (non livré = rouge, livré = vert)
   if (polyline) polyline.setStyle({ color: '#ff4d6d', weight: 5, opacity: 0.9 });
+
+  // Passer à l'état "ready" dans le tab Controls
+  setCtrlReady(data.name || 'Tournée', navStops.length);
+  switchTab('controls');
 
   showToast(`📍 ${navStops.length} arrêts — Explore la carte puis appuie sur COMMENCER`);
 }
@@ -2679,7 +2781,7 @@ function loadTourDataSmart(data) {
   };
 })();
 
-window.addEventListener('load', () => { initMap(); libLoad(); });
+window.addEventListener('load', () => { initMap(); libLoad(); showCtrlState('home'); });
 
 // Patcher onJsonFileSelected pour utiliser loadTourDataSmart
 document.addEventListener('DOMContentLoaded', () => {
