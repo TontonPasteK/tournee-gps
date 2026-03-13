@@ -1,0 +1,1820 @@
+{
+  "id": "tournee-valenzia10e-11e",
+  "name": "Tournée Valbarelle 10e-11e",
+  "date": "2026-03-13T00:00:00.000Z",
+  "secteurs": [
+    "St-Loup",
+    "Valbarelle",
+    "St-Marcel"
+  ],
+  "version": "1.0",
+  "stops": [
+    {
+      "id": 1,
+      "clientName": "CALLES Daniel",
+      "address": "6 Avenue Florian",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2843181,
+      "lng": 5.430166,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 2,
+      "clientName": "DO Kimanh",
+      "address": "8 Avenue Florian",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.284259,
+      "lng": 5.4301711,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 3,
+      "clientName": "DILELIO Fernand",
+      "address": "15 Blvd Auguste Comte",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.283916,
+      "lng": 5.4303371,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 4,
+      "clientName": "",
+      "address": "23 Blvd Auguste Comte",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Boîte lettre blanche",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2825061,
+      "lng": 5.4302886,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 5,
+      "clientName": "DUPUIS Patricia",
+      "address": "12 Traverse Baude",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Prêter attention",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2823709,
+      "lng": 5.4304489,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 6,
+      "clientName": "YGER Angola",
+      "address": "10 Traverse Baude",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2829734,
+      "lng": 5.4323753,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 7,
+      "clientName": "BAGNIS Raymond, CORSO Ernest, BOURREL Georges",
+      "address": "3 Traverse de la Roux — Bat C - Rés. Vieux Moulin",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 3
+        }
+      ],
+      "lat": 43.2827818,
+      "lng": 5.4331006,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 8,
+      "clientName": "BAR TABAC ST-LOUP",
+      "address": "Boulevard de Saint-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 4
+        }
+      ],
+      "lat": 43.2826493,
+      "lng": 5.433222,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 9,
+      "clientName": "BOULANGERIE ST-LOUP",
+      "address": "Boulevard de Saint-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2810302,
+      "lng": 5.4347738,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 10,
+      "clientName": "BAR OLIVE",
+      "address": "Boulevard de Saint-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2806985,
+      "lng": 5.4350942,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 11,
+      "clientName": "MAISON BEL AGE",
+      "address": "Boulevard de Saint-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2804364,
+      "lng": 5.4353064,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 12,
+      "clientName": "VIDAL, CUCINI",
+      "address": "403 Boulevard de Saint-Loup — Bat A",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "À gauche | À boîte",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2812605,
+      "lng": 5.4345752,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 13,
+      "clientName": "BERNARD Roger",
+      "address": "2A Rue Gabriel Fauré",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2822109,
+      "lng": 5.4325296,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 14,
+      "clientName": "RESTAURANT",
+      "address": "1 Blvd Queirel — Restaurant",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "1 journal",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2819108,
+      "lng": 5.4328131,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 15,
+      "clientName": "MARKARIAN Patrick, PIRONE Christiane",
+      "address": "8 Blvd Queirel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2814413,
+      "lng": 5.4325152,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 16,
+      "clientName": "CAMARLINGHI Sébastien",
+      "address": "10 Blvd Queirel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2805602,
+      "lng": 5.4311756,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 17,
+      "clientName": "GRIMALDI Jean",
+      "address": "64 Blvd Queirel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2805771,
+      "lng": 5.4311806,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 18,
+      "clientName": "GIOVANNOLI André",
+      "address": "65 Blvd Queirel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.278614,
+      "lng": 5.4338009,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 19,
+      "clientName": "SEFER Edmond",
+      "address": "80 Blvd Queirel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2783141,
+      "lng": 5.4339679,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 20,
+      "clientName": "TENNIS CLUB",
+      "address": "88 Blvd Queirel — Tennis Club",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "4 journaux",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 4
+        }
+      ],
+      "lat": 43.2787697,
+      "lng": 5.4327312,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 21,
+      "clientName": "LE MAS Joyeux",
+      "address": "14 Blvd Bonifay",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.278502,
+      "lng": 5.432427,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 24,
+      "clientName": "",
+      "address": "20 Blvd Bonifay",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Nom illisible",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2780158,
+      "lng": 5.4343547,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 25,
+      "clientName": "MAURIN Marcel",
+      "address": "10 Blvd Meissel",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.277781,
+      "lng": 5.435287,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 26,
+      "clientName": "MAISON RETRAITE AERIA",
+      "address": "38 Blvd Meissel — Maison de Retraite",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "2 journaux",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2783449,
+      "lng": 5.4374805,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 27,
+      "clientName": "CARMORA Alexis, PELLICIA Marcel, GAYET Jean-Marie +1",
+      "address": "146 Chemin des Prud'hommes — Rés. La Villa de St-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 4
+        }
+      ],
+      "lat": 43.2781298,
+      "lng": 5.4375858,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 28,
+      "clientName": "CHOUKROUN Simon",
+      "address": "112 Chemin des Prud'hommes",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2778057,
+      "lng": 5.4373318,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 29,
+      "clientName": "BEAUMONT Georges",
+      "address": "166 Chemin des Prud'hommes",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2777431,
+      "lng": 5.4351628,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 30,
+      "clientName": "ALBERINI Jean-Pierre, VASINO Jean",
+      "address": "118 Chemin des Prud'hommes",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2770052,
+      "lng": 5.4388306,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 31,
+      "clientName": "SICARD Alain",
+      "address": "180 Chemin des Prud'hommes",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2781411,
+      "lng": 5.4412244,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 32,
+      "clientName": "BERTOLABOERO Anne-Marie",
+      "address": "217 Chemin des Prud'hommes",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2783139,
+      "lng": 5.4413989,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 33,
+      "clientName": "(Résidence)",
+      "address": "8 Rue des Trois Ponts — Rés. Allée des Palmiers",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "0491",
+      "notes": "Accès code 0491 - pas de client nominatif",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2775442,
+      "lng": 5.4390654,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 35,
+      "clientName": "TOMASI Joseph",
+      "address": "108 Traverse Chanteperdrix — Rés. de la Becotte",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "2586A",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2761173,
+      "lng": 5.4361536,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 36,
+      "clientName": "AUBERT Michel",
+      "address": "23 Traverse Chanteperdrix — Bat C1",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2760753,
+      "lng": 5.4363026,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 37,
+      "clientName": "SAURA Claudine",
+      "address": "29 Traverse Chanteperdrix — Bat C1",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2766135,
+      "lng": 5.4358014,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 38,
+      "clientName": "BELMONTE Vincent",
+      "address": "23 Traverse Chanteperdrix",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2766986,
+      "lng": 5.4348613,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 39,
+      "clientName": "SABATHE Sébastien",
+      "address": "40 Traverse Chanteperdrix",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2771039,
+      "lng": 5.4344825,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 40,
+      "clientName": "SALLE François",
+      "address": "22 Traverse Chanteperdrix",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2765807,
+      "lng": 5.4352015,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 41,
+      "clientName": "HAON Christian",
+      "address": "40 Rue des Lauriers Rose",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2765697,
+      "lng": 5.4364502,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 42,
+      "clientName": "DIOCIAIUTI Geneviève",
+      "address": "24 Rue des Lauriers Rose",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2746589,
+      "lng": 5.438849,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 44,
+      "clientName": "SANTIMONE Marius",
+      "address": "41 Traverse du Puits du Lierre",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.27508,
+      "lng": 5.4388118,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 45,
+      "clientName": "STRITT Mireille",
+      "address": "43 Traverse du Puits du Lierre",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2746146,
+      "lng": 5.4368349,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 46,
+      "clientName": "CAROTENUTO Jean",
+      "address": "11 Chemin de la Baume",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2738715,
+      "lng": 5.4353782,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 47,
+      "clientName": "VARRAUD Laurent",
+      "address": "19 Chemin de la Baume",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2726589,
+      "lng": 5.4367662,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 50,
+      "clientName": "SASU Julien \"Bar des Colonne\"",
+      "address": "170 Traverse Rouvier",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Bar",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.272563,
+      "lng": 5.4366349,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 52,
+      "clientName": "(Résidence)",
+      "address": "248 Traverse Rouvier — Rés. Marguerite",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "13A10# / 13A0A",
+      "notes": "Interphones: 86 43## / 25 12 A",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2728102,
+      "lng": 5.4383774,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 53,
+      "clientName": "STAP",
+      "address": "59 Chemin du Puits de Paul",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.272198,
+      "lng": 5.4387937,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 54,
+      "clientName": "LESAGE Henry",
+      "address": "46 Chemin du Puits de Paul",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Orthographe: LESSAGE sur carnet",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2718988,
+      "lng": 5.4400516,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 55,
+      "clientName": "RAYNAL Jacques",
+      "address": "40 Chemin du Puits de Paul",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2712567,
+      "lng": 5.440507,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 56,
+      "clientName": "ESPINOSA Simone",
+      "address": "40 Chemin de Sainte-Croix",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.270368,
+      "lng": 5.4408551,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 57,
+      "clientName": "D'ALIFE Antonin",
+      "address": "40 Rue du Professeur Roger Luccioni",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2705991,
+      "lng": 5.4407963,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 58,
+      "clientName": "SOURIQUES Richard",
+      "address": "7 Rue des Bigarreaux — Rés. Les Cerisiers - Bat 10",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2727965,
+      "lng": 5.438398,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 59,
+      "clientName": "DELANNAY André",
+      "address": "7 Rue du Docteur Girbal — Résidence",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2753187,
+      "lng": 5.4342368,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 60,
+      "clientName": "SPADONI Jacques",
+      "address": "8 Blvd du Général Mangin",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2748715,
+      "lng": 5.4353747,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 61,
+      "clientName": "L'HERMITE Paulette",
+      "address": "26 Blvd du Général Mangin",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.27465,
+      "lng": 5.4354132,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 62,
+      "clientName": "BERNARD Jean-Claude",
+      "address": "46 Blvd du Général Mangin",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2748503,
+      "lng": 5.4352747,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 64,
+      "clientName": "PEIFFER Gilbert",
+      "address": "45 Blvd Bouygues Paul",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Journal: Le Figaro",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2767154,
+      "lng": 5.4311644,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 65,
+      "clientName": "ANDREANI Charles",
+      "address": "27 Blvd Bouygues Paul",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2767188,
+      "lng": 5.4311808,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 66,
+      "clientName": "BOURNY Jean-Yves, MARI Jean-Charles, MALARDE Patrick",
+      "address": "18 Blvd Reynaud de Trets — Rés. Florian de Saint-Loup",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 3
+        }
+      ],
+      "lat": 43.2771865,
+      "lng": 5.4315069,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 67,
+      "clientName": "ROSSI Philippe",
+      "address": "15 Traverse Bélicard",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772517,
+      "lng": 5.4312245,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 68,
+      "clientName": "LOCRICCHIO Paul",
+      "address": "16 Traverse Rose Bruny",
+      "secteur": "St-Loup",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772204,
+      "lng": 5.4313702,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 69,
+      "clientName": "GRAGLIA Guy, IRLES Louise, CASAROTTO Josette +9",
+      "address": "56 Blvd de la Valbarelle — Rés. St-Jacques - Bat H40",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 12
+        }
+      ],
+      "lat": 43.2772251,
+      "lng": 5.4313779,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 70,
+      "clientName": "BASTARD Marcel",
+      "address": "126 Blvd de la Valbarelle",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772248,
+      "lng": 5.4313784,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 71,
+      "clientName": "GRIOT Gérard",
+      "address": "136 Blvd de la Valbarelle",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772244,
+      "lng": 5.4313807,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 72,
+      "clientName": "SARL CONTRÔLE TECHNIQUE",
+      "address": "60 Avenue du Docteur Heckel",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772241,
+      "lng": 5.4313818,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 73,
+      "clientName": "OLIVIER André",
+      "address": "62 Avenue du Docteur Heckel",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772233,
+      "lng": 5.4313829,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 74,
+      "clientName": "BAR LA BELLE ÉPOQUE",
+      "address": "Blvd de la Valbarelle — Bar",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial - 2 journaux",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2772227,
+      "lng": 5.4313836,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 75,
+      "clientName": "BAR (sans nom)",
+      "address": "Blvd de la Valbarelle — Bar",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial - sous la lettre case",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2772224,
+      "lng": 5.431384,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 76,
+      "clientName": "BAR TABAC",
+      "address": "Blvd de la Valbarelle — Bar Tabac",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial - boîte au lettre case",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 3
+        }
+      ],
+      "lat": 43.2772218,
+      "lng": 5.4313846,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 77,
+      "clientName": "BARBIER COIFFEUR",
+      "address": "Blvd de la Valbarelle — Barbier",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Commercial",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2772212,
+      "lng": 5.4313856,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 78,
+      "clientName": "ROUBINI Laetitia, SPATAFORA Roland, COULON Mireille",
+      "address": "47 Chemin Rural Valbarelle St-Marcel — Rés. Les Grands Pins - Bat Tilleul",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 3
+        }
+      ],
+      "lat": 43.2772202,
+      "lng": 5.4313875,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 79,
+      "clientName": "RICCARDI Fabienne, DE MARCO Monique, GINESTET Patrick +1",
+      "address": "66 Résidence Lycée Est — Bat 2 - Entrée 6",
+      "secteur": "Valbarelle",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 4
+        }
+      ],
+      "lat": 43.2772199,
+      "lng": 5.4313879,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 80,
+      "clientName": "CATALDO Marlène",
+      "address": "15 Av. du Corps Expéditionnaire Français — La Tour",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772196,
+      "lng": 5.4313882,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 81,
+      "clientName": "SORESSE François",
+      "address": "12 Av. du Corps Expéditionnaire Français",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772194,
+      "lng": 5.4313883,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 82,
+      "clientName": "LAMBRAI Sylviane",
+      "address": "2 Av. du Général Maxime Weygand",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772194,
+      "lng": 5.4313884,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 83,
+      "clientName": "SCARICI Victoria",
+      "address": "17 Av. du Corps des (à compléter)",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "Nom rue à vérifier",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2772192,
+      "lng": 5.4313885,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 84,
+      "clientName": "GIANTI Daniel, PANDOR Marie-Ange, DELLONDER Raymon",
+      "address": "22 Avenue Elleon — Rés. Château Stoya - Bat Les Acacia",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 3
+        }
+      ],
+      "lat": 43.277219,
+      "lng": 5.4313886,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 94,
+      "clientName": "SABATO Huguette",
+      "address": "15 Avenue du Pontet",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2769742,
+      "lng": 5.4330926,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 95,
+      "clientName": "LAUTIER Danielle",
+      "address": "9 Av. de l'Abbé Lanfranchi",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2766639,
+      "lng": 5.4336599,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 96,
+      "clientName": "GAY Léon, REBATTU Francis",
+      "address": "15 Av. de l'Abbé Lanfranchi",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 2
+        }
+      ],
+      "lat": 43.2763553,
+      "lng": 5.4337031,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 98,
+      "clientName": "BERBERIAN Dolores",
+      "address": "23 Av. de l'Abbé Lanfranchi",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2767262,
+      "lng": 5.4336113,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 100,
+      "clientName": "TONA Marc",
+      "address": "37 Avenue Vincent Andreu",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2781805,
+      "lng": 5.435131,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 101,
+      "clientName": "MINASSIAN Annette",
+      "address": "49 Avenue Vincent Andreu",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2787362,
+      "lng": 5.436417,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 102,
+      "clientName": "ABDELALI Elhadi",
+      "address": "72 Avenue Vincent Andreu",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2795839,
+      "lng": 5.4362199,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 103,
+      "clientName": "KREHMEIER Marc",
+      "address": "91 Avenue Vincent Andreu",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2793513,
+      "lng": 5.4358638,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 104,
+      "clientName": "RANALDI Paul",
+      "address": "9 Blvd Pierre Chapron",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2803271,
+      "lng": 5.4363186,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 105,
+      "clientName": "MATEOS Corine",
+      "address": "27 Blvd Pierre Chapron",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2807574,
+      "lng": 5.4358388,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 106,
+      "clientName": "MERLY Éliane",
+      "address": "31 Blvd Pierre Chapron",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2816195,
+      "lng": 5.4351344,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 107,
+      "clientName": "LORENTS Éric",
+      "address": "34 Blvd Pierre Chapron",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2816329,
+      "lng": 5.4350479,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 108,
+      "clientName": "DI AMATO",
+      "address": "33 Blvd de la Colonne",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2839246,
+      "lng": 5.4352707,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 109,
+      "clientName": "ROUX",
+      "address": "9 Blvd des Boulistes",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2829972,
+      "lng": 5.43646,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 110,
+      "clientName": "MILHORAT René",
+      "address": "29 Traverse des Raymonds",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2828063,
+      "lng": 5.4366427,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 111,
+      "clientName": "DAVIN France",
+      "address": "54 Traverse des Raymonds",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2829154,
+      "lng": 5.4366348,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 114,
+      "clientName": "BONNET Christian",
+      "address": "36 Blvd de Saint-Marcel",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2836027,
+      "lng": 5.4369081,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 117,
+      "clientName": "CASTELLIN Gérard",
+      "address": "96 Rue de la Granière",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.2850063,
+      "lng": 5.4400345,
+      "delivered": false,
+      "autoDetected": false
+    },
+    {
+      "id": 120,
+      "clientName": "FONDANIER Yves",
+      "address": "13 Traverse de la Haute Granière",
+      "secteur": "St-Marcel",
+      "floor": "",
+      "doorCode": "",
+      "notes": "JETER - à supprimer",
+      "products": [
+        {
+          "name": "La Provence",
+          "qty": 1
+        }
+      ],
+      "lat": 43.284567,
+      "lng": 5.4405125,
+      "delivered": false,
+      "autoDetected": false
+    }
+  ],
+  "waypoints": [],
+  "distance": 16873.41902054413
+}

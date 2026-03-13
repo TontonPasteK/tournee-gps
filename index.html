@@ -5,1971 +5,2699 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TournéeGuide</title>
+<title>Tournée GPS+Audio</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
+
 :root {
-  --bg:#07090d; --panel:#0e1117; --border:#1c2130;
-  --accent:#00e5ff; --accent2:#ff4d6d; --green:#00ff87;
-  --yellow:#ffd60a; --purple:#b57aff; --orange:#ff9500;
-  --text:#d8dde8; --muted:#4a5568;
+  --bg: #07090d;
+  --panel: #0e1117;
+  --border: #1c2130;
+  --accent: #00e5ff;
+  --accent2: #ff4d6d;
+  --green: #00ff87;
+  --yellow: #ffd60a;
+  --purple: #b57aff;
+  --text: #d8dde8;
+  --muted: #4a5568;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;overflow:hidden;position:fixed;}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;}
-.screen.hidden{display:none!important;}
 
-/* ── HOME ── */
-#screen-home{background:var(--bg);justify-content:center;align-items:center;padding:24px;gap:20px;}
-.home-logo{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--accent);text-align:center;line-height:1;}
-.home-sub{font-size:9px;letter-spacing:2px;color:var(--muted);text-align:center;margin-top:-10px;}
-.home-btns{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:10px;}
-.home-btn{width:100%;height:70px;border-radius:16px;border:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:0 20px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;transition:transform .1s;}
-.home-btn:active{transform:scale(.97);}
-.home-btn .icon{font-size:26px;width:36px;text-align:center;}
-.home-btn .desc{display:flex;flex-direction:column;align-items:flex-start;}
-.home-btn .desc span{font-size:8px;font-weight:400;opacity:.7;letter-spacing:1px;margin-top:2px;}
-.home-btn.rec{background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff;}
-.home-btn.nav{background:linear-gradient(135deg,#00e5ff,#0077b6);color:#000;}
-.home-btn.lib{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);}
-.home-version{font-size:8px;color:var(--muted);letter-spacing:1px;}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-/* ── MAP SCREENS ── */
-#map-record,#map-navigate{position:absolute;inset:0;z-index:0;}
-.leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.85) saturate(.6);}
-.leaflet-container{background:#0a0c12;}
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  overflow: hidden;
+  position: fixed;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  filter: brightness(0.85) saturate(0.7) contrast(1.1);
+}
+.leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.6); }
+.leaflet-container { background: #0a0c12; }
+
+#map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px);
+  pointer-events: none;
+  z-index: 999;
+}
 
 /* ── HUD TOP ── */
-.hud-top{position:absolute;top:0;left:0;right:0;z-index:100;padding:10px 12px 0;pointer-events:none;}
-.hud-bar{background:rgba(7,9,13,.92);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px);padding:9px 12px;display:flex;align-items:center;gap:8px;pointer-events:all;}
-.hud-back{background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:0 4px;font-family:'Space Mono',monospace;}
-.hud-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--accent);flex-shrink:0;}
-.hud-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;}
-.hud-stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
-.hud-val{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;line-height:1;}
-.hud-val.cyan{color:var(--accent);}.hud-val.green{color:var(--green);}.hud-val.yellow{color:var(--yellow);}
-.hud-lbl{font-size:8px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
+.hud-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 12px 16px 0;
+  pointer-events: none;
+}
+.hud-bar {
+  background: rgba(7,9,13,0.9);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: all;
+}
+.hud-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.hud-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+.hud-stat { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.hud-stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--text);
+  line-height: 1;
+}
+.hud-stat-val.green { color: var(--green); }
+.hud-stat-val.yellow { color: var(--yellow); }
+.hud-stat-val.cyan { color: var(--accent); }
+.hud-stat-val.purple { color: var(--purple); }
+.hud-stat-lbl { font-size: 7px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
 
-/* ── HUD BOTTOM PANEL ── */
-.hud-bottom{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
-.bottom-panel{background:rgba(7,9,13,.95);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(16px);overflow:hidden;}
-.tabs{display:flex;border-bottom:1px solid var(--border);}
-.tab{flex:1;padding:8px 4px;text-align:center;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'Space Mono',monospace;transition:color .2s,background .2s;}
-.tab.active{color:var(--accent);background:rgba(0,229,255,.06);}
-.tab-content{display:none;}.tab-content.active{display:block;}
+/* REC dot */
+.rec-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.rec-dot.gps { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 1.2s infinite; }
+.rec-dot.audio { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); animation: blink 0.8s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* ── CONTROLS ── */
-.ctrl{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
-.btn-main{width:100%;height:54px;border-radius:14px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s;background:var(--accent2);color:#fff;}
-.btn-main.idle{background:var(--green);color:#000;}
-.btn-main:active{transform:scale(.97);}
-.btn-row{display:flex;gap:8px;}
-.btn-sm{flex:1;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color .15s,background .15s;}
-.btn-sm:active{background:var(--border);}.btn-sm:disabled{opacity:.3;pointer-events:none;}
-.btn-sm.yl{border-color:var(--yellow);color:var(--yellow);}
-.btn-sm.gn{border-color:var(--green);color:var(--green);}
-.btn-sm.cy{border-color:var(--accent);color:var(--accent);}
-.btn-sm.rd{border-color:var(--accent2);color:var(--accent2);}
+/* Audio bar indicator */
+.audio-bar {
+  position: absolute;
+  top: 72px; left: 16px; right: 16px;
+  z-index: 1001;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  display: none;
+}
+.audio-bar.show { display: block; }
+.audio-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent2);
+  border-radius: 2px;
+  transition: width 0.1s;
+}
 
-/* ── STOPS LIST ── */
-.stops-scroll{max-height:180px;overflow-y:auto;padding:4px 0;}
-.stop-item{padding:8px 12px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid rgba(28,33,48,.5);cursor:pointer;}
-.stop-item:active{background:rgba(0,229,255,.05);}
-.stop-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);width:26px;flex-shrink:0;line-height:1;}
-.stop-body{flex:1;min-width:0;}
-.stop-client{font-size:11px;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.stop-addr{font-size:9px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.stop-products{font-size:9px;color:var(--yellow);margin-top:2px;}
-.empty-stops{padding:18px 12px;text-align:center;font-size:10px;color:var(--muted);line-height:2;letter-spacing:1px;}
+/* ── TOAST ── */
+.stop-toast {
+  position: absolute;
+  top: 80px; left: 16px; right: 16px;
+  z-index: 1002;
+  background: rgba(14,17,23,0.96);
+  border: 1px solid var(--yellow);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+  transform: translateY(-4px);
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.stop-toast.visible { opacity: 1; transform: translateY(0); }
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; animation: blink 0.8s infinite; }
 
-/* ── STOP FORM MODAL ── */
-#stop-form-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);display:flex;flex-direction:column;justify-content:flex-end;}
-#stop-form-modal.hidden{display:none!important;}
-.form-panel{background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;padding:16px 16px max(16px,calc(env(safe-area-inset-bottom)+8px));max-height:92vh;overflow-y:auto;}
-.form-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:12px;}
-.form-row{display:flex;gap:8px;margin-bottom:8px;}
-.form-group{flex:1;display:flex;flex-direction:column;gap:4px;}
-.form-label{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
-.form-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
-.form-input:focus{border-color:var(--accent);}
-.form-input.error{border-color:#ff4d6d;}
-.voice-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:rgba(181,122,255,.1);color:var(--purple);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end;}
-.voice-btn.active{background:rgba(255,77,109,.2);border-color:#ff4d6d;color:#ff4d6d;animation:pulse .8s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.products-section{margin-bottom:8px;}
-.products-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:32px;}
-.chip{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;user-select:none;}
-.chip:active{background:var(--border);}
-.chip .chip-qty{background:var(--yellow);color:#000;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
-.chip.selected{border-color:var(--yellow);color:var(--yellow);}
-.custom-product-row{display:flex;gap:6px;}
-.qty-input{width:56px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;text-align:center;outline:none;}
-.form-btns{display:flex;gap:8px;margin-top:12px;}
-.form-btn{flex:1;height:48px;border-radius:12px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
-.form-btn.save{background:var(--green);color:#000;}
-.form-btn.cancel{background:rgba(255,255,255,.07);color:var(--text);font-size:14px;}
-.voice-status{font-size:9px;color:var(--purple);letter-spacing:1px;min-height:14px;margin-bottom:6px;}
+/* accuracy */
+.acc-badge {
+  position: absolute;
+  top: 82px; right: 16px;
+  z-index: 1001;
+  background: rgba(7,9,13,0.85);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  pointer-events: none;
+  display: none;
+}
+.acc-badge.show { display: block; }
 
-/* ── REVIEW SCREEN ── */
-#screen-review{background:var(--bg);}
-.review-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.review-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
-.review-list{flex:1;overflow-y:auto;}
-.review-item{padding:12px 16px;border-bottom:1px solid rgba(28,33,48,.5);display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
-.review-item:active{background:rgba(0,229,255,.04);}
-.review-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);width:30px;flex-shrink:0;line-height:1;}
-.review-body{flex:1;min-width:0;}
-.review-client{font-size:12px;font-weight:700;color:var(--text);}
-.review-addr{font-size:10px;color:var(--muted);margin-top:2px;}
-.review-products{font-size:10px;color:var(--yellow);margin-top:3px;}
-.review-meta{font-size:9px;color:var(--muted);margin-top:2px;}
-.review-edit-hint{font-size:8px;color:var(--accent);opacity:.6;margin-top:2px;letter-spacing:1px;}
-.review-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
-.route-name-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;width:100%;outline:none;}
-.route-name-input:focus{border-color:var(--accent);}
+/* ── HUD BOTTOM ── */
+.hud-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 0 16px 16px;
+  padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+}
+.bottom-panel {
+  background: rgba(7,9,13,0.93);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
 
-/* ── NAVIGATE SCREEN ── */
-.nav-progress{position:absolute;top:0;left:0;right:0;z-index:101;height:3px;background:var(--border);}
-.nav-progress-fill{height:100%;background:var(--green);transition:width .5s;}
-.nav-stop-panel{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:0 12px 12px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom)+6px));}
-.nav-card{background:rgba(7,9,13,.96);border:1px solid var(--border);border-radius:20px;backdrop-filter:blur(16px);padding:14px;}
-.nav-counter{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
-.nav-client{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);letter-spacing:1px;line-height:1.1;}
-.nav-address{font-size:11px;color:var(--muted);margin:4px 0 8px;}
-.nav-products-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
-.nav-product-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.15);border-radius:8px;}
-.nav-product-name{flex:1;font-size:12px;color:var(--text);}
-.nav-product-qty{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);line-height:1;}
-.nav-details{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
-.nav-detail-chip{padding:4px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;font-size:9px;color:var(--text);}
-.nav-notes{font-size:10px;color:var(--purple);padding:6px 10px;background:rgba(181,122,255,.07);border:1px solid rgba(181,122,255,.2);border-radius:8px;margin-bottom:10px;}
-.nav-actions{display:flex;gap:8px;}
-.btn-delivered{flex:2;height:54px;border-radius:14px;border:none;cursor:pointer;background:var(--green);color:#000;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
-.btn-delivered:active{opacity:.8;}
-.btn-skip{flex:1;height:54px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;}
-.btn-skip:active{background:var(--border);}
-.nav-dist-badge{position:absolute;top:64px;right:12px;z-index:101;background:rgba(7,9,13,.92);border:1px solid var(--border);border-radius:10px;padding:5px 10px;font-size:10px;color:var(--accent);letter-spacing:1px;}
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid var(--border); }
+.tab {
+  flex: 1; padding: 9px 4px;
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  border: none; background: transparent;
+  font-family: 'Space Mono', monospace;
+}
+.tab.active { color: var(--accent); background: rgba(0,229,255,0.06); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
-/* ── NAV DONE ── */
-.nav-done-screen{position:absolute;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;}
-.nav-done-screen.hidden{display:none!important;}
-.done-icon{font-size:64px;}
-.done-title{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);letter-spacing:3px;}
-.done-stats{text-align:center;font-size:11px;color:var(--muted);line-height:2.2;}
+/* CONTROLS */
+.ctrl { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
 
-/* ── ROUTES LIBRARY ── */
-#screen-routes{background:var(--bg);}
-.routes-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.routes-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;flex:1;}
-#routes-list-container{flex:1;overflow-y:auto;}
-.route-card{padding:14px 16px;border-bottom:1px solid rgba(28,33,48,.5);}
-.route-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
-.route-card-meta{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;}
-.route-card-actions{display:flex;gap:6px;}
-.route-btn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;}
-.route-btn.nav-btn{border-color:var(--accent);color:var(--accent);}
-.route-btn.del{border-color:#ff4d6d;color:#ff4d6d;}
-.route-btn:active{background:var(--border);}
-.routes-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:10px;letter-spacing:1px;text-align:center;padding:32px;line-height:2;}
-.routes-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.btn-main {
+  width: 100%; height: 58px;
+  border-radius: 14px; border: none; cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: transform 0.1s;
+  background: var(--accent); color: #000;
+}
+.btn-main:active { transform: scale(0.97); }
+.btn-main.running { background: var(--accent2); color: #fff; }
 
-/* ── MAP MARKERS ── */
-.pos-marker{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 10px var(--accent),0 0 20px rgba(0,229,255,.3);}
-.stop-dot{width:14px;height:14px;border-radius:50%;background:#ff4d6d;border:2px solid #fff;box-shadow:0 0 6px rgba(255,77,109,.5);}
-.next-dot{width:18px;height:18px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4);animation:glow 1.2s infinite;}
-@keyframes glow{0%,100%{box-shadow:0 0 12px var(--green),0 0 24px rgba(0,255,135,.4)}50%{box-shadow:0 0 22px var(--green),0 0 44px rgba(0,255,135,.6)}}
-.delivered-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);border:2px solid rgba(255,255,255,.2);}
-.stop-tooltip-lbl{background:rgba(7,9,13,.92);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;white-space:nowrap;}
-.stop-tooltip-lbl::before{display:none}
+.btn-row { display: flex; gap: 8px; }
+.btn-sm {
+  flex: 1; height: 42px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-sm:active { background: var(--border); }
+.btn-sm:disabled { opacity: 0.3; pointer-events: none; }
+.btn-sm.hl-yellow { border-color: var(--yellow); color: var(--yellow); }
+.btn-sm.hl-purple { border-color: var(--purple); color: var(--purple); }
+.btn-sm.hl-green  { border-color: var(--green);  color: var(--green); }
+.btn-sm.hl-cyan   { border-color: var(--accent);  color: var(--accent); }
 
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+/* ── BIBLIOTHÈQUE DE TOURNÉES ── */
+.lib-modal-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,0.9);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+.lib-modal-overlay.visible { opacity: 1; pointer-events: all; }
+.lib-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  width: 100%; max-width: 480px;
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transform: translateY(30px);
+  transition: transform 0.22s;
+}
+.lib-modal-overlay.visible .lib-panel { transform: translateY(0); }
+.lib-header {
+  padding: 16px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.lib-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px; color: var(--accent);
+}
+.lib-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.lib-close:active { background: var(--border); }
+.lib-actions {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.lib-list {
+  overflow-y: auto; flex: 1; padding: 8px 0;
+}
+.lib-empty {
+  padding: 40px 20px; text-align: center;
+  font-size: 11px; color: var(--muted); line-height: 2; letter-spacing: 1px;
+}
+.tour-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(28,33,48,0.5);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.tour-card:active { background: rgba(0,229,255,0.05); }
+.tour-card.active-tour { background: rgba(0,229,255,0.07); border-left: 3px solid var(--accent); }
+.tour-card-preview {
+  width: 58px; height: 44px;
+  border-radius: 8px; overflow: hidden;
+  background: #0a0c14; flex-shrink: 0;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.tour-card-preview canvas { width: 58px; height: 44px; display: block; }
+.tour-card-preview .preview-placeholder {
+  font-size: 18px; color: var(--muted);
+}
+.tour-card-info { flex: 1; min-width: 0; }
+.tour-card-name {
+  font-size: 11px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; font-size: 14px;
+}
+.tour-card-meta { font-size: 8px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+.tour-card-meta span { color: var(--accent); }
+.tour-card-del {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border-radius: 50%; border: 1px solid rgba(255,77,109,0.3);
+  background: transparent; color: var(--accent2);
+  font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.6; transition: opacity 0.15s, background 0.15s;
+}
+.tour-card-del:active { background: rgba(255,77,109,0.15); opacity: 1; }
+
+/* audio segment indicator */
+.seg-indicator {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: rgba(181,122,255,0.07);
+  border: 1px solid rgba(181,122,255,0.2);
+  border-radius: 8px;
+  font-size: 9px; color: var(--purple);
+}
+.seg-indicator.hidden { display: none; }
+
+/* STOPS LIST */
+.stops-content { max-height: 190px; overflow-y: auto; padding: 6px 0; }
+.stop-item {
+  padding: 7px 14px;
+  display: flex; align-items: flex-start; gap: 8px;
+  border-bottom: 1px solid rgba(28,33,48,0.5);
+  animation: fadeIn 0.25s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+.stop-num { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--accent); line-height:1; flex-shrink:0; width:26px; }
+.stop-info { flex:1; min-width:0; }
+.stop-addr { font-size:10px; color:var(--text); line-height:1.4; }
+.stop-meta { font-size:8px; color:var(--muted); margin-top:2px; display:flex; gap:6px; flex-wrap:wrap; }
+.stop-dur { color: var(--yellow); }
+.empty-stops { padding:20px 14px; text-align:center; font-size:10px; color:var(--muted); line-height:2; letter-spacing:1px; }
+
+/* EXPORT */
+.export-content { padding: 12px 14px; display:flex; flex-direction:column; gap:8px; }
+.export-info { font-size:9px; color:var(--muted); line-height:1.8; }
+.export-info strong { color: var(--text); }
+
+/* MARKERS */
+.stop-pulse { width:14px; height:14px; border-radius:50%; background:var(--accent2); border:2px solid #fff; box-shadow:0 0 0 3px rgba(255,77,109,0.3); }
+.pos-marker { width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid #fff; box-shadow:0 0 10px var(--accent), 0 0 20px rgba(0,229,255,0.3); }
+.start-marker { width:14px; height:14px; border-radius:50%; background:var(--green); border:2px solid #fff; box-shadow:0 0 8px var(--green); }
+.end-marker { width:14px; height:14px; border-radius:50%; background:var(--accent2); border:2px solid #fff; box-shadow:0 0 8px var(--accent2); }
+
+/* ── NOTES VOCALES ── */
+.notes-content { max-height: 210px; overflow-y: auto; padding: 6px 0; }
+.note-item {
+  padding: 7px 12px;
+  display: flex; align-items: flex-start; gap: 8px;
+  border-bottom: 1px solid rgba(28,33,48,0.5);
+  animation: fadeIn 0.2s ease;
+}
+.note-item.discarded { opacity: 0.35; }
+.note-item.discarded .note-text { text-decoration: line-through; }
+.note-badge {
+  flex-shrink: 0;
+  font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 5px; border-radius: 4px;
+  background: rgba(0,229,255,0.12); color: var(--accent);
+  border: 1px solid rgba(0,229,255,0.25);
+  white-space: nowrap; margin-top: 1px;
+}
+.note-badge.tour  { background: rgba(0,255,135,0.12); color: var(--green); border-color: rgba(0,255,135,0.25); }
+.note-badge.hors  { background: rgba(255,77,109,0.08); color: var(--accent2); border-color: rgba(255,77,109,0.2); }
+.note-body { flex: 1; min-width: 0; }
+.note-text { font-size: 10px; color: var(--text); line-height: 1.4; word-break: break-word; }
+.note-meta { font-size: 8px; color: var(--muted); margin-top: 2px; }
+.note-toggle {
+  flex-shrink: 0; width: 22px; height: 22px;
+  border-radius: 50%; border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-size: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.note-toggle:active { background: var(--border); }
+.note-interim {
+  padding: 6px 12px;
+  font-size: 9px; color: var(--muted);
+  font-style: italic; letter-spacing: 0.5px;
+  min-height: 24px;
+}
+.note-empty { padding: 20px 14px; text-align: center; font-size: 10px; color: var(--muted); line-height: 2; letter-spacing: 1px; }
+.sr-status {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  font-size: 8px; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.sr-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.sr-dot.on { background: var(--green); box-shadow: 0 0 4px var(--green); animation: blink 1s infinite; }
+.sr-dot.err { background: var(--accent2); }
+
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.visible { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  width: 100%; max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 2px;
+  color: var(--accent);
+}
+.modal-stat-row {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.modal-stat-row strong { color: var(--text); }
+.modal-btn-row { display: flex; gap: 8px; }
+.modal-canvas-wrap { border-radius: 10px; overflow: hidden; background: #07090d; }
+.modal-canvas-wrap canvas { display: block; width: 100%; }
+.progress-bar-wrap {
+  height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--accent); border-radius: 3px;
+  transition: width 0.2s;
+}
+.merge-status { font-size: 9px; color: var(--muted); text-align: center; }
+
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* ── NAV BANNER (mode navigation guidée) ── */
+.nav-banner {
+  position: absolute;
+  top: 80px; left: 16px; right: 16px;
+  z-index: 1001;
+  background: rgba(7,9,13,0.96);
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  padding: 10px 12px 8px;
+  backdrop-filter: blur(14px);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 14px rgba(0,229,255,0.18);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.nav-banner.show { display: flex; }
+.nav-banner.near  { border-color: var(--green);  box-shadow: 0 0 18px rgba(0,255,135,0.35); }
+.nav-banner.at-stop { border-color: var(--yellow); box-shadow: 0 0 18px rgba(255,214,10,0.4); animation: blink 0.6s 3; }
+
+.nav-row1 { display: flex; align-items: center; gap: 8px; }
+.nav-stop-num { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); min-width:44px; line-height:1; }
+.nav-stop-info { flex:1; min-width:0; }
+.nav-stop-addr   { font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:bold; }
+.nav-stop-client { font-size:9px;  color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+.nav-dist { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--yellow); min-width:52px; text-align:right; }
+.nav-banner.near  .nav-dist { color:var(--green); }
+.nav-banner.at-stop .nav-dist { color:var(--yellow); }
+
+.nav-notes { font-size:9px; color:var(--yellow); font-style:italic; padding:2px 0; display:none; }
+.nav-notes.visible { display:block; }
+
+.nav-row2 { display:flex; align-items:center; gap:6px; }
+.nav-next     { flex:1; font-size:8px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-progress { font-size:9px; color:var(--accent); white-space:nowrap; font-family:'Bebas Neue',sans-serif; letter-spacing:1px; }
+
+.nav-btns { display:flex; gap:6px; margin-top:4px; }
+.nav-btn-livrer {
+  flex:2; height:38px; border-radius:10px; border:none; cursor:pointer;
+  background:var(--green); color:#000;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px;
+  transition: transform 0.1s;
+}
+.nav-btn-livrer:active { transform:scale(0.96); }
+.nav-btn-skip {
+  flex:1; height:38px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--border); background:rgba(255,255,255,0.03);
+  color:var(--muted); font-family:'Space Mono',monospace; font-size:9px;
+  transition: background 0.15s;
+}
+.nav-btn-skip:active { background:var(--border); }
+
+/* Marqueur livré (vert plein) */
+.stop-delivered {
+  width:14px; height:14px; border-radius:50%;
+  background:var(--green); border:2px solid #000;
+  box-shadow: 0 0 6px var(--green);
+}
+/* Marqueur cible actuelle (pulsation cyan) */
+.stop-target {
+  width:18px; height:18px; border-radius:50%;
+  background:rgba(0,229,255,0.25); border:2px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: blink 0.9s infinite;
+}
 </style>
 </head>
 <body>
 
-<!-- ══ HOME ══ -->
-<div id="screen-home" class="screen">
-  <div class="home-logo">TournéeGuide</div>
-  <div class="home-sub">GESTION DE TOURNÉE GPS</div>
-  <div class="home-btns">
-    <button class="home-btn rec" onclick="goRecord()">
-      <span class="icon">🔴</span>
-      <div class="desc">Enregistrer une tournée<span>GPS + clients + journaux</span></div>
-    </button>
-    <button class="home-btn nav" onclick="showScreen('routes')">
-      <span class="icon">🗺️</span>
-      <div class="desc">Suivre une tournée<span>Navigation guidée arrêt par arrêt</span></div>
-    </button>
-    <button class="home-btn lib" onclick="showScreen('routes')">
-      <span class="icon">📋</span>
-      <div class="desc">Mes tournées<span>Gérer, exporter, importer</span></div>
-    </button>
+<div id="map"></div>
+<div class="acc-badge" id="acc-badge">GPS ±??m</div>
+<div class="audio-bar" id="audio-bar"><div class="audio-bar-fill" id="audio-fill"></div></div>
+
+<!-- NAV BANNER — Mode navigation guidée -->
+<div class="nav-banner" id="nav-banner">
+  <div class="nav-row1">
+    <div class="nav-stop-num" id="nav-stop-num">#1</div>
+    <div class="nav-stop-info">
+      <div class="nav-stop-addr" id="nav-stop-addr">Chargement…</div>
+      <div class="nav-stop-client" id="nav-stop-client"></div>
+    </div>
+    <div class="nav-dist" id="nav-dist">—</div>
   </div>
-  <div class="home-version">v2.1 — TournéeGuide</div>
+  <div class="nav-notes" id="nav-stop-notes"></div>
+  <div class="nav-row2">
+    <div class="nav-next" id="nav-next"></div>
+    <div class="nav-progress" id="nav-progress">0/0</div>
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn-livrer" onclick="navMarkDelivered()">✓ LIVRÉ</button>
+    <button class="nav-btn-skip" onclick="navSkipStop()">⏭ Passer</button>
+  </div>
 </div>
 
-<!-- ══ RECORD ══ -->
-<div id="screen-record" class="screen hidden">
-  <div id="map-record"></div>
-  <div class="hud-top">
-    <div class="hud-bar">
-      <button class="hud-back" onclick="confirmBack()">←</button>
-      <div class="hud-title">REC</div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val cyan" id="rec-time">00:00</div><div class="hud-lbl">Durée</div></div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val green" id="rec-dist">0 m</div><div class="hud-lbl">Distance</div></div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val yellow" id="rec-stops-hud">0</div><div class="hud-lbl">Arrêts</div></div>
+<div class="stop-toast" id="stop-toast">
+  <div class="toast-dot"></div>
+  <div id="toast-text">Arrêt potentiel…</div>
+</div>
+
+<!-- HUD TOP -->
+<div class="hud-top">
+  <div class="hud-bar">
+    <div class="hud-title">TOURNÉE</div>
+    <div class="rec-dot" id="rec-gps" title="GPS"></div>
+    <div class="rec-dot" id="rec-audio" title="Audio"></div>
+    <div class="hud-divider"></div>
+    <div class="hud-stat">
+      <div class="hud-stat-val cyan" id="hud-time">00:00</div>
+      <div class="hud-stat-lbl">Durée</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-stat">
+      <div class="hud-stat-val green" id="hud-dist">0 m</div>
+      <div class="hud-stat-lbl">Distance</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-stat">
+      <div class="hud-stat-val yellow" id="hud-stops">0</div>
+      <div class="hud-stat-lbl">Arrêts</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-stat">
+      <div class="hud-stat-val purple" id="hud-segs">0</div>
+      <div class="hud-stat-lbl">Seg. audio</div>
     </div>
   </div>
-  <div class="hud-bottom">
-    <div class="bottom-panel">
-      <div class="tabs">
-        <button class="tab active" onclick="switchRecTab('ctrl')">⚙ Contrôles</button>
-        <button class="tab" onclick="switchRecTab('list')">📍 Arrêts</button>
-      </div>
-      <div class="tab-content active" id="rec-tab-ctrl">
-        <div class="ctrl">
-          <!-- Chargement tournée de référence -->
-          <input type="file" id="ref-file-input" accept=".json" style="display:none" onchange="loadRefRoute(event)">
-          <div id="ref-route-bar" style="width:100%;margin-bottom:8px;border-radius:10px;border:1px dashed var(--border);background:rgba(255,255,255,.02);padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="document.getElementById('ref-file-input').click()">
-            <span style="font-size:14px;">📂</span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:9px;color:var(--muted);letter-spacing:1px;">TOURNÉE DE RÉFÉRENCE</div>
-              <div id="ref-route-lbl" style="font-size:10px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Appuyer pour charger le JSON…</div>
-            </div>
-            <div id="ref-geocode-badge" style="display:none;font-size:9px;color:var(--yellow);white-space:nowrap;"></div>
-          </div>
+</div>
 
-          <button class="btn-main idle" id="btn-rec-main" onclick="recMainAction()">
-            <span id="rec-icon">▶</span><span id="rec-label">DÉMARRER</span>
-          </button>
-          <div class="btn-row">
-            <button class="btn-sm yl" id="btn-add-stop" onclick="openStopForm(null)">＋ Arrêt</button>
-            <button class="btn-sm cy" onclick="centerRecMap()">◎ Centrer</button>
-            <button class="btn-sm gn" id="btn-rec-finish" onclick="finishRecording()">✓ Terminer</button>
-          </div>
-          <div class="btn-row" style="margin-top:6px">
-            <button id="btn-auto-stop" onclick="toggleAutoStop()" style="flex:1;height:40px;border-radius:10px;border:2px solid var(--green);background:rgba(0,255,135,.12);color:var(--green);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;">
-              <span>🤖</span><span id="auto-label">AUTO : ON</span>
-            </button>
-            <div style="flex:2;height:40px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);display:flex;align-items:center;padding:0 10px;gap:6px;overflow:hidden;position:relative;">
-              <div id="auto-dwell-fill" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(0,255,135,.20);transition:width .3s linear;border-radius:10px;"></div>
-              <span style="font-size:9px;color:var(--muted);z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;" id="auto-status-lbl">GPS inactif</span>
-            </div>
-          </div>
+<!-- HUD BOTTOM -->
+<div class="hud-bottom">
+  <div class="bottom-panel">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('controls')">⚙ Ctrl</button>
+      <button class="tab" onclick="switchTab('stops')">📍 Arrêts</button>
+      <button class="tab" onclick="switchTab('notes')">🎤 Notes</button>
+      <button class="tab" onclick="switchTab('export')">↓ Export</button>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="tab-content active" id="tab-controls">
+      <div class="ctrl">
+        <button class="btn-main" id="btn-main" onclick="mainAction()">
+          <span id="btn-icon">▶</span>
+          <span id="btn-label">DÉMARRER</span>
+        </button>
+        <div class="seg-indicator hidden" id="seg-indicator">
+          🎙 Segment audio <span id="seg-num">1</span> en cours — <span id="seg-size">0 MB</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-sm hl-yellow" id="btn-poi" disabled onclick="addManualStop()">＋ Arrêt</button>
+          <button class="btn-sm" id="btn-center" onclick="centerMap()">◎ Centrer</button>
+          <button class="btn-sm hl-green" id="btn-finish" disabled onclick="finishTour()">✓ Terminer</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
+          <button class="btn-sm" id="btn-fit" onclick="fitBoundsToRoute()" style="font-size:9px">🗺 Vue globale</button>
+        </div>
+        <input type="file" id="input-json" accept=".json" style="display:none" onchange="onJsonFileSelected(event)">
+      </div>
+    </div>
+
+    <!-- NOTES VOCALES -->
+    <div class="tab-content" id="tab-notes">
+      <div class="sr-status">
+        <div class="sr-dot" id="sr-dot"></div>
+        <span id="sr-status-text">Reconnaissance vocale inactive</span>
+      </div>
+      <div class="note-interim" id="note-interim"></div>
+      <div class="notes-content" id="notes-list">
+        <div class="note-empty">Les notes vocales<br>apparaîtront ici</div>
+      </div>
+    </div>
+
+    <!-- STOPS -->
+    <div class="tab-content" id="tab-stops">
+      <div class="stops-content" id="stops-list">
+        <div class="empty-stops">Les arrêts détectés<br>apparaîtront ici</div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="tab-content" id="tab-export">
+      <div class="export-content">
+        <div class="export-info" id="export-info">Lance la tournée pour générer un rapport.</div>
+        <button class="btn-sm hl-yellow" id="btn-export-txt" disabled onclick="exportTxt()" style="height:44px;font-size:11px">↓ Rapport .txt</button>
+        <button class="btn-sm hl-purple" id="btn-export-audio" disabled onclick="exportAudio()" style="height:44px;font-size:11px">↓ Fichiers audio</button>
+        <button class="btn-sm" id="btn-export-gpx" disabled onclick="exportGpx()" style="height:44px;font-size:11px">↓ Tracé .gpx</button>
+        <button class="btn-sm hl-green" id="btn-export-json" disabled onclick="exportJson()" style="height:44px;font-size:11px">💾 Sauvegarder JSON</button>
+        <div class="btn-row">
+          <button class="btn-sm hl-cyan" id="btn-capture-image" disabled onclick="openFinalModal()" style="height:44px;font-size:10px">📷 Image du parcours</button>
+          <button class="btn-sm hl-purple" id="btn-merge-audio" disabled onclick="mergeAudioSegments()" style="height:44px;font-size:10px">🔗 Fusionner audio</button>
         </div>
       </div>
-      <div class="tab-content" id="rec-tab-list">
-        <div class="stops-scroll" id="rec-stops-list">
-          <div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
 
-<!-- ══ STOP FORM MODAL (fixed, couvre tout) ══ -->
-<!-- FIX D : clic sur le fond sombre ferme le modal -->
-<div id="stop-form-modal" class="hidden" onclick="closeStopForm()">
-  <div class="form-panel" onclick="event.stopPropagation()">
-    <div class="form-title" id="form-title">NOUVEL ARRÊT</div>
-    <div class="form-row">
-      <div class="form-group" style="flex:3">
-        <div class="form-label">Nom du client *</div>
-        <input class="form-input" id="f-client" type="text" placeholder="Ex: M. Dupont" autocomplete="off" autocorrect="off">
-      </div>
-      <button class="voice-btn" id="btn-voice-client" onclick="startVoice('f-client')" title="Dicter">🎙</button>
+<!-- ── MODAL BIBLIOTHÈQUE DE TOURNÉES ── -->
+<div class="lib-modal-overlay" id="modal-library">
+  <div class="lib-panel">
+    <div class="lib-header">
+      <div class="lib-title">📚 MES TOURNÉES</div>
+      <button class="lib-close" onclick="closeLibrary()">✕</button>
     </div>
-    <div class="form-row">
-      <div class="form-group" style="flex:2">
-        <div class="form-label">Adresse</div>
-        <input class="form-input" id="f-address" type="text" placeholder="15 rue Victor Hugo" autocomplete="off">
-      </div>
-      <div class="form-group" style="flex:1">
-        <div class="form-label">Étage / Porte</div>
-        <input class="form-input" id="f-floor" type="text" placeholder="2e G">
-      </div>
+    <div class="lib-actions">
+      <button class="btn-sm hl-cyan" style="height:36px;font-size:9px" onclick="triggerLoadJson()">📂 Importer JSON</button>
+      <button class="btn-sm hl-green" style="height:36px;font-size:9px" id="btn-lib-save" disabled onclick="saveCurrentToLibrary()">💾 Sauvegarder actuelle</button>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <div class="form-label">Code / Interphone</div>
-        <input class="form-input" id="f-code" type="text" placeholder="1234A" inputmode="numeric">
-      </div>
-      <div class="form-group" style="flex:2">
-        <div class="form-label">Note</div>
-        <input class="form-input" id="f-note" type="text" placeholder="Sonner 2 fois…">
-      </div>
-    </div>
-    <div class="products-section">
-      <div class="form-label" style="margin-bottom:6px">Journaux / Publications</div>
-      <div class="voice-status" id="voice-status"></div>
-      <div class="products-chips" id="products-chips"></div>
-      <div class="custom-product-row">
-        <input class="form-input" id="f-custom-product" type="text" placeholder="Autre publication…" style="flex:3" autocomplete="off">
-        <input class="qty-input" id="f-custom-qty" type="number" min="1" max="99" value="1" inputmode="numeric">
-        <button class="btn-sm cy" style="flex:none;width:44px;height:40px;padding:0" onclick="addCustomProduct()">＋</button>
-      </div>
-    </div>
-    <div class="form-btns">
-      <button class="form-btn cancel" onclick="closeStopForm()">Annuler</button>
-      <button class="form-btn save" onclick="saveStopForm()">✓ Sauvegarder</button>
+    <div class="lib-list" id="lib-list">
+      <div class="lib-empty">Aucune tournée sauvegardée.<br>Importe un fichier JSON ou<br>termine une tournée pour la sauvegarder.</div>
     </div>
   </div>
 </div>
 
-<!-- ══ REVIEW ══ -->
-<div id="screen-review" class="screen hidden">
-  <div class="review-header">
-    <button class="hud-back" onclick="showScreen('record')" style="font-size:16px">←</button>
-    <div class="review-title">RÉVISION</div>
-    <div style="font-size:10px;color:var(--muted)" id="review-summary"></div>
-  </div>
-  <div class="review-list" id="review-list"></div>
-  <div class="review-footer">
-    <input class="route-name-input" id="route-name-input" type="text" placeholder="Nom de la tournée (ex: Marseille Centre — Matin)">
-    <div class="btn-row">
-      <button class="btn-sm rd" onclick="discardRecording()">✕ Annuler</button>
-      <button class="btn-sm gn" style="flex:2" onclick="saveRoute()">💾 Sauvegarder</button>
+<!-- ── MODAL CHOIX MODE TOURNÉE ── -->
+<div class="modal-overlay" id="modal-nav-choice">
+  <div class="modal-box" style="max-width:300px">
+    <div class="modal-title" style="font-size:16px">🗺 CHARGER LA TOURNÉE</div>
+    <div id="nav-choice-info" style="font-size:10px;color:var(--muted);text-align:center;padding:6px 0 14px;line-height:1.6"></div>
+    <div class="modal-btn-row">
+      <button class="btn-sm hl-cyan" onclick="chooseVisualize()" style="height:56px;flex-direction:column;gap:2px">
+        <span style="font-size:18px">👁</span>
+        <span style="font-size:10px">Visualiser</span>
+        <span style="font-size:8px;color:var(--muted)">Voir le parcours</span>
+      </button>
+      <button class="btn-sm hl-green" onclick="chooseNavigate()" style="height:56px;flex-direction:column;gap:2px">
+        <span style="font-size:18px">🧭</span>
+        <span style="font-size:10px">Naviguer</span>
+        <span style="font-size:8px;color:var(--muted)">Suivre les arrêts</span>
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ══ NAVIGATE ══ -->
-<div id="screen-navigate" class="screen hidden">
-  <div id="map-navigate"></div>
-  <div class="nav-progress"><div class="nav-progress-fill" id="nav-progress-fill"></div></div>
-  <div class="hud-top">
-    <div class="hud-bar">
-      <button class="hud-back" onclick="exitNavigation()">←</button>
-      <div class="hud-title" id="nav-route-name" style="font-size:13px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">TOURNÉE</div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val green" id="nav-delivered">0</div><div class="hud-lbl">Livrés</div></div>
-      <div class="hud-divider"></div>
-      <div class="hud-stat"><div class="hud-val yellow" id="nav-remaining">0</div><div class="hud-lbl">Restants</div></div>
-      <div class="hud-divider"></div>
-      <button class="btn-sm cy" style="flex:none;height:30px;font-size:9px;width:54px;padding:0 6px;" onclick="toggleVoice()">🔊<span id="voice-toggle-lbl">ON</span></button>
-      <button id="btn-nav-pause" onclick="toggleNavPause()" style="flex:none;height:30px;font-size:9px;width:76px;padding:0 6px;border-radius:8px;border:1px solid var(--yellow);background:rgba(255,214,10,.08);color:var(--yellow);font-family:'Space Mono',monospace;cursor:pointer;">⏸ PAUSE</button>
+<!-- ── MODAL FINALISATION ── -->
+<div class="modal-overlay" id="modal-final">
+  <div class="modal-box">
+    <div class="modal-title">🏁 TOURNÉE TERMINÉE</div>
+    <div class="modal-stat-row">
+      <span>Date</span><strong id="mstat-date">—</strong>
     </div>
-  </div>
-  <div class="nav-dist-badge" id="nav-dist-badge" style="display:none">— m</div>
-  <div class="nav-stop-panel" id="nav-stop-panel">
-    <div class="nav-card">
-      <div class="nav-counter" id="nav-counter">ARRÊT 1 / 1</div>
-      <div class="nav-client" id="nav-client">—</div>
-      <div class="nav-address" id="nav-address">—</div>
-      <div class="nav-products-list" id="nav-products-list"></div>
-      <div class="nav-details" id="nav-details"></div>
-      <div class="nav-notes" id="nav-notes" style="display:none"></div>
-      <div class="nav-actions">
-        <button class="btn-skip" onclick="skipStop()">⟳ Passer</button>
-        <button class="btn-delivered" onclick="markDelivered()">✓ LIVRÉ</button>
-      </div>
+    <div class="modal-stat-row">
+      <span>Durée totale</span><strong id="mstat-dur">—</strong>
     </div>
+    <div class="modal-stat-row">
+      <span>Distance</span><strong id="mstat-dist">—</strong>
+    </div>
+    <div class="modal-stat-row">
+      <span>Arrêts</span><strong id="mstat-stops">—</strong>
+    </div>
+    <div class="modal-stat-row">
+      <span>Segments audio</span><strong id="mstat-audio">—</strong>
+    </div>
+    <div class="modal-canvas-wrap" style="position:relative">
+      <canvas id="route-canvas" width="1200" height="780" style="width:100%;display:block;border-radius:8px"></canvas>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-sm hl-cyan" onclick="downloadRouteImage()" style="height:44px;font-size:10px">↓ Image PNG</button>
+      <button class="btn-sm hl-green" onclick="exportJson()" style="height:44px;font-size:10px">💾 JSON</button>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-sm hl-purple" id="btn-modal-merge" onclick="mergeAudioSegments()" style="height:44px;font-size:10px">🔗 Fusionner audio</button>
+      <button class="btn-sm" onclick="closeModal()" style="height:44px;font-size:10px">✕ Fermer</button>
+    </div>
+    <div class="progress-bar-wrap" id="merge-progress-wrap" style="display:none">
+      <div class="progress-bar-fill" id="merge-progress-fill" style="width:0%"></div>
+    </div>
+    <div class="merge-status" id="merge-status"></div>
   </div>
-  <div class="nav-done-screen hidden" id="nav-done-screen">
-    <div class="done-icon">🎉</div>
-    <div class="done-title">TOURNÉE TERMINÉE</div>
-    <div class="done-stats" id="done-stats"></div>
-    <button class="btn-sm gn" style="height:50px;width:100%;font-size:12px;max-width:300px" onclick="exitNavigation()">← Retour à l'accueil</button>
-  </div>
-</div>
-
-<!-- ══ ROUTES LIBRARY ══ -->
-<div id="screen-routes" class="screen hidden">
-  <div class="routes-header">
-    <button class="hud-back" onclick="showScreen('home')" style="font-size:16px">←</button>
-    <div class="routes-title">MES TOURNÉES</div>
-  </div>
-  <div id="routes-list-container"></div>
-  <div class="routes-footer">
-    <button class="btn-sm cy" style="flex:1;height:44px;font-size:10px;" onclick="importRoute()">↑ Importer JSON</button>
-  </div>
-  <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImport(event)">
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-// CONSTANTS
-// ══════════════════════════════════════════════════════════════
-const DEFAULT_PAPERS = ['Le Monde','Le Figaro','La Provence','L\'Équipe','Libération',
-  'Le Parisien','Nice-Matin','La Croix','Les Échos','20 Minutes'];
+// ════════════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════════════
+const STOP_SPEED_THRESHOLD = 0.3;  // m/s (~1 km/h)
+const STOP_MIN_DURATION    = 5;    // secondes
+const STOP_MERGE_RADIUS    = 8;    // mètres
+const SEGMENT_DURATION_MS  = 10 * 60 * 1000; // 10 min par segment audio
 
-// ══════════════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════════════
-let mapRec = null, mapNav = null;
-let recPolyline = null, recPosMarker = null, recStopMarkers = [];
-let navDonePolyline = null, navTodoPolyline = null, navPosMarker = null, navStopMarkers = [];
-let navLastPos = null, navArrivalTimer = null;
+// ════════════════════════════════════════════════════════════════
+// STATE GPS
+// ════════════════════════════════════════════════════════════════
+let isRunning = false;
+let watchId   = null;
+let positions = [];
+let stops     = [];
+let currentStopCandidate = null;
+let lastPos   = null;
+let totalDistance = 0;
+let sessionStart  = null;
+let clockInterval = null;
+let map, polyline, posMarker, startMarker, endMarker;
+let stopMarkers = [];
 
-// Recording
-let recRunning = false, recWatchId = null, recInterval = null;
-let recPositions = [], recStops = [], recStart = null, recDist = 0, recLastPos = null;
+// ════════════════════════════════════════════════════════════════
+// STATE AUDIO
+// ════════════════════════════════════════════════════════════════
+let mediaRecorder  = null;
+let audioChunks    = [];
+let audioBlobs     = [];   // { blob, mimeType, startTs }
+let audioStream    = null;
+let segmentTimer   = null;
+let analyserNode   = null;
+let dataArray      = null;
+let vizInterval    = null;
+let audioCtx       = null;
+let currentSegStartTs = null;
+let currentSegIdx     = 0;
 
-// Stop form
-let editingStopIdx = null;
-let formProducts = {};
+// ════════════════════════════════════════════════════════════════
+// MAP INIT
+// ════════════════════════════════════════════════════════════════
+function initMap() {
+  map = L.map('map', { zoomControl:false, attributionControl:false, tap:false })
+         .setView([43.2965, 5.3698], 15);
 
-// Voice
-let speechRec = null, speechRecActive = false;
-let voiceEnabled = true;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
 
-// Auto-stop detection (record mode)
-let recAutoEnabled  = true;         // toggle ON/OFF
-let recDwellPos     = null;         // position de référence pour le dwell
-let recDwellTimer   = null;         // timer 4s avant enregistrement auto
-let recDwellStart   = null;         // timestamp de début du dwell (pour la barre de progression)
-let recAutoCooldown = false;        // cooldown 25s après un arrêt auto
-let recTrafficLights = [];          // feux rouges chargés depuis Overpass
-let recRefStops     = [];           // arrêts de référence chargés depuis JSON (avec coords géocodées)
-let recRefGeocoding = false;        // géocodage en cours
-let recRefMarkers   = [];           // marqueurs des arrêts de référence sur la carte
+  polyline = L.polyline([], {
+    color:'#00e5ff', weight:4, opacity:0.85, lineJoin:'round', lineCap:'round'
+  }).addTo(map);
 
-// Navigation
-let navRoute = null, navStopIdx = 0, navWatchId = null, navStart = null;
-let navPaused = false;
+  const tooltipStyle = document.createElement('style');
+  tooltipStyle.textContent = `.stop-tooltip{background:rgba(7,9,13,.9);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:4px;box-shadow:none;white-space:nowrap}.stop-tooltip::before{display:none}`;
+  document.head.appendChild(tooltipStyle);
+}
 
-// Audio recording
-let audioStream = null, audioRecorder = null, audioChunks = [], audioChunkNum = 0, audioChunkTimer = null;
+// ════════════════════════════════════════════════════════════════
+// MAIN ACTION
+// ════════════════════════════════════════════════════════════════
+function mainAction() {
+  if (navMode && !isRunning) { startNavTour(); return; }
+  if (!isRunning) startTour();
+  else stopTour();
+}
 
-// ══════════════════════════════════════════════════════════════
-// SCREEN MANAGEMENT
-// FIX #1: invalidateSize après affichage de la carte nav
-// ══════════════════════════════════════════════════════════════
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('screen-' + name).classList.remove('hidden');
-  if (name === 'record' && !mapRec) initRecMap();
-  if (name === 'navigate') {
-    if (!mapNav) initNavMap();
-    // FIX #1 : forcer le recalcul de la taille Leaflet après affichage
-    setTimeout(() => { if (mapNav) mapNav.invalidateSize(); }, 100);
+// ─── Mode navigation : démarrage GPS uniquement (pas de micro) ───
+async function startNavTour() {
+  document.getElementById('btn-main').style.pointerEvents = 'none';
+
+  if (!navigator.geolocation) {
+    document.getElementById('btn-main').style.pointerEvents = '';
+    alert('GPS non disponible.'); return;
   }
-  if (name === 'routes') renderRoutesList();
-}
-
-// ══════════════════════════════════════════════════════════════
-// RECORD MAP
-// ══════════════════════════════════════════════════════════════
-function initRecMap() {
-  mapRec = L.map('map-record', { zoomControl:false, attributionControl:false, tap:false })
-            .setView([43.2965, 5.3698], 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapRec);
-  recPolyline = L.polyline([], { color:'#ff4d6d', weight:4, opacity:.85 }).addTo(mapRec);
-  injectTooltipStyle();
-}
-
-function centerRecMap() {
-  if (recLastPos && mapRec) mapRec.setView([recLastPos.lat, recLastPos.lng], 17, { animate:true });
-}
-
-// ══════════════════════════════════════════════════════════════
-// RECORDING
-// FIX #2: goRecord() appelle stopRec() avant de réinitialiser
-// FIX #3: recStopMarkers toujours réinitialisé
-// ══════════════════════════════════════════════════════════════
-function goRecord() {
-  // FIX #2 : arrêter proprement si un enregistrement est en cours
-  stopRec();
-  recStops = []; recPositions = []; recDist = 0; recLastPos = null; recStart = null;
-  recDwellPos = null; recAutoCooldown = false;
-  if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
-  recDwellStart = null; recTrafficLights = [];
-  // Ne pas réinitialiser recRefStops/recRefMarkers ici — on veut conserver le fichier chargé entre sessions
-  // FIX #3 : réinitialiser le tableau des marqueurs dans tous les cas
-  if (mapRec) {
-    recPolyline.setLatLngs([]);
-    if (recPosMarker) { recPosMarker.remove(); recPosMarker = null; }
-    recStopMarkers.forEach(m => m.remove());
-  }
-  recStopMarkers = [];
-  // Remettre les boutons à l'état initial
-  document.getElementById('btn-rec-main').className = 'btn-main idle';
-  document.getElementById('rec-icon').textContent = '▶';
-  document.getElementById('rec-label').textContent = 'DÉMARRER';
-  // ＋ Arrêt et Terminer toujours accessibles, même sans GPS actif
-  document.getElementById('rec-time').textContent = '00:00';
-  document.getElementById('rec-dist').textContent = '0 m';
-  document.getElementById('rec-stops-hud').textContent = '0';
-  renderRecStopsList();
-  showScreen('record');
-  if (mapRec) setTimeout(() => mapRec.invalidateSize(), 100);
-}
-
-function recMainAction() {
-  if (!recRunning) startRec(); else stopRec();
-}
-
-async function startRec() {
-  if (!navigator.geolocation) { alert('GPS non disponible sur cet appareil.'); return; }
-  // FIX A : empêcher le double-tap pendant que GPS initialise
-  if (recRunning) return;
-  const btn = document.getElementById('btn-rec-main');
-  btn.disabled = true;
-  btn.style.opacity = '.5';
   try {
     await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:30000, maximumAge:0 })
     );
-  } catch(e) { btn.disabled = false; btn.style.opacity = ''; alert('GPS refusé. Active la localisation dans les réglages.'); return; }
-  btn.disabled = false;
-  btn.style.opacity = '';
-  recRunning = true;
-  recStart = Date.now();
-  btn.className = 'btn-main';
-  document.getElementById('rec-icon').textContent = '■';
-  document.getElementById('rec-label').textContent = 'ARRÊTER';
-  // boutons déjà actifs depuis le début
-  recInterval = setInterval(updateRecClock, 1000);
-  recWatchId = navigator.geolocation.watchPosition(onRecPos, onRecGpsError,
-    { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
-  requestWakeLock();
-  // Démarrer l'enregistrement audio (conversation formateur)
-  startAudioRec();
-  // Charger les feux rouges de la zone en arrière-plan
-  fetchTrafficLights();
-}
-
-function stopRec() {
-  if (!recRunning) return;
-  recRunning = false;
-  clearInterval(recInterval); recInterval = null;
-  if (recWatchId !== null) { navigator.geolocation.clearWatch(recWatchId); recWatchId = null; }
-  if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
-  if (_dwellAnimFrame) { clearTimeout(_dwellAnimFrame); _dwellAnimFrame = null; }
-  recDwellPos = null; recAutoCooldown = false; recDwellStart = null;
-  releaseWakeLock();
-  setAutoStatusLbl('GPS arrêté');
-  document.getElementById('auto-dwell-fill').style.width = '0%';
-  stopAudioRec();
-}
-
-function finishRecording() {
-  stopRec();
-  recStops.forEach(s => { if (!s.address || s.address === '') s.address = `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`; });
-  renderReviewList();
-  const d = new Date();
-  document.getElementById('route-name-input').value = `Tournée du ${d.toLocaleDateString('fr-FR')}`;
-  document.getElementById('review-summary').textContent = `${recStops.length} arrêt(s) — ${formatDist(recDist)}`;
-  showScreen('review');
-}
-
-function onRecPos(pos) {
-  // FIX B : null-check mapRec (sécurité si GPS répond après fermeture)
-  if (!mapRec || !recRunning) return;
-  const { latitude:lat, longitude:lng, accuracy } = pos.coords;
-  if (accuracy > 60) return;
-  const point = { lat, lng, ts: pos.timestamp };
-  recPositions.push(point);
-  if (recLastPos) recDist += haversine(recLastPos.lat, recLastPos.lng, lat, lng);
-  recLastPos = point;
-  if (recPolyline) recPolyline.addLatLng([lat, lng]);
-  if (!recPosMarker) {
-    recPosMarker = L.marker([lat, lng], { icon: makeIcon('pos-marker', 14) }).addTo(mapRec);
-  } else { recPosMarker.setLatLng([lat, lng]); }
-  if (recPositions.length <= 2) mapRec.setView([lat, lng], 17);
-  else mapRec.panTo([lat, lng], { animate:true, duration:.5 });
-  document.getElementById('rec-dist').textContent = formatDist(recDist);
-  autoDetectStop(lat, lng);
-}
-
-function onRecGpsError(err) {
-  console.warn('GPS error:', err.code, err.message);
-}
-
-function updateRecClock() {
-  if (!recStart) return;
-  document.getElementById('rec-time').textContent = formatElapsed(Date.now() - recStart);
-}
-
-// ══════════════════════════════════════════════════════════════
-// STOP FORM
-// FIX #4: borderColor utilise la valeur hex, pas une var CSS
-// FIX #5: editReviewStop n'a plus besoin de changer d'écran
-// FIX #6: chips avec data-name pour éviter les problèmes d'apostrophes
-// ══════════════════════════════════════════════════════════════
-function openStopForm(idx) {
-  editingStopIdx = idx;
-  formProducts = {};
-  document.getElementById('form-title').textContent = idx === null ? 'NOUVEL ARRÊT' : `MODIFIER ARRÊT #${idx + 1}`;
-  // Réinitialiser le champ client
-  const clientInput = document.getElementById('f-client');
-  clientInput.value = '';
-  clientInput.classList.remove('error');
-
-  if (idx !== null) {
-    // Mode édition : pré-remplir avec les données existantes
-    const s = recStops[idx];
-    clientInput.value = s.clientName || '';
-    document.getElementById('f-address').value = s.address || '';
-    document.getElementById('f-floor').value = s.floor || '';
-    document.getElementById('f-code').value = s.doorCode || '';
-    document.getElementById('f-note').value = s.notes || '';
-    (s.products || []).forEach(p => { formProducts[p.name] = p.qty; });
-  } else {
-    // Nouveau arrêt : vider tous les champs
-    document.getElementById('f-address').value = '';
-    document.getElementById('f-floor').value = '';
-    document.getElementById('f-code').value = '';
-    document.getElementById('f-note').value = '';
-    // Géocodage inverse : utiliser la dernière position connue
-    // ou en demander une nouvelle si GPS pas encore actif
-    if (recLastPos) {
-      reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
-        const el = document.getElementById('f-address');
-        if (el && el.value === '') el.value = addr;
-      });
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        recLastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: pos.timestamp };
-        reverseGeocode(recLastPos.lat, recLastPos.lng, addr => {
-          const el = document.getElementById('f-address');
-          if (el && el.value === '') el.value = addr;
-        });
-        // Centrer la carte sur la position
-        if (mapRec) mapRec.setView([recLastPos.lat, recLastPos.lng], 17);
-      }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
-    }
+  } catch(e) {
+    document.getElementById('btn-main').style.pointerEvents = '';
+    alert('GPS refusé. Active la localisation dans les réglages.'); return;
   }
-  renderChips();
-  document.getElementById('voice-status').textContent = '';
-  document.getElementById('stop-form-modal').classList.remove('hidden');
-  setTimeout(() => clientInput.focus(), 250);
+
+  document.getElementById('btn-main').style.pointerEvents = '';
+  isRunning = true;
+  sessionStart = Date.now();
+  positions = []; totalDistance = 0; lastPos = null;
+
+  // ⚠️ Ne pas effacer les stopMarkers nav — ils sont déjà sur la carte
+  if (polyline) polyline.setLatLngs([]);
+  if (posMarker)   { posMarker.remove();   posMarker   = null; }
+
+  document.getElementById('hud-stops').textContent = '0';
+  document.getElementById('hud-dist').textContent  = '0 m';
+  document.getElementById('hud-time').textContent  = '00:00';
+
+  // Masquer les boutons d'export inutiles en mode nav
+  document.getElementById('btn-export-txt').disabled    = true;
+  document.getElementById('btn-export-gpx').disabled    = true;
+  document.getElementById('btn-export-audio').disabled  = true;
+  document.getElementById('btn-export-json').disabled   = true;
+  document.getElementById('btn-capture-image').disabled = true;
+  document.getElementById('btn-merge-audio').disabled   = true;
+
+  updateMainBtn('running', '■', 'ARRÊTER');
+  document.getElementById('rec-gps').className   = 'rec-dot gps';
+  document.getElementById('btn-finish').disabled = false;
+  document.getElementById('acc-badge').classList.add('show');
+
+  clockInterval = setInterval(updateClock, 1000);
+  await requestWakeLock();
+
+  watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {
+    enableHighAccuracy:true, timeout:30000, maximumAge:0
+  });
+
+  // Afficher la bannière de navigation
+  document.getElementById('nav-banner').classList.add('show');
+  updateNavBanner();
+
+  showToast('🧭 Navigation démarrée !');
 }
 
-function closeStopForm() {
-  stopVoice();
-  document.getElementById('stop-form-modal').classList.add('hidden');
-  editingStopIdx = null;
-  formProducts = {};
-}
+async function startTour() {
+  document.getElementById('btn-main').style.pointerEvents = 'none';
 
-function saveStopForm() {
-  const clientInput = document.getElementById('f-client');
-  const clientName = clientInput.value.trim();
-  if (!clientName) {
-    // FIX #4 : utiliser la classe CSS au lieu de style inline avec var()
-    clientInput.classList.add('error');
-    clientInput.focus();
+  if (!navigator.geolocation) {
+    document.getElementById('btn-main').style.pointerEvents = '';
+    alert('GPS non disponible.'); return;
+  }
+  try {
+    await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:30000, maximumAge:0 })
+    );
+  } catch(e) {
+    document.getElementById('btn-main').style.pointerEvents = '';
+    alert('GPS refusé. Active la localisation dans les réglages.'); return;
+  }
+
+  try {
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+  } catch(e) {
+    document.getElementById('btn-main').style.pointerEvents = '';
+    alert('Microphone refusé. Active le micro dans les réglages.'); return;
+  }
+
+  document.getElementById('btn-main').style.pointerEvents = '';
+
+  isRunning = true;
+  sessionStart = Date.now();
+  positions = []; stops = []; audioBlobs = [];
+  totalDistance = 0; currentStopCandidate = null; lastPos = null;
+  currentSegStartTs = null; currentSegIdx = 0;
+
+  if (polyline) polyline.setLatLngs([]);
+  if (posMarker)   { posMarker.remove();   posMarker   = null; }
+  if (startMarker) { startMarker.remove(); startMarker = null; }
+  if (endMarker)   { endMarker.remove();   endMarker   = null; }
+  stopMarkers.forEach(e => e.marker.remove());
+  stopMarkers = [];
+
+  document.getElementById('hud-stops').textContent = '0';
+  document.getElementById('hud-dist').textContent  = '0 m';
+  document.getElementById('hud-time').textContent  = '00:00';
+  document.getElementById('hud-segs').textContent  = '0';
+  document.getElementById('btn-export-txt').disabled    = true;
+  document.getElementById('btn-export-gpx').disabled    = true;
+  document.getElementById('btn-export-audio').disabled  = true;
+  document.getElementById('btn-export-json').disabled   = true;
+  document.getElementById('btn-capture-image').disabled = true;
+  document.getElementById('btn-merge-audio').disabled   = true;
+
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    const src = audioCtx.createMediaStreamSource(audioStream);
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 32;
+    dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+    src.connect(analyserNode);
+  } catch(e) {
+    isRunning = false;
+    if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    alert('Impossible de démarrer le contexte audio. Réessaie.');
     return;
   }
-  clientInput.classList.remove('error');
 
-  const stop = {
-    id: editingStopIdx !== null ? recStops[editingStopIdx].id : recStops.length + 1,
-    clientName,
-    address: document.getElementById('f-address').value.trim(),
-    floor: document.getElementById('f-floor').value.trim(),
-    doorCode: document.getElementById('f-code').value.trim(),
-    notes: document.getElementById('f-note').value.trim(),
-    products: Object.entries(formProducts).filter(([, q]) => q > 0).map(([name, qty]) => ({ name, qty })),
-    lat: null,
-    lng: null,
-    delivered: false
-  };
+  updateMainBtn('running', '■', 'ARRÊTER');
+  document.getElementById('rec-gps').className   = 'rec-dot gps';
+  document.getElementById('rec-audio').className = 'rec-dot audio';
+  document.getElementById('btn-poi').disabled    = false;
+  document.getElementById('btn-finish').disabled = false;
+  document.getElementById('acc-badge').classList.add('show');
+  document.getElementById('audio-bar').classList.add('show');
+  document.getElementById('seg-indicator').classList.remove('hidden');
 
-  if (editingStopIdx !== null) {
-    // Conserver les coordonnées GPS du stop existant
-    stop.lat = recStops[editingStopIdx].lat;
-    stop.lng = recStops[editingStopIdx].lng;
-    recStops[editingStopIdx] = stop;
-    // Mettre à jour le tooltip du marqueur sur la carte
-    if (recStopMarkers[editingStopIdx]) {
-      recStopMarkers[editingStopIdx].setTooltipContent(`#${stop.id} ${stop.clientName}`);
-    }
-    // FIX #5 : mettre à jour la liste de révision si elle est visible
-    renderReviewList();
-  } else {
-    // Utiliser la position GPS courante
-    stop.lat = recLastPos ? recLastPos.lat : 43.2965;
-    stop.lng = recLastPos ? recLastPos.lng : 5.3698;
-    recStops.push(stop);
-    addRecStopMarker(stop);
+  // Réinitialiser les notes vocales
+  noteSegments = []; noteIdCounter = 0;
+  refreshNotesList();
+
+  startAudioSegment();
+  segmentTimer = setInterval(rotateAudioSegment, SEGMENT_DURATION_MS);
+
+  // Démarrer la reconnaissance vocale
+  startSpeechRecognition();
+
+  vizInterval = setInterval(() => {
+    if (!analyserNode) return;
+    analyserNode.getByteFrequencyData(dataArray);
+    const avg = dataArray.reduce((s, v) => s + v, 0) / dataArray.length;
+    document.getElementById('audio-fill').style.width = Math.min(100, avg * 2.5) + '%';
+  }, 100);
+
+  clockInterval = setInterval(updateClock, 1000);
+  await requestWakeLock();
+
+  watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {
+    enableHighAccuracy:true, timeout:30000, maximumAge:0
+  });
+
+  // Mode navigation : activer la bannière maintenant que le GPS tourne
+  if (navMode) {
+    document.getElementById('nav-banner').classList.add('show');
+    updateNavBanner();
   }
-
-  document.getElementById('rec-stops-hud').textContent = recStops.length;
-  renderRecStopsList();
-  closeStopForm();
-  vibrate([60, 30, 60]);
 }
 
-function renderChips() {
-  const el = document.getElementById('products-chips');
-  const customKeys = Object.keys(formProducts).filter(k => !DEFAULT_PAPERS.includes(k));
-  const allPapers = [...DEFAULT_PAPERS, ...customKeys];
-  // FIX #6 : utiliser data-name pour éviter les problèmes d'apostrophes dans onclick
-  el.innerHTML = allPapers.map(name => {
-    const qty = formProducts[name] || 0;
-    const safeNameAttr = name.replace(/"/g, '&quot;');
-    return `<div class="chip${qty > 0 ? ' selected' : ''}" data-name="${safeNameAttr}" onclick="toggleChipEl(this)">
-      ${escHtml(name)}${qty > 0 ? `<span class="chip-qty">${qty}</span>` : ''}
+function stopTour() {
+  if (!isRunning) return;
+  isRunning = false;
+
+  clearInterval(clockInterval);
+  clearInterval(segmentTimer);
+  clearInterval(vizInterval);
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    const origOnStop = mediaRecorder.onstop;
+    const streamToStop = audioStream;
+    const ctxToClose   = audioCtx;
+    audioStream = null;
+    audioCtx    = null;
+    mediaRecorder.onstop = (e) => {
+      if (origOnStop) origOnStop(e);
+      if (streamToStop) streamToStop.getTracks().forEach(t => t.stop());
+      if (ctxToClose)   ctxToClose.close();
+      document.getElementById('btn-export-audio').disabled = false;
+      document.getElementById('btn-merge-audio').disabled  = audioBlobs.length < 2;
+      updateExportInfo();
+      // ── Auto-sauvegarde en bibliothèque ──
+      addToLibrary({
+        version:'2.0', date: new Date().toISOString(),
+        name: `Tournée du ${new Date().toLocaleDateString('fr-FR')}`,
+        sessionStart, totalDistance, positions, stops,
+        audioSegments: audioBlobs.map((b,i) => ({ index:i, mimeType:b.mimeType, startTs:b.startTs, size:b.blob.size })),
+        notesVocales: { notesTournee: noteSegments.filter(n=>n.kept) }
+      });
+      // ── Marqueur de fin + fitBounds ──
+      placeEndMarker();
+      setTimeout(fitBoundsToRoute, 400);
+    };
+    mediaRecorder.stop();
+  } else {
+    if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
+    if (audioCtx)    { audioCtx.close(); audioCtx = null; }
+    document.getElementById('btn-export-audio').disabled = audioBlobs.length === 0;
+    document.getElementById('btn-merge-audio').disabled  = audioBlobs.length < 2;
+    updateExportInfo();
+    placeEndMarker();
+    setTimeout(fitBoundsToRoute, 400);
+  }
+
+  stops.forEach(s => {
+    if (s.manual && !s.endTs) { s.endTs = Date.now(); s.duration = Math.round((s.endTs - s.startTs)/1000); }
+  });
+
+  if (currentStopCandidate) {
+    const dur = (Date.now() - currentStopCandidate.startTs) / 1000;
+    if (dur >= STOP_MIN_DURATION) validateStop(currentStopCandidate, dur);
+    currentStopCandidate = null;
+  }
+
+  updateMainBtn('', '▶', 'DÉMARRER');
+  document.getElementById('rec-gps').className   = 'rec-dot';
+  document.getElementById('rec-audio').className = 'rec-dot';
+  document.getElementById('btn-poi').disabled    = true;
+  document.getElementById('btn-finish').disabled = true;
+  document.getElementById('audio-bar').classList.remove('show');
+  document.getElementById('audio-fill').style.width = '0%';
+  document.getElementById('seg-indicator').classList.add('hidden');
+
+  document.getElementById('btn-export-txt').disabled    = false;
+  document.getElementById('btn-export-gpx').disabled    = false;
+  document.getElementById('btn-export-json').disabled   = false;
+  document.getElementById('btn-capture-image').disabled = positions.length < 2;
+  document.getElementById('btn-lib-save').disabled      = false;
+
+  // Arrêter la reconnaissance vocale
+  stopSpeechRecognition();
+
+  // Fin mode navigation
+  if (navMode) stopNavMode();
+
+  releaseWakeLock();
+  analyserNode = null;
+  dataArray    = null;
+}
+
+function finishTour() {
+  stopTour();
+  document.getElementById('export-info').innerHTML = '⏳ Finalisation de l\'enregistrement…';
+  switchTab('export');
+  // Ouvrir le modal après que onstop ait finalisé (~600ms)
+  setTimeout(openFinalModal, 700);
+}
+
+// ════════════════════════════════════════════════════════════════
+// MARQUEURS DÉBUT / FIN
+// ════════════════════════════════════════════════════════════════
+function placeStartMarker(lat, lng) {
+  if (startMarker) return; // déjà placé
+  const icon = L.divIcon({ className:'', html:'<div class="start-marker"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+  startMarker = L.marker([lat, lng], { icon, zIndexOffset:900 }).addTo(map);
+  startMarker.bindTooltip('Départ', { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip' });
+}
+
+function placeEndMarker() {
+  if (!lastPos) return;
+  if (endMarker) { endMarker.remove(); endMarker = null; }
+  const icon = L.divIcon({ className:'', html:'<div class="end-marker"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+  endMarker = L.marker([lastPos.lat, lastPos.lng], { icon, zIndexOffset:900 }).addTo(map);
+  endMarker.bindTooltip('Arrivée', { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip' });
+  if (posMarker) { posMarker.remove(); posMarker = null; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// FIT BOUNDS — recadre la carte sur tout le tracé
+// ════════════════════════════════════════════════════════════════
+function fitBoundsToRoute() {
+  const pts = positions.length > 0
+    ? positions.map(p => [p.lat, p.lng])
+    : stops.map(s => [s.lat, s.lng]);
+  if (pts.length === 0) return;
+  if (pts.length === 1) { map.setView(pts[0], 16, { animate:true }); return; }
+  const bounds = L.latLngBounds(pts);
+  map.fitBounds(bounds, { padding:[40, 40], animate:true, maxZoom:17 });
+}
+
+// ════════════════════════════════════════════════════════════════
+// AUDIO SEGMENTS
+// ════════════════════════════════════════════════════════════════
+function getSupportedMime() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+function startAudioSegment() {
+  const localChunks  = [];
+  const localStartTs = Date.now();
+  audioChunks       = localChunks;
+  currentSegStartTs = localStartTs;
+  currentSegIdx     = audioBlobs.length;
+  const opts = getSupportedMime() ? { mimeType: getSupportedMime() } : {};
+  try { mediaRecorder = new MediaRecorder(audioStream, opts); }
+  catch(e) { mediaRecorder = new MediaRecorder(audioStream); }
+
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) localChunks.push(e.data); };
+  mediaRecorder.start(1000);
+  const localMime = mediaRecorder.mimeType || 'audio/webm';
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(localChunks, { type: localMime });
+    audioBlobs.push({ blob, mimeType: localMime, startTs: localStartTs });
+    updateSegUI();
+  };
+  updateSegUI();
+}
+
+function stopAudioSegment() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+function rotateAudioSegment() {
+  stopAudioSegment();
+  setTimeout(() => { if (isRunning) startAudioSegment(); }, 300);
+}
+
+function updateSegUI() {
+  const n = audioBlobs.length + 1;
+  document.getElementById('seg-num').textContent  = n;
+  document.getElementById('hud-segs').textContent = audioBlobs.length;
+  const totalMb = audioBlobs.reduce((s, b) => s + b.blob.size, 0) / 1024 / 1024;
+  document.getElementById('seg-size').textContent = totalMb.toFixed(1) + ' MB';
+}
+
+// ════════════════════════════════════════════════════════════════
+// GPS
+// ════════════════════════════════════════════════════════════════
+function onPosition(pos) {
+  const { latitude:lat, longitude:lng, speed, accuracy } = pos.coords;
+  const ts  = pos.timestamp;
+  const spd = speed !== null ? speed : 0;
+
+  document.getElementById('acc-badge').textContent = `GPS ±${Math.round(accuracy)}m${accuracy > 40 ? ' ⚠' : ''}`;
+
+  if (accuracy > 40) return;
+
+  const point = { lat, lng, ts, speed:spd, accuracy };
+  positions.push(point);
+  if (lastPos) totalDistance += haversine(lastPos.lat, lastPos.lng, lat, lng);
+  lastPos = point;
+
+  polyline.addLatLng([lat, lng]);
+
+  // Marqueur de départ (premier point)
+  if (positions.length === 1) placeStartMarker(lat, lng);
+
+  if (!posMarker) {
+    const icon = L.divIcon({ className:'', html:'<div class="pos-marker"></div>', iconSize:[12,12], iconAnchor:[6,6] });
+    posMarker = L.marker([lat, lng], { icon, zIndexOffset:1000 }).addTo(map);
+  } else {
+    posMarker.setLatLng([lat, lng]);
+  }
+
+  if (positions.length <= 3 || map.getZoom() < 15) map.setView([lat, lng], 17);
+  else map.panTo([lat, lng], { animate:true, duration:0.5 });
+
+  document.getElementById('hud-dist').textContent = formatDist(totalDistance);
+  detectStop(point);
+
+  // Mode navigation : mettre à jour la distance / bannière
+  if (navMode) updateNavBanner();
+}
+
+function onGpsError(err) {
+  console.warn('GPS:', err.message);
+  if (isRunning) {
+    if (err.code === 1) showToast('⚠️ GPS refusé — vérifie les permissions');
+    else if (err.code === 2) showToast('⚠️ Signal GPS perdu…');
+    else if (err.code === 3) showToast('⚠️ GPS timeout — repositionnement…');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// STOP DETECTION
+// ════════════════════════════════════════════════════════════════
+function detectStop(point) {
+  const spd = point.speed;
+
+  if (spd <= STOP_SPEED_THRESHOLD) {
+    if (!currentStopCandidate) {
+      currentStopCandidate = { startTs:point.ts, lat:point.lat, lng:point.lng, positions:[point],
+        audioSegIdx: currentSegIdx, audioSegStartTs: currentSegStartTs };
+      showToast(`Arrêt… ${STOP_MIN_DURATION}s pour valider`);
+    } else {
+      currentStopCandidate.positions.push(point);
+      const dur = (point.ts - currentStopCandidate.startTs) / 1000;
+      const rem = Math.max(0, STOP_MIN_DURATION - dur);
+      if (rem > 0) {
+        showToast(`Arrêt en cours… ${Math.round(rem)}s`);
+      } else if (!currentStopCandidate.validated) {
+        currentStopCandidate.validated = true;
+        validateStop(currentStopCandidate, dur);
+        hideToast();
+      }
+    }
+  } else {
+    if (currentStopCandidate) {
+      if (!currentStopCandidate.validated) {
+        currentStopCandidate = null; hideToast();
+      } else {
+        const dur = (point.ts - currentStopCandidate.startTs) / 1000;
+        const stopObj = currentStopCandidate.stopRef;
+        if (stopObj && !stopObj.endTs) {
+          stopObj.endTs = point.ts;
+          stopObj.duration = Math.round(dur);
+          refreshStopsList();
+        }
+        currentStopCandidate = null;
+      }
+    }
+  }
+}
+
+function validateStop(candidate, duration) {
+  const pts = candidate.positions || [candidate];
+  const lat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
+  const lng = pts.reduce((s, p) => s + p.lng, 0) / pts.length;
+
+  for (const s of stops) {
+    if (haversine(s.lat, s.lng, lat, lng) < STOP_MERGE_RADIUS) {
+      candidate.mergedStop = s; return;
+    }
+  }
+
+  const segIdx     = candidate.audioSegIdx !== undefined ? candidate.audioSegIdx : currentSegIdx;
+  const segStartTs = candidate.audioSegStartTs || currentSegStartTs;
+  const offsetSec  = segStartTs ? Math.max(0, Math.round((candidate.startTs - segStartTs) / 1000)) : null;
+
+  const stop = {
+    id: stops.length + 1,
+    lat, lng,
+    startTs: candidate.startTs,
+    endTs: null,
+    duration: Math.round(duration),
+    address: null,
+    manual: false,
+    audioSegIdx: segIdx,
+    audioOffsetSec: offsetSec
+  };
+
+  stops.push(stop);
+  candidate.stopRef = stop;
+  addStopMarker(stop);
+  reverseGeocode(stop);
+  refreshStopsList();
+  document.getElementById('hud-stops').textContent = stops.length;
+  vibrate([50, 30, 50]);
+}
+
+function addManualStop() {
+  if (!lastPos) return;
+  const offsetSec = currentSegStartTs ? Math.max(0, Math.round((Date.now() - currentSegStartTs) / 1000)) : null;
+  const stop = {
+    id: stops.length + 1,
+    lat: lastPos.lat, lng: lastPos.lng,
+    startTs: Date.now(), endTs: null,
+    duration: 0, address: null, manual: true,
+    audioSegIdx: currentSegIdx, audioOffsetSec: offsetSec
+  };
+  stops.push(stop);
+  addStopMarker(stop);
+  reverseGeocode(stop);
+  refreshStopsList();
+  document.getElementById('hud-stops').textContent = stops.length;
+  vibrate([80]);
+}
+
+// ════════════════════════════════════════════════════════════════
+// MAP MARKERS
+// ════════════════════════════════════════════════════════════════
+function addStopMarker(stop) {
+  const icon = L.divIcon({ className:'', html:'<div class="stop-pulse"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+  const m = L.marker([stop.lat, stop.lng], { icon }).addTo(map);
+  m.bindTooltip(`#${stop.id}`, { permanent:true, direction:'top', offset:[0,-8], className:'stop-tooltip' });
+  stopMarkers.push({ stop, marker:m });
+}
+
+function updateStopMarkerLabel(stop) {
+  const e = stopMarkers.find(e => e.stop.id === stop.id);
+  if (e && stop.address) e.marker.setTooltipContent(`#${stop.id} ${stop.address.substring(0,18)}`);
+}
+
+// ════════════════════════════════════════════════════════════════
+// REVERSE GEOCODE
+// ════════════════════════════════════════════════════════════════
+async function reverseGeocode(stop) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${stop.lat}&lon=${stop.lng}&format=json&addressdetails=1`;
+    const signal = AbortSignal.timeout ? AbortSignal.timeout(10000) : (() => { const c = new AbortController(); setTimeout(() => c.abort(), 10000); return c.signal; })();
+    const r = await fetch(url, { signal, headers:{ 'Accept-Language':'fr', 'User-Agent':'TourneeGPS/1.0' } });
+    const d = await r.json();
+    const a = d.address || {};
+    stop.address = [a.house_number, a.road].filter(Boolean).join(' ')
+      || a.suburb || a.neighbourhood || d.display_name?.split(',')[0] || null;
+    refreshStopsList();
+    updateStopMarkerLabel(stop);
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+// STOPS LIST
+// ════════════════════════════════════════════════════════════════
+function refreshStopsList() {
+  const list = document.getElementById('stops-list');
+
+  // ── Mode Navigation : afficher les arrêts du template ──
+  if (navMode && navStops.length > 0) {
+    const current = navCurrentStop();
+    list.innerHTML = navStops.map(s => {
+      const isDone    = navDelivered.has(s.id);
+      const isCurrent = current && s.id === current.id;
+      const distStr   = (lastPos && s.lat) ? formatDist(haversine(lastPos.lat, lastPos.lng, s.lat, s.lng)) : '';
+      const bg        = isDone ? 'rgba(0,255,135,0.06)' : isCurrent ? 'rgba(0,229,255,0.08)' : '';
+      const borderL   = isDone ? '3px solid var(--green)' : isCurrent ? '3px solid var(--accent)' : '3px solid transparent';
+      return `
+      <div class="stop-item" style="background:${bg};border-left:${borderL};cursor:pointer"
+           onclick="${isDone ? '' : `navGoToStop(${s.id})`}">
+        <div class="stop-num" style="color:${isDone ? 'var(--green)' : isCurrent ? 'var(--accent)' : 'var(--muted)'}">
+          ${isDone ? '✓' : String(s.id).padStart(2,'0')}
+        </div>
+        <div class="stop-info">
+          <div class="stop-addr">${escapeHtml(s.address || `Arrêt ${s.id}`)}</div>
+          <div class="stop-meta">
+            <span style="color:var(--muted)">${escapeHtml(s.clientName || '')}</span>
+            ${distStr ? `<span style="color:var(--yellow)">${distStr}</span>` : ''}
+            ${s.notes ? `<span style="color:var(--yellow)">⚠</span>` : ''}
+            ${isCurrent ? `<span style="color:var(--accent)">← EN COURS</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // ── Mode Normal : afficher les arrêts enregistrés ──
+  if (stops.length === 0) {
+    list.innerHTML = '<div class="empty-stops">Les arrêts détectés<br>apparaîtront ici</div>';
+    return;
+  }
+  list.innerHTML = stops.slice().reverse().map(s => {
+    const durStr = s.duration >= 60
+      ? `${Math.floor(s.duration/60)}min ${s.duration%60}s`
+      : (s.endTs || s.duration > 0) ? `${s.duration}s` : '…s';
+    const audioRef = s.audioOffsetSec !== null
+      ? `🎙 seg.${s.audioSegIdx+1} @${formatSec(s.audioOffsetSec)}`
+      : '';
+    return `
+    <div class="stop-item">
+      <div class="stop-num">${String(s.id).padStart(2,'0')}</div>
+      <div class="stop-info">
+        <div class="stop-addr">${s.address || `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`}</div>
+        <div class="stop-meta">
+          <span class="stop-dur">${durStr}</span>
+          <span>${new Date(s.startTs).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
+          ${s.manual ? '<span style="color:var(--accent)">manuel</span>' : ''}
+          ${audioRef ? `<span style="color:var(--purple)">${audioRef}</span>` : ''}
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
 
-// FIX #6 : utiliser dataset.name pour récupérer le nom
-function toggleChipEl(el) {
-  const name = el.dataset.name;
-  if (!formProducts[name]) formProducts[name] = 1;
-  else if (formProducts[name] < 9) formProducts[name]++;
-  else delete formProducts[name];
-  renderChips();
+// ════════════════════════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════════════════════════
+function updateExportInfo() {
+  const totalAudioMb = audioBlobs.reduce((s, b) => s + b.blob.size, 0) / 1024 / 1024;
+  const dur = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
+  document.getElementById('export-info').innerHTML =
+    `<strong>Session terminée</strong><br>` +
+    `Durée : <strong>${dur}</strong><br>` +
+    `Distance : <strong>${formatDist(totalDistance)}</strong><br>` +
+    `Arrêts : <strong>${stops.length}</strong><br>` +
+    `Audio : <strong>${audioBlobs.length} segment(s)</strong> — ${totalAudioMb.toFixed(1)} MB`;
 }
 
-function addCustomProduct() {
-  const nameEl = document.getElementById('f-custom-product');
-  const name = nameEl.value.trim();
-  const qty = parseInt(document.getElementById('f-custom-qty').value) || 1;
-  if (!name) { nameEl.focus(); return; }
-  formProducts[name] = qty;
-  nameEl.value = '';
-  document.getElementById('f-custom-qty').value = '1';
-  renderChips();
+function exportTxt() {
+  const date = new Date().toLocaleDateString('fr-FR');
+  const dur  = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
+  let txt = `TOURNÉE DE DISTRIBUTION — ${date}\n${'═'.repeat(48)}\n\n`;
+  txt += `Durée       : ${dur}\n`;
+  txt += `Distance    : ${formatDist(totalDistance)}\n`;
+  txt += `Points GPS  : ${positions.length}\n`;
+  txt += `Arrêts      : ${stops.length}\n`;
+  txt += `Segments audio : ${audioBlobs.length}\n\n`;
+  txt += `${'─'.repeat(48)}\nLISTE DES ARRÊTS\n${'─'.repeat(48)}\n\n`;
+
+  stops.forEach((s, i) => {
+    const time = new Date(s.startTs).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const dur  = s.duration >= 60 ? `${Math.floor(s.duration/60)}min ${s.duration%60}s` : `${s.duration}s`;
+    txt += `Arrêt #${String(i+1).padStart(2,'0')}  ${time}\n`;
+    txt += `  Adresse  : ${s.address || 'N/A'}\n`;
+    txt += `  GPS      : ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}\n`;
+    txt += `  Durée    : ${dur}\n`;
+    txt += `  Type     : ${s.manual ? 'Manuel' : 'Auto'}\n`;
+    if (s.audioOffsetSec !== null)
+      txt += `  Audio    : Segment ${s.audioSegIdx+1}, à ${formatSec(s.audioOffsetSec)} dans le fichier\n`;
+    txt += '\n';
+  });
+
+  dlText(`tournee_${new Date().toISOString().slice(0,10)}.txt`, txt, 'text/plain');
 }
 
-function addRecStopMarker(stop) {
-  if (!mapRec) return;
-  const m = L.marker([stop.lat, stop.lng], { icon: makeIcon('stop-dot', 14) }).addTo(mapRec);
-  m.bindTooltip(`#${stop.id} ${stop.clientName}`,
-    { permanent:true, direction:'top', offset:[0, -10], className:'stop-tooltip-lbl' });
-  recStopMarkers.push(m);
+function exportAudio() {
+  if (audioBlobs.length === 0) { alert('Aucun audio enregistré.'); return; }
+  const btn = document.getElementById('btn-export-audio');
+  btn.disabled = true;
+  audioBlobs.forEach((b, i) => {
+    setTimeout(() => {
+      const ext = b.mimeType.includes('mp4') ? 'm4a' : b.mimeType.includes('ogg') ? 'ogg' : 'webm';
+      const url = URL.createObjectURL(b.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tournee_audio_seg${String(i+1).padStart(2,'0')}.${ext}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (i === audioBlobs.length - 1) setTimeout(() => { btn.disabled = false; }, 1200);
+    }, i * 800);
+  });
 }
 
-function renderRecStopsList() {
-  const el = document.getElementById('rec-stops-list');
-  if (recStops.length === 0) {
-    el.innerHTML = '<div class="empty-stops">Les arrêts ajoutés<br>apparaîtront ici</div>';
-    return;
-  }
-  el.innerHTML = recStops.map((s, i) => `
-    <div class="stop-item" onclick="openStopForm(${i})">
-      <div class="stop-num" style="color:${s.autoDetected ? 'var(--green)' : 'var(--accent)'}">
-        ${String(s.id).padStart(2, '0')}
-        ${s.autoDetected ? '<div style="font-size:7px;letter-spacing:0;color:var(--green);margin-top:1px;">AUTO</div>' : ''}
-      </div>
-      <div class="stop-body">
-        <div class="stop-client">${escHtml(s.clientName)}${s.autoDetected && (!s.clientName || /^Arrêt\s*\d/i.test(s.clientName)) ? ' <span style="font-size:8px;color:var(--muted);font-weight:400;">— à compléter</span>' : ''}</div>
-        <div class="stop-addr">${s.address ? escHtml(s.address) : '<span style="color:var(--muted);font-style:italic">geocodage…</span>'}</div>
-        <div class="stop-products">${s.products.length > 0 ? s.products.map(p => `${escHtml(p.name)} ×${p.qty}`).join(' · ') : 'Aucun journal'}</div>
-      </div>
-    </div>`).join('');
+function exportGpx() {
+  const date = new Date().toISOString();
+  let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TourneeGPS" xmlns="http://www.topografix.com/GPX/1/1">\n  <metadata><time>${date}</time></metadata>\n  <trk><name>Tournée ${new Date().toLocaleDateString('fr-FR')}</name><trkseg>\n`;
+  positions.forEach(p => {
+    gpx += `    <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lng.toFixed(7)}"><time>${new Date(p.ts).toISOString()}</time></trkpt>\n`;
+  });
+  gpx += `  </trkseg></trk>\n`;
+  stops.forEach(s => {
+    gpx += `  <wpt lat="${s.lat.toFixed(7)}" lon="${s.lng.toFixed(7)}"><name>${escapeXml('Arrêt #' + s.id)}</name><desc>${escapeXml((s.address || '') + ' — ' + s.duration + 's')}</desc><time>${new Date(s.startTs).toISOString()}</time></wpt>\n`;
+  });
+  gpx += `</gpx>`;
+  dlText(`tournee_${new Date().toISOString().slice(0,10)}.gpx`, gpx, 'application/gpx+xml');
 }
 
-// ══════════════════════════════════════════════════════════════
-// REVIEW
-// FIX #5 : editReviewStop n'a plus besoin de changer d'écran
-// ══════════════════════════════════════════════════════════════
-function renderReviewList() {
-  const el = document.getElementById('review-list');
-  if (!el) return;
-  if (recStops.length === 0) {
-    el.innerHTML = '<div class="empty-stops">Aucun arrêt enregistré.<br>Retourne en arrière pour en ajouter.</div>';
-    return;
-  }
-  el.innerHTML = recStops.map((s, i) => `
-    <div class="review-item" onclick="openStopForm(${i})">
-      <div class="review-num">${String(s.id).padStart(2, '0')}</div>
-      <div class="review-body">
-        <div class="review-client">${escHtml(s.clientName)}</div>
-        <div class="review-addr">${escHtml(s.address || '—')}</div>
-        <div class="review-products">${s.products.length > 0 ? s.products.map(p => `${escHtml(p.name)} ×${p.qty}`).join(' · ') : '<span style="color:var(--muted)">Aucun journal</span>'}</div>
-        <div class="review-meta">${s.floor ? '🏢 ' + escHtml(s.floor) : ''}${s.doorCode ? ' · 🔑 ' + escHtml(s.doorCode) : ''}${s.notes ? ' · ' + escHtml(s.notes) : ''}</div>
-        <div class="review-edit-hint">Tap pour modifier ›</div>
-      </div>
-    </div>`).join('');
-}
+function exportJson() {
+  // Notes gardées (liées à la tournée) + regroupées par arrêt
+  const notesParArret = {};
+  noteSegments.filter(n => n.kept).forEach(n => {
+    const key = n.stopId !== null ? String(n.stopId) : 'general';
+    if (!notesParArret[key]) notesParArret[key] = [];
+    notesParArret[key].push({ text: n.text, ts: n.ts, stopAddr: n.stopAddr });
+  });
 
-function saveRoute() {
-  const name = document.getElementById('route-name-input').value.trim()
-    || `Tournée ${new Date().toLocaleDateString('fr-FR')}`;
-  if (recStops.length === 0) { alert('Aucun arrêt à sauvegarder !'); return; }
-  const route = {
-    id: 'route_' + Date.now(),
-    name,
+  const data = {
+    version: '2.0',
     date: new Date().toISOString(),
-    stops: recStops,
-    waypoints: recPositions,
-    distance: recDist
-  };
-  const routes = getRoutes();
-  routes.unshift(route);
-  localStorage.setItem('tournee_routes', JSON.stringify(routes));
-  alert(`✅ "${name}" sauvegardée avec ${recStops.length} arrêt(s) !`);
-  showScreen('home');
-}
-
-function discardRecording() {
-  if (confirm('Annuler et perdre tous les arrêts enregistrés ?')) {
-    stopRec(); // arrête aussi l'audio
-    showScreen('home');
-  }
-}
-
-function confirmBack() {
-  if (recStops.length > 0 || recRunning) {
-    if (confirm('Revenir à l\'accueil ? Les données non sauvegardées seront perdues.')) {
-      stopRec();
-      showScreen('home');
+    name: `Tournée du ${new Date().toLocaleDateString('fr-FR')}`,
+    sessionStart,
+    totalDistance,
+    positions,
+    stops,
+    audioSegments: audioBlobs.map((b, i) => ({
+      index: i, mimeType: b.mimeType, startTs: b.startTs, size: b.blob.size
+    })),
+    notesVocales: {
+      toutesLesNotes: noteSegments,          // intégralité pour référence
+      notesTournee: noteSegments.filter(n => n.kept),  // filtrées tournée
+      parArret: notesParArret                // regroupées par arrêt
     }
-  } else {
-    stopRec();
-    showScreen('home');
-  }
+  };
+  dlText(`tournee_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(data, null, 2), 'application/json');
 }
 
-// ══════════════════════════════════════════════════════════════
-// ROUTES LIBRARY
-// ══════════════════════════════════════════════════════════════
-function getRoutes() {
-  try { return JSON.parse(localStorage.getItem('tournee_routes') || '[]'); }
-  catch(e) { return []; }
-}
-
-function renderRoutesList() {
-  const routes = getRoutes();
-  const container = document.getElementById('routes-list-container');
-  if (routes.length === 0) {
-    container.innerHTML = '<div class="routes-empty">📋<br>Aucune tournée sauvegardée.<br>Enregistre ta première tournée<br>pour la retrouver ici.</div>';
-    return;
-  }
-  container.innerHTML = routes.map((r, i) => `
-    <div class="route-card">
-      <div class="route-card-name">${escHtml(r.name)}</div>
-      <div class="route-card-meta">${new Date(r.date).toLocaleDateString('fr-FR')} · ${r.stops.length} arrêt(s) · ${formatDist(r.distance || 0)}</div>
-      <div class="route-card-actions">
-        <button class="route-btn nav-btn" onclick="startNavigation(${i})">🗺️ Naviguer</button>
-        <button class="route-btn" onclick="exportRoute(${i})">↓ JSON</button>
-        <button class="route-btn del" onclick="deleteRoute(${i})">✕</button>
-      </div>
-    </div>`).join('');
-}
-
-function deleteRoute(idx) {
-  const routes = getRoutes();
-  if (!confirm(`Supprimer "${routes[idx].name}" ?`)) return;
-  routes.splice(idx, 1);
-  localStorage.setItem('tournee_routes', JSON.stringify(routes));
-  renderRoutesList();
-}
-
-function exportRoute(idx) {
-  const route = getRoutes()[idx];
-  const url = URL.createObjectURL(new Blob([JSON.stringify(route, null, 2)], { type:'application/json' }));
+function dlText(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
   const a = document.createElement('a');
-  a.href = url;
-  a.download = route.name.replace(/[^a-z0-9]/gi, '_') + '.json';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
 }
 
-function importRoute() { document.getElementById('import-file-input').click(); }
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
 
-function handleImport(e) {
-  const file = e.target.files[0]; if (!file) return;
+// ════════════════════════════════════════════════════════════════
+// CHARGER UNE TOURNÉE (JSON)
+// ════════════════════════════════════════════════════════════════
+function triggerLoadJson() {
+  document.getElementById('input-json').click();
+}
+
+function onJsonFileSelected(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = e => {
     try {
-      const route = JSON.parse(ev.target.result);
-      if (!route.stops || !Array.isArray(route.stops) || !route.name) {
-        alert('Fichier JSON invalide ou format incorrect.'); return;
-      }
-      route.id = 'route_' + Date.now();
-      const routes = getRoutes();
-      routes.unshift(route);
-      localStorage.setItem('tournee_routes', JSON.stringify(routes));
-      renderRoutesList();
-      alert(`✅ "${route.name}" importée avec succès (${route.stops.length} arrêts) !`);
-    } catch(err) { alert('Erreur de lecture du fichier JSON.'); }
+      const data = JSON.parse(e.target.result);
+      loadTourData(data);
+    } catch(err) {
+      alert('Fichier JSON invalide.');
+    }
   };
   reader.readAsText(file);
-  e.target.value = '';
+  evt.target.value = '';
 }
 
-// ══════════════════════════════════════════════════════════════
-// NAVIGATION MAP
-// ══════════════════════════════════════════════════════════════
-function initNavMap() {
-  mapNav = L.map('map-navigate', { zoomControl:false, attributionControl:false, tap:false })
-            .setView([43.2965, 5.3698], 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapNav);
-  navDonePolyline = L.polyline([], { color:'#00cc66', weight:6, opacity:.9 }).addTo(mapNav);
-  navTodoPolyline = L.polyline([], { color:'#00e5ff', weight:4, opacity:.65, dashArray:'10,6' }).addTo(mapNav);
-  injectTooltipStyle();
-}
+function loadTourData(data) {
+  // Réinitialiser la carte
+  if (polyline) polyline.setLatLngs([]);
+  if (posMarker)   { posMarker.remove();   posMarker   = null; }
+  if (startMarker) { startMarker.remove(); startMarker = null; }
+  if (endMarker)   { endMarker.remove();   endMarker   = null; }
+  stopMarkers.forEach(m => m.marker.remove());
+  stopMarkers = [];
 
-// ══════════════════════════════════════════════════════════════
-// NAVIGATION LOGIC
-// FIX #7: startNavigation arrête l'éventuel watch GPS précédent
-// FIX #8: null check dans onNavPos
-// ══════════════════════════════════════════════════════════════
-function startNavigation(routeIdx) {
-  const routes = getRoutes();
-  if (!routes[routeIdx]) { alert('Tournée introuvable.'); return; }
+  // ── Format v2 (tournee-complete) ──
+  if (data.version === '2.0' && data.positions) {
+    positions    = data.positions || [];
+    stops        = data.stops || [];
+    totalDistance = data.totalDistance || 0;
+    sessionStart  = data.sessionStart || null;
 
-  // FIX #7 : arrêter le watch GPS précédent si navigation en cours
-  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
-
-  navRoute = JSON.parse(JSON.stringify(routes[routeIdx])); // deep copy
-  navRoute.stops.forEach(s => { s.delivered = false; delete s._announced; delete s.deliveredAt; });
-  navStopIdx = 0;
-  navStart = Date.now();
-  navPaused = false;
-
-  // Réinitialiser le bouton pause
-  const pauseBtn = document.getElementById('btn-nav-pause');
-  if (pauseBtn) { pauseBtn.textContent = '⏸ PAUSE'; pauseBtn.style.color='var(--yellow)'; pauseBtn.style.borderColor='var(--yellow)'; pauseBtn.style.background='rgba(255,214,10,.08)'; pauseBtn.disabled=false; }
-
-  // Démarrer l'enregistrement audio en arrière-plan
-  startAudioRec();
-
-  showScreen('navigate'); // initialise mapNav + invalidateSize via setTimeout
-
-  setTimeout(() => {
-    setupNavMap();
-    updateNavUI();
-    // Démarrer GPS
-    if (navigator.geolocation) {
-      navWatchId = navigator.geolocation.watchPosition(onNavPos,
-        err => console.warn('GPS nav:', err.message),
-        { enableHighAccuracy:true, timeout:30000, maximumAge:0 });
+    positions.forEach(p => polyline.addLatLng([p.lat, p.lng]));
+    if (positions.length > 0) {
+      const fp = positions[0], lp = positions[positions.length-1];
+      placeStartMarker(fp.lat, fp.lng);
+      lastPos = lp;
+      placeEndMarker();
     }
-    // FIX E : vérifier que la navigation est encore active avant d'annoncer
-    setTimeout(() => {
-      if (!navRoute) return;
-      const s0 = navRoute.stops[0];
-      if (s0) announceStop(s0);
-      geocodeAllStops(); // géocode tout le parcours en arrière-plan
-    }, 600);
-    requestWakeLock();
-  }, 150); // laisser le temps à Leaflet de s'initialiser
-}
 
-function setupNavMap() {
-  if (!mapNav) return;
-  // Effacer anciens marqueurs (tableau indexé sur les stops)
-  navStopMarkers.forEach(m => m && m.remove());
-  navStopMarkers = new Array(navRoute.stops.length).fill(null);
-  if (navPosMarker) { navPosMarker.remove(); navPosMarker = null; }
+  // ── Format v1 (ancien format stops-only) ──
+  } else if (data.stops || data.id) {
+    const rawStops = data.stops || [];
+    positions = [];
+    totalDistance = 0;
+    sessionStart = data.date ? new Date(data.date).getTime() : null;
 
-  // Ajouter les marqueurs pour les stops qui ont déjà des coordonnées
-  navRoute.stops.forEach((s, i) => { if (s.lat && s.lng) addNavMarker(i); });
+    // Construire stops compatibles
+    stops = rawStops.map((s, i) => ({
+      id: s.id || i + 1,
+      lat: s.lat, lng: s.lng,
+      startTs: sessionStart || Date.now(),
+      endTs: null, duration: 0,
+      address: s.address || null,
+      manual: false,
+      audioSegIdx: 0, audioOffsetSec: null
+    }));
 
-  // Tracer le parcours coloré
-  updateNavPolylines();
-
-  // Centrer sur le premier arrêt connu
-  const first = navRoute.stops.find(s => s.lat && s.lng);
-  if (first) mapNav.setView([first.lat, first.lng], 15);
-
-  // UI
-  document.getElementById('nav-route-name').textContent = navRoute.name.toUpperCase();
-  document.getElementById('nav-done-screen').classList.add('hidden');
-  document.getElementById('nav-stop-panel').style.display = '';
-  document.getElementById('nav-dist-badge').style.display = '';
-}
-
-// Ajouter un marqueur pour le stop i (si coordonnées disponibles)
-function addNavMarker(i) {
-  if (!mapNav || navStopMarkers[i]) return;
-  const s = navRoute.stops[i];
-  if (!s || !s.lat || !s.lng) return;
-  const cls  = s.delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
-  const size = (i === navStopIdx && !s.delivered) ? 18 : 14;
-  const m = L.marker([s.lat, s.lng], { icon: makeIcon(cls, size) }).addTo(mapNav);
-  m.bindTooltip(`#${s.id} ${s.clientName}`,
-    { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip-lbl' });
-  navStopMarkers[i] = m;
-}
-
-// Géocoder TOUS les arrêts en arrière-plan et construire le tracé au fil de l'eau
-async function geocodeAllStops() {
-  if (!navRoute) return;
-  const n = navRoute.stops.length;
-  // Commencer par l'arrêt courant, puis les suivants, puis les précédents
-  const order = [];
-  for (let i = navStopIdx; i < n; i++) order.push(i);
-  for (let i = 0; i < navStopIdx; i++) order.push(i);
-
-  for (const i of order) {
-    if (!navRoute) return; // navigation terminée entre-temps
-    const s = navRoute.stops[i];
-    if (s.lat && s.lng) { addNavMarker(i); continue; } // déjà géocodé
-    if (!s.address) continue;
-    try {
-      const q = encodeURIComponent(s.address);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
-      const data = await res.json();
-      if (data && data[0]) {
-        s.lat = parseFloat(data[0].lat);
-        s.lng = parseFloat(data[0].lon);
-        addNavMarker(i);
-        updateNavPolylines();
-        // Centrer sur l'arrêt courant dès qu'il est géocodé
-        if (i === navStopIdx && mapNav) mapNav.setView([s.lat, s.lng], 16, { animate:true });
+    // Tracer une ligne entre les arrêts (approximation du parcours)
+    if (stops.length > 1) {
+      polyline.setLatLngs(stops.map(s => [s.lat, s.lng]));
+      // Calcul distance approximative
+      for (let i = 1; i < stops.length; i++) {
+        totalDistance += haversine(stops[i-1].lat, stops[i-1].lng, stops[i].lat, stops[i].lng);
       }
-    } catch(e) { console.warn('Géocodage stop', i, e); }
-    await new Promise(r => setTimeout(r, 1100)); // max 1 req/s Nominatim
+      const fs = stops[0], ls = stops[stops.length-1];
+      lastPos = ls;
+      placeStartMarker(fs.lat, fs.lng);
+      placeEndMarker();
+    }
   }
+
+  // Afficher les marqueurs d'arrêts
+  stops.forEach(s => addStopMarker(s));
+  refreshStopsList();
+
+  // Mettre à jour le HUD
+  document.getElementById('hud-stops').textContent = stops.length;
+  document.getElementById('hud-dist').textContent  = formatDist(totalDistance);
+  if (sessionStart) {
+    const elapsed = (stops[stops.length-1]?.startTs || sessionStart) - sessionStart;
+    document.getElementById('hud-time').textContent = formatElapsed(elapsed);
+  }
+
+  // Activer les exports
+  document.getElementById('btn-export-txt').disabled    = false;
+  document.getElementById('btn-export-gpx').disabled    = false;
+  document.getElementById('btn-export-json').disabled   = false;
+  document.getElementById('btn-capture-image').disabled = false;
+
+  const name = data.name || 'Tournée chargée';
+  document.getElementById('export-info').innerHTML =
+    `<strong>${name}</strong><br>` +
+    `Distance : <strong>${formatDist(totalDistance)}</strong><br>` +
+    `Arrêts : <strong>${stops.length}</strong><br>` +
+    `Points GPS : <strong>${positions.length}</strong>`;
+
+  switchTab('export');
+  setTimeout(fitBoundsToRoute, 400);
+
+  // Ajouter automatiquement à la bibliothèque
+  addToLibrary({ ...data, _libId: data._libId || ('lib_' + Date.now()) });
+
+  showToast(`✅ ${name} — ${stops.length} arrêts chargés`);
 }
 
-function updateNavUI() {
-  if (!navRoute) return;
-  const stops = navRoute.stops;
-  const delivered = stops.filter(s => s.delivered).length;
-  const remaining = stops.length - delivered;
-  document.getElementById('nav-delivered').textContent = delivered;
-  document.getElementById('nav-remaining').textContent = remaining;
-  document.getElementById('nav-progress-fill').style.width = (delivered / stops.length * 100) + '%';
+// ════════════════════════════════════════════════════════════════
+// IMAGE DU PARCOURS — avec vraies tuiles OSM (dark mode)
+// ════════════════════════════════════════════════════════════════
+const ZOOM_IMG = 15;
+const TILE_SZ  = 256;
 
-  const s = stops[navStopIdx];
-  if (!s) return;
+function _mercY(lat) {
+  const r = lat * Math.PI / 180;
+  return Math.log(Math.tan(Math.PI / 4 + r / 2));
+}
+function _deg2tile(lat, lng, z) {
+  const n = Math.pow(2, z);
+  return {
+    x: Math.floor((lng + 180) / 360 * n),
+    y: Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n)
+  };
+}
+function _tile2nw(tx, ty, z) {
+  const n = Math.pow(2, z);
+  return {
+    lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * ty / n))) * 180 / Math.PI,
+    lng: tx / n * 360 - 180
+  };
+}
+async function _fetchTile(z, x, y) {
+  // Essaye plusieurs sous-domaines pour le rate-limit
+  const sub = ['a','b','c'][Math.abs(x + y) % 3];
+  const url = `https://${sub}.tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  try {
+    const r = await fetch(url, { headers: { 'User-Agent': 'TourneeGPS/1.0' } });
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    return await new Promise((res) => {
+      const img = new Image();
+      img.onload  = () => { URL.revokeObjectURL(blobUrl); res(img); };
+      img.onerror = () => { URL.revokeObjectURL(blobUrl); res(null); };
+      img.src = blobUrl;
+    });
+  } catch { return null; }
+}
 
-  document.getElementById('nav-counter').textContent = `ARRÊT ${navStopIdx + 1} / ${stops.length}`;
-  document.getElementById('nav-client').textContent = s.clientName || '—';
-  document.getElementById('nav-address').textContent = s.address || '—';
+async function drawRouteOnCanvas(canvas) {
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const TOP = 72;
 
-  // Produits
-  const pl = document.getElementById('nav-products-list');
-  if (s.products && s.products.length > 0) {
-    pl.innerHTML = s.products.map(p => `
-      <div class="nav-product-row">
-        <div class="nav-product-name">${escHtml(p.name)}</div>
-        <div class="nav-product-qty">×${p.qty}</div>
-      </div>`).join('');
-  } else {
-    pl.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 0">Aucun journal spécifié</div>';
+  // Fond de secours + spinner
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#4a5568';
+  ctx.font = '13px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('⏳ Chargement de la carte…', W / 2, (H + TOP) / 2);
+
+  const pts = positions.length > 1
+    ? positions.map(p => ({ lat: p.lat, lng: p.lng }))
+    : stops.map(s => ({ lat: s.lat, lng: s.lng }));
+
+  if (pts.length < 2) {
+    ctx.fillText('Pas assez de points GPS', W / 2, (H + TOP) / 2);
+    return;
   }
 
-  // Détails
-  const chips = [];
-  if (s.floor) chips.push(`🏢 ${escHtml(s.floor)}`);
-  if (s.doorCode) chips.push(`🔑 ${escHtml(s.doorCode)}`);
-  document.getElementById('nav-details').innerHTML = chips.map(c => `<div class="nav-detail-chip">${c}</div>`).join('');
+  const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng);
+  const MAR = 0.003;
+  const t0 = _deg2tile(Math.max(...lats) + MAR, Math.min(...lngs) - MAR, ZOOM_IMG);
+  const t1 = _deg2tile(Math.min(...lats) - MAR, Math.max(...lngs) + MAR, ZOOM_IMG);
+  const mosaicW = (t1.x - t0.x + 1) * TILE_SZ;
+  const mosaicH = (t1.y - t0.y + 1) * TILE_SZ;
 
-  // Notes
-  const notesEl = document.getElementById('nav-notes');
-  if (s.notes) { notesEl.textContent = '📝 ' + s.notes; notesEl.style.display = 'block'; }
-  else { notesEl.style.display = 'none'; }
+  // Coin Nord-Ouest et Sud-Est de la mosaïque
+  const nw = _tile2nw(t0.x, t0.y, ZOOM_IMG);
+  const se = _tile2nw(t1.x + 1, t1.y + 1, ZOOM_IMG);
+  const nwY = _mercY(nw.lat), seY = _mercY(se.lat);
 
-  // Mettre à jour les icônes des marqueurs (tableau indexé = même index que stops)
-  stops.forEach((s, i) => {
-    const m = navStopMarkers[i];
-    if (!m) return;
-    const cls  = s.delivered ? 'delivered-dot' : (i === navStopIdx ? 'next-dot' : 'stop-dot');
-    const size = (i === navStopIdx && !s.delivered) ? 18 : 14;
-    m.setIcon(makeIcon(cls, size));
+  function tileXY(lat, lng) {
+    return {
+      px: (lng - nw.lng) / (se.lng - nw.lng) * mosaicW,
+      py: (nwY - _mercY(lat)) / (nwY - seY) * mosaicH
+    };
+  }
+
+  // ── Télécharger tuiles ──
+  const mosaicCanvas = document.createElement('canvas');
+  mosaicCanvas.width  = mosaicW;
+  mosaicCanvas.height = mosaicH;
+  const mCtx = mosaicCanvas.getContext('2d');
+  mCtx.fillStyle = '#0a0c14';
+  mCtx.fillRect(0, 0, mosaicW, mosaicH);
+
+  const jobs = [];
+  for (let tx = t0.x; tx <= t1.x; tx++) {
+    for (let ty = t0.y; ty <= t1.y; ty++) {
+      const dx = (tx - t0.x) * TILE_SZ, dy = (ty - t0.y) * TILE_SZ;
+      jobs.push(_fetchTile(ZOOM_IMG, tx, ty).then(img => {
+        if (!img) return;
+        mCtx.drawImage(img, dx, dy, TILE_SZ, TILE_SZ);
+        // Filtre dark : convertir en niveaux de gris + teinte bleu nuit
+        const id = mCtx.getImageData(dx, dy, TILE_SZ, TILE_SZ);
+        const d  = id.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const g = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114; // luminosité
+          const inv = 255 - g;
+          d[i]   = Math.round(inv * 0.12 + 4);   // R
+          d[i+1] = Math.round(inv * 0.15 + 7);   // G
+          d[i+2] = Math.round(inv * 0.22 + 14);  // B
+        }
+        mCtx.putImageData(id, dx, dy);
+      }));
+    }
+  }
+  await Promise.all(jobs);
+
+  // ── Recadrage sur la zone d'intérêt ──
+  const corners = pts.map(p => tileXY(p.lat, p.lng));
+  const cxMin = Math.max(0, Math.min(...corners.map(c => c.px)) - 55);
+  const cxMax = Math.min(mosaicW, Math.max(...corners.map(c => c.px)) + 55);
+  const cyMin = Math.max(0, Math.min(...corners.map(c => c.py)) - 55);
+  const cyMax = Math.min(mosaicH, Math.max(...corners.map(c => c.py)) + 55);
+
+  const mapAreaH = H - TOP;
+  const cropW = cxMax - cxMin, cropH = cyMax - cyMin;
+  const scale  = Math.min(W / cropW, mapAreaH / cropH);
+  const offX   = (W - cropW * scale) / 2;
+  const offY   = TOP + (mapAreaH - cropH * scale) / 2;
+
+  // Dessiner la mosaïque recadrée
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(mosaicCanvas, cxMin, cyMin, cropW, cropH, offX, offY, cropW * scale, cropH * scale);
+
+  // Scanlines
+  for (let ys = TOP; ys < H; ys += 4) {
+    ctx.strokeStyle = 'rgba(0,229,255,0.022)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, ys); ctx.lineTo(W, ys); ctx.stroke();
+  }
+
+  function toXY(lat, lng) {
+    const { px, py } = tileXY(lat, lng);
+    return { x: offX + (px - cxMin) * scale, y: offY + (py - cyMin) * scale };
+  }
+
+  // ── Tracé ──
+  // Halo
+  ctx.beginPath();
+  ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 14;
+  ctx.strokeStyle = 'rgba(0,150,190,0.35)';
+  ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  pts.forEach((p, i) => {
+    const { x, y } = toXY(p.lat, p.lng);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  // Ligne principale
+  ctx.beginPath();
+  ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 5;
+  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 3;
+  pts.forEach((p, i) => {
+    const { x, y } = toXY(p.lat, p.lng);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // ── Marqueurs arrêts ──
+  stops.forEach(s => {
+    const { x, y } = toXY(s.lat, s.lng);
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4d6d';
+    ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 5;
+    ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.shadowBlur = 0;
+    ctx.stroke();
   });
 
-  // FIX C : null-check mapNav avant panTo
-  if (s.lat && s.lng && mapNav) mapNav.panTo([s.lat, s.lng], { animate:true, duration:.7 });
+  // Départ — vert
+  const { x: sx, y: sy } = toXY(pts[0].lat, pts[0].lng);
+  ctx.beginPath(); ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#00ff87'; ctx.shadowColor = '#00ff87'; ctx.shadowBlur = 10;
+  ctx.fill(); ctx.shadowBlur = 0;
+  ctx.fillStyle = '#000'; ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('A', sx, sy);
+
+  // Arrivée — rouge
+  const { x: ex, y: ey } = toXY(pts[pts.length-1].lat, pts[pts.length-1].lng);
+  ctx.beginPath(); ctx.arc(ex, ey, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff4d6d'; ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 10;
+  ctx.fill(); ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fff'; ctx.fillText('B', ex, ey);
+
+  // ── En-tête ──
+  ctx.fillStyle = 'rgba(7,9,13,0.96)';
+  ctx.fillRect(0, 0, W, TOP);
+  ctx.strokeStyle = '#1c2130'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, TOP - 1); ctx.lineTo(W, TOP - 1); ctx.stroke();
+
+  const dateStr = sessionStart
+    ? new Date(sessionStart).toLocaleDateString('fr-FR', { weekday:'short', year:'numeric', month:'short', day:'numeric' })
+    : new Date().toLocaleDateString('fr-FR');
+
+  ctx.font = 'bold 20px "Courier New", monospace';
+  ctx.fillStyle = '#00e5ff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 7;
+  ctx.fillText('TOURNÉE — ' + dateStr.toUpperCase(), 16, 10);
+
+  ctx.shadowBlur = 0; ctx.font = '11px "Courier New", monospace'; ctx.fillStyle = '#d8dde8';
+  const dur = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
+  ctx.fillText(`Dist: ${formatDist(totalDistance)}  |  Arrêts: ${stops.length}  |  Durée: ${dur}  |  GPS: ${pts.length} pts`, 16, 40);
+
+  // Légende
+  const lx = W - 160, ly = H - 62;
+  ctx.fillStyle = 'rgba(7,9,13,0.88)';
+  ctx.strokeStyle = '#1c2130'; ctx.lineWidth = 1;
+  const rr = 8;
+  ctx.beginPath();
+  ctx.moveTo(lx+rr, ly); ctx.lineTo(W-rr, ly); ctx.quadraticCurveTo(W, ly, W, ly+rr);
+  ctx.lineTo(W, ly+54); ctx.quadraticCurveTo(W, ly+54+rr, W-rr, ly+54+rr);
+  ctx.lineTo(lx+rr, ly+54+rr); ctx.quadraticCurveTo(lx, ly+54+rr, lx, ly+54);
+  ctx.lineTo(lx, ly+rr); ctx.quadraticCurveTo(lx, ly, lx+rr, ly);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  [['#00ff87','Départ'], ['#ff4d6d','Arrêt'], ['#00e5ff','Parcours']].forEach(([col, lab], i) => {
+    const yi = ly + 10 + i * 16;
+    ctx.beginPath(); ctx.arc(lx + 14, yi + 4, 5, 0, Math.PI * 2);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.fillStyle = '#d8dde8'; ctx.font = '10px monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(lab, lx + 24, yi);
+  });
 }
 
-function updateNavPolylines() {
-  if (!navRoute || !navDonePolyline || !navTodoPolyline) return;
-  const wps = navRoute.waypoints || [];
-  const stops = navRoute.stops;
+async function openFinalModal() {
+  if (positions.length < 2 && stops.length === 0) return;
 
-  if (wps.length > 0) {
-    // Tournée enregistrée : on coupe le tracé GPS au niveau du dernier arrêt livré
-    let splitIdx = 0;
-    let lastDone = null;
-    for (let i = stops.length - 1; i >= 0; i--) {
-      if (stops[i].delivered && stops[i].lat && stops[i].lng) { lastDone = stops[i]; break; }
-    }
-    if (lastDone) {
-      let minD = Infinity;
-      for (let j = 0; j < wps.length; j++) {
-        const d = Math.hypot(wps[j].lat - lastDone.lat, wps[j].lng - lastDone.lng);
-        if (d < minD) { minD = d; splitIdx = j; }
-      }
-    }
-    navDonePolyline.setLatLngs(wps.slice(0, splitIdx + 1).map(p => [p.lat, p.lng]));
-    navTodoPolyline.setLatLngs(wps.slice(splitIdx).map(p => [p.lat, p.lng]));
+  // Remplir les stats immédiatement et afficher le modal
+  const dateStr = sessionStart
+    ? new Date(sessionStart).toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+    : new Date().toLocaleDateString('fr-FR');
+  document.getElementById('mstat-date').textContent   = dateStr;
+  document.getElementById('mstat-dur').textContent    = sessionStart ? formatElapsed(Date.now() - sessionStart) : '—';
+  document.getElementById('mstat-dist').textContent   = formatDist(totalDistance);
+  document.getElementById('mstat-stops').textContent  = stops.length;
+  const totalMb = audioBlobs.reduce((s, b) => s + b.blob.size, 0) / 1024 / 1024;
+  document.getElementById('mstat-audio').textContent  = `${audioBlobs.length} seg. (${totalMb.toFixed(1)} MB)`;
+  document.getElementById('btn-modal-merge').disabled = audioBlobs.length < 2;
+  document.getElementById('modal-final').classList.add('visible');
 
-  } else {
-    // Tournée importée (pas de GPS) : lignes droites entre arrêts géolocalisés
-    const done = [], todo = [];
-    let lastDonePt = null;
-    for (let i = 0; i < stops.length; i++) {
-      const s = stops[i];
-      if (!s.lat || !s.lng) continue;
-      const pt = [s.lat, s.lng];
-      if (s.delivered) {
-        done.push(pt);
-        lastDonePt = pt;
-      } else {
-        if (todo.length === 0 && lastDonePt) todo.push(lastDonePt);
-        todo.push(pt);
-      }
-    }
-    navDonePolyline.setLatLngs(done);
-    navTodoPolyline.setLatLngs(todo);
-  }
+  // Canvas haute résolution
+  const canvas = document.getElementById('route-canvas');
+  canvas.width  = 1200;
+  canvas.height = 780;
+
+  // Dessiner (async — télécharge les tuiles OSM)
+  await drawRouteOnCanvas(canvas);
 }
 
-function markDelivered() {
-  if (!navRoute) return;
-  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
-  navRoute.stops[navStopIdx].delivered = true;
-  navRoute.stops[navStopIdx].deliveredAt = Date.now();
-  updateNavPolylines();
-  vibrate([60, 30, 60]);
-
-  // Trouver le prochain arrêt non livré
-  let next = -1;
-  for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
-    if (!navRoute.stops[i].delivered) { next = i; break; }
-  }
-  if (next === -1) {
-    updateNavUI();
-    finishNavigation();
-  } else {
-    navStopIdx = next;
-    updateNavUI();
-    // Centrer la carte sur le prochain arrêt s'il est déjà géocodé
-    const ns = navRoute.stops[next];
-    if (ns.lat && ns.lng && mapNav) mapNav.setView([ns.lat, ns.lng], 16, { animate:true });
-    announceDirection(ns);
-  }
+function closeModal() {
+  document.getElementById('modal-final').classList.remove('visible');
 }
 
-function skipStop() {
-  if (!navRoute) return;
-  let next = -1;
-  for (let i = navStopIdx + 1; i < navRoute.stops.length; i++) {
-    if (!navRoute.stops[i].delivered) { next = i; break; }
-  }
-  if (next === -1) { alert('Pas d\'arrêt suivant disponible.'); return; }
-  navStopIdx = next;
-  updateNavUI();
+function downloadRouteImage() {
+  const canvas = document.getElementById('route-canvas');
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tournee_carte_${new Date().toISOString().slice(0,10)}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
 }
 
-function finishNavigation() {
-  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
-  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
-  releaseWakeLock();
-  stopAudioRec();
-  generateReport();
-  const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
-  const delivered = navRoute.stops.filter(s => s.delivered).length;
-  document.getElementById('done-stats').innerHTML =
-    `<strong>${delivered}</strong> / <strong>${navRoute.stops.length}</strong> arrêts livrés<br>Durée : <strong>${dur}</strong>`;
-  document.getElementById('nav-stop-panel').style.display = 'none';
-  document.getElementById('nav-dist-badge').style.display = 'none';
-  document.getElementById('nav-done-screen').classList.remove('hidden');
-  navRoute = null; // arrête geocodeAllStops() et empêche le double rapport dans exitNavigation()
-  speak('Tournée terminée ! Bravo.');
-}
+// ════════════════════════════════════════════════════════════════
+// FUSION AUDIO (Web Audio API → WAV)
+// ════════════════════════════════════════════════════════════════
+async function mergeAudioSegments() {
+  if (audioBlobs.length === 0) { alert('Aucun audio enregistré.'); return; }
 
-function exitNavigation() {
-  if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
-  if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
-  releaseWakeLock();
-  stopAudioRec();
-  if (navRoute && navRoute.stops.some(s => s.delivered)) generateReport();
-  navRoute = null; // arrête geocodeAllStops() en cours éventuel
-  navLastPos = null;
-  speechSynthesis && speechSynthesis.cancel();
-  showScreen('home');
-}
+  const statusEl  = document.getElementById('merge-status');
+  const progressW = document.getElementById('merge-progress-wrap');
+  const progressF = document.getElementById('merge-progress-fill');
+  const btn       = document.getElementById('btn-modal-merge');
 
-// ── Direction & annonce prochain arrêt ──────────────────────────
-function getBearing(lat1, lng1, lat2, lng2) {
-  const dL = (lng2 - lng1) * Math.PI / 180;
-  const f1 = lat1 * Math.PI / 180, f2 = lat2 * Math.PI / 180;
-  const y = Math.sin(dL) * Math.cos(f2);
-  const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dL);
-  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-function bearingToFr(b) {
-  return ['nord','nord-est','est','sud-est','sud','sud-ouest','ouest','nord-ouest'][Math.round(b / 45) % 8];
-}
-function announceDirection(stop) {
-  let text = 'Livré. ';
-  if (navLastPos && stop.lat && stop.lng) {
-    const dist = haversine(navLastPos.lat, navLastPos.lng, stop.lat, stop.lng);
-    const dir  = bearingToFr(getBearing(navLastPos.lat, navLastPos.lng, stop.lat, stop.lng));
-    const dm   = dist >= 100 ? `${Math.round(dist / 50) * 50} mètres` : `${Math.round(dist / 10) * 10} mètres`;
-    text += `Direction ${dir}, ${dm}. `;
-  }
-  // Détection de changement de secteur : annonce le nb de journaux à préparer
-  const prevDelivered = navRoute.stops.slice(0, navStopIdx).reverse().find(s => s.delivered);
-  const prevKey = prevDelivered ? getStreetKey(prevDelivered.address) : null;
-  const nextKey = getStreetKey(stop.address);
-  if (nextKey && nextKey !== prevKey) {
-    const secText = getSectorText(navStopIdx);
-    if (secText) text += secText + ' ';
-  }
-  text += `Prochain arrêt : ${stop.clientName}.`;
-  speak(text);
-}
+  if (statusEl)  { statusEl.textContent  = ''; }
+  if (progressW) { progressW.style.display = 'block'; }
+  if (progressF) { progressF.style.width   = '5%'; }
+  if (btn)       { btn.disabled = true; }
 
-// FIX #8 : null check sur navRoute au début
-function onNavPos(pos) {
-  if (!navRoute) return;
-  const { latitude:lat, longitude:lng, speed } = pos.coords;
-  navLastPos = { lat, lng };
-
-  // Mettre à jour le marqueur de position
-  if (!navPosMarker) {
-    navPosMarker = L.marker([lat, lng], { icon: makeIcon('pos-marker', 14) }).addTo(mapNav);
-  } else { navPosMarker.setLatLng([lat, lng]); }
-
-  // La carte suit la position GPS en temps réel
-  if (mapNav) mapNav.panTo([lat, lng], { animate:true, duration:0.8, easeLinearity:0.5 });
-
-  const s = navRoute.stops[navStopIdx];
-  if (!s || !s.lat || !s.lng) return;
-
-  const dist = haversine(lat, lng, s.lat, s.lng);
-  document.getElementById('nav-dist-badge').textContent = formatDist(dist);
-
-  if (dist < 30) {
-    // Annonce vocale d'arrivée (une seule fois)
-    if (!s._announced) { s._announced = true; vibrate([100, 50, 100]); announceStop(s); }
-    // 4 secondes dans les 30m → livraison auto (même en roulant au pas)
-    if (!navArrivalTimer) {
-      navArrivalTimer = setTimeout(() => {
-        navArrivalTimer = null;
-        if (navRoute && !navRoute.stops[navStopIdx].delivered) markDelivered();
-      }, 4000);
-    }
-  } else {
-    // On est sorti de la zone : annuler le timer
-    if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// VOICE TTS + STT
-// ══════════════════════════════════════════════════════════════
-function freqToFr(notes) {
-  if (!notes) return '';
-  const m = ('' + notes).match(/(\d)\/7/);
-  if (!m) return '';
-  const map = {
-    7: 'livraison tous les jours',
-    6: 'du lundi au samedi',
-    5: 'du lundi au vendredi',
-    3: 'samedi, dimanche et lundi',
-    2: 'samedi et dimanche'
-  };
-  return map[+m[1]] || `${m[1]} jours sur 7`;
-}
-
-// ── Résumé de secteur (rue / résidence) ────────────────────────
-function getStreetKey(address) {
-  if (!address) return '';
-  // Enlève le numéro de voie en début (ex: "14bis ")
-  let s = address.replace(/^\d+\s*(bis|ter|quater)?\s*/i, '');
-  // Enlève le code postal et la ville en fin (ex: ", 13011 Marseille")
-  s = s.replace(/[,\s]+\d{5}.*$/, '');
-  return s.trim().toLowerCase();
-}
-
-function getSectorText(fromIdx) {
-  if (!navRoute) return '';
-  const stops = navRoute.stops;
-  if (fromIdx >= stops.length) return '';
-  const key = getStreetKey(stops[fromIdx].address);
-  if (!key) return '';
-  // Nom lisible de la rue (sans numéro ni code postal)
-  const streetName = stops[fromIdx].address
-    .replace(/^\d+\s*(bis|ter|quater)?\s*/i, '')
-    .replace(/[,\s]+\d{5}.*$/, '')
-    .trim();
-  let totalJournaux = 0, nClients = 0;
-  for (let i = fromIdx; i < stops.length; i++) {
-    if (getStreetKey(stops[i].address) !== key) break;
-    if (!stops[i].delivered) {
-      nClients++;
-      if (stops[i].products)
-        totalJournaux += stops[i].products.reduce((sum, p) => sum + (p.qty || 0), 0);
-    }
-  }
-  if (nClients === 0) return '';
-  return `${streetName} : préparez ${totalJournaux} journal${totalJournaux > 1 ? 'x' : ''} pour ${nClients} client${nClients > 1 ? 's' : ''}.`;
-}
-
-async function geocodeAndCenter(stop) {
-  if (!mapNav) return;
-  if (stop.lat && stop.lng) {
-    mapNav.setView([stop.lat, stop.lng], 17, { animate: true });
+  // Un seul segment → téléchargement direct
+  if (audioBlobs.length === 1) {
+    const b = audioBlobs[0];
+    const ext = b.mimeType.includes('mp4') ? 'm4a' : b.mimeType.includes('ogg') ? 'ogg' : 'webm';
+    const url = URL.createObjectURL(b.blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `tournee_audio_complet.${ext}`; a.click();
+    URL.revokeObjectURL(url);
+    if (statusEl)  statusEl.textContent  = '✅ Téléchargement lancé.';
+    if (progressF) progressF.style.width = '100%';
+    if (btn)       btn.disabled = false;
     return;
   }
-  if (!stop.address) return;
+
   try {
-    const q = encodeURIComponent(stop.address);
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
-    const data = await res.json();
-    if (data && data[0]) {
-      stop.lat = parseFloat(data[0].lat);
-      stop.lng = parseFloat(data[0].lon);
-      mapNav.setView([stop.lat, stop.lng], 17, { animate: true });
-      // Ajouter un marqueur si pas encore présent
-      if (!navStopMarkers[navStopIdx]) {
-        const m = L.marker([stop.lat, stop.lng],
-          { icon: makeIcon('next-dot', 18) }).addTo(mapNav);
-        m.bindTooltip(`#${stop.id} ${stop.clientName}`,
-          { permanent:false, direction:'top', offset:[0,-10], className:'stop-tooltip-lbl' });
-        navStopMarkers[navStopIdx] = m;
+    if (statusEl) statusEl.textContent = '⏳ Décodage des segments…';
+
+    const mergeCtx = new AudioContext();
+    const buffers  = [];
+
+    for (let i = 0; i < audioBlobs.length; i++) {
+      if (progressF) progressF.style.width = Math.round(10 + (i / audioBlobs.length) * 60) + '%';
+      const arrBuf = await audioBlobs[i].blob.arrayBuffer();
+      const decoded = await mergeCtx.decodeAudioData(arrBuf);
+      buffers.push(decoded);
+    }
+
+    if (statusEl) statusEl.textContent = '⏳ Fusion en cours…';
+    if (progressF) progressF.style.width = '75%';
+
+    const numCh     = buffers[0].numberOfChannels;
+    const sampleRate = buffers[0].sampleRate;
+    const totalLen  = buffers.reduce((s, b) => s + b.length, 0);
+    const merged    = mergeCtx.createBuffer(numCh, totalLen, sampleRate);
+
+    let offset = 0;
+    for (const buf of buffers) {
+      for (let ch = 0; ch < numCh; ch++) {
+        merged.getChannelData(ch).set(buf.getChannelData(ch), offset);
       }
-      updateNavPolylines();
+      offset += buf.length;
     }
-  } catch(e) { console.warn('Geocodage échoué:', e); }
-}
 
-function announceStop(stop) {
-  if (!voiceEnabled || !stop) return;
-  let text = `Arrêt ${stop.id} : ${stop.clientName}. `;
-  if (stop.address) text += `${stop.address}. `;
-  if (stop.products && stop.products.length > 0) {
-    text += stop.products.map(p =>
-      `${p.name} : ${p.qty} exemplaire${p.qty > 1 ? 's' : ''}`
-    ).join(', ') + '. ';
+    if (statusEl) statusEl.textContent = '⏳ Encodage WAV…';
+    if (progressF) progressF.style.width = '90%';
+
+    const wavBlob = audioBufferToWav(merged);
+    const url     = URL.createObjectURL(wavBlob);
+    const a       = document.createElement('a');
+    a.href = url;
+    a.download = `tournee_audio_complet_${new Date().toISOString().slice(0,10)}.wav`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    mergeCtx.close();
+
+    if (progressF) progressF.style.width = '100%';
+    if (statusEl)  statusEl.textContent  = `✅ Fusion OK — ${(wavBlob.size/1024/1024).toFixed(1)} MB`;
+    if (btn)       btn.disabled = false;
+
+  } catch (err) {
+    console.error('Merge error:', err);
+    if (statusEl)  statusEl.textContent  = '⚠️ Fusion impossible — téléchargement des segments séparés…';
+    if (progressF) progressF.style.width = '0%';
+    if (btn)       btn.disabled = false;
+    setTimeout(exportAudio, 500);
   }
-  if (stop.floor) text += `${stop.floor}. `;
-  if (stop.doorCode) text += `Code : ${stop.doorCode.split('').join(' ')}. `;
-  const freq = freqToFr(stop.notes);
-  if (freq) text += freq + '. ';
-  // Pour le tout premier arrêt, annoncer le résumé du secteur de départ
-  if (navStopIdx === 0) {
-    const secText = getSectorText(0);
-    if (secText) text += secText + ' ';
-  }
-  speak(text);
 }
 
-function speak(text) {
-  if (!voiceEnabled || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'fr-FR'; u.rate = 1.4; u.pitch = 1.0;
-  // Préférer une voix française si disponible
-  const voices = window.speechSynthesis.getVoices();
-  const frVoice = voices.find(v => v.lang.startsWith('fr') && !v.name.includes('Compact'));
-  if (frVoice) u.voice = frVoice;
-  window.speechSynthesis.speak(u);
-}
+function audioBufferToWav(buffer) {
+  const numCh = buffer.numberOfChannels;
+  const sr    = buffer.sampleRate;
+  const bps   = 16; // bits per sample
+  const bAlign = numCh * (bps / 8);
+  const dataLen = buffer.length * bAlign;
+  const ab    = new ArrayBuffer(44 + dataLen);
+  const view  = new DataView(ab);
 
-function toggleVoice() {
-  voiceEnabled = !voiceEnabled;
-  document.getElementById('voice-toggle-lbl').textContent = voiceEnabled ? 'ON' : 'OFF';
-  if (!voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
-}
+  const ws = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+  ws(0, 'RIFF');
+  view.setUint32(4, 36 + dataLen, true);
+  ws(8, 'WAVE');
+  ws(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);         // PCM
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true);
+  view.setUint32(28, sr * bAlign, true);
+  view.setUint16(32, bAlign, true);
+  view.setUint16(34, bps, true);
+  ws(36, 'data');
+  view.setUint32(40, dataLen, true);
 
-function startVoice(targetId) {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) {
-    alert('Reconnaissance vocale non supportée.\nUtilise Chrome pour cette fonctionnalité.');
-    return;
-  }
-  if (speechRecActive) { stopVoice(); return; }
-  speechRec = new SpeechRec();
-  speechRec.lang = 'fr-FR';
-  speechRec.continuous = false;
-  speechRec.interimResults = true;
-  speechRec.onstart = () => {
-    speechRecActive = true;
-    document.getElementById('btn-voice-client').classList.add('active');
-    document.getElementById('voice-status').textContent = '🎙 Parle maintenant…';
-  };
-  speechRec.onresult = e => {
-    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
-    const el = document.getElementById(targetId);
-    if (el) el.value = transcript;
-    if (e.results[e.results.length - 1].isFinal) {
-      document.getElementById('voice-status').textContent = '✓ Transcrit';
-      stopVoice();
+  let off = 44;
+  for (let i = 0; i < buffer.length; i++) {
+    for (let ch = 0; ch < numCh; ch++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+      view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      off += 2;
     }
-  };
-  speechRec.onerror = err => {
-    console.warn('STT error:', err.error);
-    document.getElementById('voice-status').textContent = `⚠ ${err.error === 'not-allowed' ? 'Micro refusé' : 'Erreur micro'}`;
-    stopVoice();
-  };
-  speechRec.onend = () => stopVoice();
-  try { speechRec.start(); } catch(e) { stopVoice(); }
+  }
+  return new Blob([ab], { type: 'audio/wav' });
 }
 
-function stopVoice() {
-  if (speechRec) { try { speechRec.stop(); } catch(e) {} speechRec = null; }
-  speechRecActive = false;
-  const btn = document.getElementById('btn-voice-client');
-  if (btn) btn.classList.remove('active');
-}
-
-// ══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // UTILS
-// ══════════════════════════════════════════════════════════════
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+// ════════════════════════════════════════════════════════════════
+function updateClock() {
+  const e = Date.now() - sessionStart;
+  const h = Math.floor(e/3600000), m = Math.floor((e%3600000)/60000), s = Math.floor((e%60000)/1000);
+  document.getElementById('hud-time').textContent = h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
-function formatDist(m) {
-  return m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(2) + ' km';
-}
-
+function formatDist(m) { return m < 1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km'; }
 function formatElapsed(ms) {
-  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
-  return `${pad(m)}:${pad(s)}`;
-}
-
-function formatElapsedLong(ms) {
-  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000);
+  const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000), s=Math.floor((ms%60000)/1000);
   return h > 0 ? `${h}h ${pad(m)}min` : `${m}min ${pad(s)}s`;
 }
+function formatSec(s) { return Math.floor(s/60)+':'+ String(s%60).padStart(2,'0'); }
+function pad(n) { return String(n).padStart(2,'0'); }
 
-function pad(n) { return String(n).padStart(2, '0'); }
+function haversine(lat1,lon1,lat2,lon2) {
+  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function centerMap() { if (lastPos) map.setView([lastPos.lat,lastPos.lng],17,{animate:true}); }
+function updateMainBtn(cls,icon,label) {
+  document.getElementById('btn-main').className = 'btn-main '+cls;
+  document.getElementById('btn-icon').textContent = icon;
+  document.getElementById('btn-label').textContent = label;
+}
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['controls','stops','notes','export'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
 function vibrate(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
-// FIX #9 : makeIcon gère correctement la taille pour next-dot (18px)
-function makeIcon(cls, size) {
-  return L.divIcon({
-    className: '',
-    html: `<div class="${cls}"></div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2]
-  });
+// TOAST
+let toastTmt = null;
+function showToast(msg) {
+  document.getElementById('toast-text').textContent = msg;
+  document.getElementById('stop-toast').classList.add('visible');
+  clearTimeout(toastTmt);
+  toastTmt = setTimeout(() => document.getElementById('stop-toast').classList.remove('visible'), 4000);
 }
+function hideToast() { document.getElementById('stop-toast').classList.remove('visible'); }
 
-function injectTooltipStyle() {
-  if (document.getElementById('tt-style')) return;
-  const s = document.createElement('style');
-  s.id = 'tt-style';
-  s.textContent = `.stop-tooltip-lbl{background:rgba(7,9,13,.92);border:1px solid #ff4d6d;color:#ff4d6d;font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:none}.stop-tooltip-lbl::before{display:none}`;
-  document.head.appendChild(s);
-}
-
-async function reverseGeocode(lat, lng, cb) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
-    const r = await fetch(url, {
-      headers: { 'Accept-Language':'fr', 'User-Agent':'TourneeGuide/2.1' }
-    });
-    if (!r.ok) { cb(''); return; }
-    const d = await r.json();
-    const a = d.address || {};
-    const addr = [a.house_number, a.road].filter(Boolean).join(' ')
-      || a.suburb || a.neighbourhood || d.display_name?.split(',')[0] || '';
-    cb(addr);
-  } catch(e) { cb(''); }
-}
-
-// FIX #10 : escHtml pour sécuriser l'affichage des données utilisateur
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function switchRecTab(name) {
-  const tabs = document.querySelectorAll('#screen-record .tab');
-  const names = ['ctrl', 'list'];
-  tabs.forEach((t, i) => t.classList.toggle('active', names[i] === name));
-  document.querySelectorAll('#screen-record .tab-content').forEach(c => c.classList.remove('active'));
-  const target = document.getElementById('rec-tab-' + name);
-  if (target) target.classList.add('active');
-}
-
-// Wake Lock
+// WAKE LOCK
 let wakeLock = null;
 async function requestWakeLock() {
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
   }
 }
-function releaseWakeLock() {
-  if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; }
-}
+function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
 
-// Reprendre le wakeLock si l'app revient au premier plan pendant navigation
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && (recRunning || navRoute)) {
-    if (!wakeLock) await requestWakeLock();
+  if (document.visibilityState !== 'visible' || !isRunning) return;
+  if (!wakeLock) await requestWakeLock();
+  if (mediaRecorder && mediaRecorder.state === 'inactive' && audioStream) {
+    console.warn('MediaRecorder stoppé par Android — relancement');
+    startAudioSegment();
+  } else if (!mediaRecorder && audioStream) {
+    startAudioSegment();
   }
 });
 
-// ══════════════════════════════════════════════════════════════
-// AUTO-DÉTECTION D'ARRÊTS (mode enregistrement)
-// ══════════════════════════════════════════════════════════════
-const AUTO_RADIUS   = 25;    // mètres — rayon de dwell
-const AUTO_DELAY    = 4000;  // ms — durée avant enregistrement
-const AUTO_COOLDOWN = 25000; // ms — pause après un arrêt auto
+// Fermer modal si clic sur overlay
+document.getElementById('modal-final').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('modal-library').addEventListener('click', function(e) {
+  if (e.target === this) closeLibrary();
+});
 
-function setAutoStatusLbl(txt) {
-  const el = document.getElementById('auto-status-lbl');
-  if (el) el.textContent = txt;
+// ════════════════════════════════════════════════════════════════
+// BIBLIOTHÈQUE DE TOURNÉES (localStorage)
+// ════════════════════════════════════════════════════════════════
+const LIB_KEY      = 'tournee_library_v1';
+const LIB_MAX      = 30;   // max tournées stockées
+let   libTours     = [];   // [{ id, name, date, stops, distance, duration, thumb, data }]
+let   activeTourId = null; // tournée actuellement affichée
+
+function libLoad() {
+  try { libTours = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); }
+  catch { libTours = []; }
 }
 
-function toggleAutoStop() {
-  recAutoEnabled = !recAutoEnabled;
-  const btn = document.getElementById('btn-auto-stop');
-  const lbl = document.getElementById('auto-label');
-  if (recAutoEnabled) {
-    btn.style.borderColor = 'var(--green)';
-    btn.style.background  = 'rgba(0,255,135,.12)';
-    btn.style.color       = 'var(--green)';
-    lbl.textContent = 'AUTO : ON';
-    setAutoStatusLbl('En attente…');
-  } else {
-    btn.style.borderColor = 'var(--muted)';
-    btn.style.background  = 'rgba(255,255,255,.03)';
-    btn.style.color       = 'var(--muted)';
-    lbl.textContent = 'AUTO : OFF';
-    setAutoStatusLbl('Désactivé');
-    if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; }
-    recDwellPos = null; recDwellStart = null;
-    document.getElementById('auto-dwell-fill').style.width = '0%';
+function libSave() {
+  try { localStorage.setItem(LIB_KEY, JSON.stringify(libTours)); }
+  catch(e) {
+    // localStorage plein — supprimer la plus ancienne et réessayer
+    if (libTours.length > 1) { libTours.shift(); libSave(); }
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-// TOURNÉE DE RÉFÉRENCE — chargement + géocodage + matching
-// ══════════════════════════════════════════════════════════════
-function loadRefRoute(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      const stops = data.stops || (Array.isArray(data) ? data : null);
-      if (!stops || stops.length === 0) { alert('Fichier JSON invalide ou aucun arrêt trouvé.'); return; }
+function tourToEntry(data) {
+  const pts   = (data.positions || []).length > 1
+    ? data.positions
+    : (data.stops || []);
+  return {
+    id:       data._libId || ('lib_' + Date.now() + '_' + Math.random().toString(36).slice(2,6)),
+    name:     data.name || `Tournée ${new Date(data.date||Date.now()).toLocaleDateString('fr-FR')}`,
+    date:     data.date || new Date().toISOString(),
+    stops:    (data.stops || []).length,
+    distance: data.totalDistance || 0,
+    duration: data.sessionStart ? Math.max(0, (data.stops?.slice(-1)[0]?.startTs || Date.now()) - data.sessionStart) : 0,
+    pts:      pts.length,
+    data:     data  // données complètes (lourdes — compressées ci-dessous)
+  };
+}
 
-      // Nettoyer l'état précédent
-      recRefMarkers.forEach(m => m && m.remove());
-      recRefMarkers = [];
-      recRefStops = stops.map(s => ({ ...s, _matched: false }));
+function saveCurrentToLibrary() {
+  if (stops.length === 0 && positions.length === 0) return;
+  const tourData = {
+    version:'2.0', date: new Date().toISOString(),
+    name: `Tournée du ${new Date().toLocaleDateString('fr-FR')}`,
+    sessionStart, totalDistance, positions, stops,
+    audioSegments: audioBlobs.map((b,i) => ({ index:i, mimeType:b.mimeType, startTs:b.startTs, size:b.blob.size })),
+    notesVocales: { notesTournee: noteSegments.filter(n=>n.kept) }
+  };
+  addToLibrary(tourData);
+  showToast('✅ Tournée sauvegardée dans la bibliothèque');
+  document.getElementById('btn-lib-save').disabled = true;
+}
 
-      const lbl = document.getElementById('ref-route-lbl');
-      lbl.textContent = `${data.name || file.name} — ${stops.length} arrêts`;
-      lbl.style.color = 'var(--green)';
-      document.getElementById('ref-geocode-badge').style.display = 'block';
+function addToLibrary(data) {
+  libLoad();
+  const entry = tourToEntry(data);
+  // Éviter les doublons (même date/name)
+  const idx = libTours.findIndex(t => t.name === entry.name && t.date === entry.date);
+  if (idx >= 0) libTours[idx] = entry;
+  else {
+    libTours.unshift(entry);
+    if (libTours.length > LIB_MAX) libTours = libTours.slice(0, LIB_MAX);
+  }
+  libSave();
+  renderLibraryList();
+}
 
-      // Lancer le géocodage en arrière-plan
-      geocodeRefStops();
-    } catch(err) {
-      alert('Erreur de lecture du fichier JSON.');
+function deleteFromLibrary(id, evt) {
+  evt.stopPropagation();
+  libLoad();
+  libTours = libTours.filter(t => t.id !== id);
+  libSave();
+  if (activeTourId === id) activeTourId = null;
+  renderLibraryList();
+}
+
+function selectTourFromLibrary(id) {
+  const entry = libTours.find(t => t.id === id);
+  if (!entry) return;
+  activeTourId = id;
+  loadTourData(entry.data);
+  closeLibrary();
+  // Activer le bouton sauvegarder si c'est une tournée récente
+  document.getElementById('btn-lib-save').disabled = false;
+}
+
+function openLibrary() {
+  libLoad();
+  // Activer "Sauvegarder actuelle" si une tournée est en mémoire
+  document.getElementById('btn-lib-save').disabled = (stops.length === 0 && positions.length === 0);
+  renderLibraryList();
+  document.getElementById('modal-library').classList.add('visible');
+}
+
+function closeLibrary() {
+  document.getElementById('modal-library').classList.remove('visible');
+}
+
+function renderLibraryList() {
+  const list = document.getElementById('lib-list');
+  if (libTours.length === 0) {
+    list.innerHTML = '<div class="lib-empty">Aucune tournée sauvegardée.<br>Importe un fichier JSON ou<br>termine une tournée pour la sauvegarder.</div>';
+    return;
+  }
+
+  list.innerHTML = libTours.map(t => {
+    const dateStr  = new Date(t.date).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    const distStr  = t.distance < 1000 ? Math.round(t.distance)+'m' : (t.distance/1000).toFixed(1)+'km';
+    const durStr   = t.duration > 0 ? formatElapsed(t.duration) : '—';
+    const active   = activeTourId === t.id ? ' active-tour' : '';
+
+    return `
+    <div class="tour-card${active}" onclick="selectTourFromLibrary('${t.id}')">
+      <div class="tour-card-preview">
+        <canvas id="prev-${t.id}" width="116" height="88"></canvas>
+      </div>
+      <div class="tour-card-info">
+        <div class="tour-card-name">${escapeHtml(t.name)}</div>
+        <div class="tour-card-meta">
+          <span>${dateStr}</span>
+          <span>📍 ${t.stops} arrêts</span>
+          <span>📏 ${distStr}</span>
+          ${t.pts > 0 ? `<span>GPS ${t.pts}pts</span>` : ''}
+        </div>
+      </div>
+      <button class="tour-card-del" onclick="deleteFromLibrary('${t.id}',event)" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+
+  // Dessiner les miniatures après le rendu
+  libTours.forEach(t => drawThumb(t));
+}
+
+function drawThumb(entry) {
+  const canvas = document.getElementById('prev-' + entry.id);
+  if (!canvas) return;
+  const W = 116, H = 88;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0a0c14';
+  ctx.fillRect(0, 0, W, H);
+
+  const data = entry.data;
+  if (!data) return;
+
+  const pts = (data.positions || []).length > 1
+    ? data.positions.map(p => ({ lat:p.lat, lng:p.lng }))
+    : (data.stops || []).map(s => ({ lat:s.lat, lng:s.lng }));
+
+  if (pts.length < 2) {
+    ctx.fillStyle = '#4a5568'; ctx.font = '9px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', W/2, H/2); return;
+  }
+
+  const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng);
+  const minLat=Math.min(...lats), maxLat=Math.max(...lats);
+  const minLng=Math.min(...lngs), maxLng=Math.max(...lngs);
+  const PAD = 8;
+  const rangeX = maxLng-minLng||0.001, rangeY = maxLat-minLat||0.001;
+  const sx = (W-PAD*2)/rangeX, sy = (H-PAD*2)/rangeY;
+  const sc = Math.min(sx, sy);
+  const ox = PAD+(W-PAD*2-rangeX*sc)/2;
+  const oy = PAD+(H-PAD*2-rangeY*sc)/2;
+
+  function p2xy(lat,lng) {
+    return { x: ox+(lng-minLng)*sc, y: H-PAD-(H-PAD*2-rangeY*sc)/2-(lat-minLat)*sc };
+  }
+
+  // Halo
+  ctx.beginPath(); ctx.shadowColor='#00e5ff'; ctx.shadowBlur=6;
+  ctx.strokeStyle='rgba(0,180,220,0.35)'; ctx.lineWidth=5;
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  pts.forEach((p,i) => { const {x,y}=p2xy(p.lat,p.lng); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  // Tracé
+  ctx.beginPath(); ctx.shadowBlur=3;
+  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=2;
+  pts.forEach((p,i) => { const {x,y}=p2xy(p.lat,p.lng); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke(); ctx.shadowBlur=0;
+
+  // Arrêts
+  (data.stops||[]).forEach(s => {
+    const {x,y}=p2xy(s.lat,s.lng);
+    ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.fillStyle='#ff4d6d'; ctx.fill();
+  });
+
+  // Départ/arrivée
+  const {x:sx_,y:sy_}=p2xy(pts[0].lat,pts[0].lng);
+  ctx.beginPath(); ctx.arc(sx_,sy_,4,0,Math.PI*2);
+  ctx.fillStyle='#00ff87'; ctx.fill();
+  const {x:ex_,y:ey_}=p2xy(pts[pts.length-1].lat,pts[pts.length-1].lng);
+  ctx.beginPath(); ctx.arc(ex_,ey_,4,0,Math.PI*2);
+  ctx.fillStyle='#ff4d6d'; ctx.fill();
+}
+
+// ════════════════════════════════════════════════════════════════
+// NOTES VOCALES — Reconnaissance vocale en temps réel
+// ════════════════════════════════════════════════════════════════
+
+// Mots-clés liés à la tournée (filtrage automatique)
+const MOTS_TOURNEE = [
+  'journal','journaux','livrer','livraison','livré','déposer','laisser','poser',
+  'boîte','boite','lettre','lettres','porte','portail','entrée','escalier','étage',
+  'code','digicode','interphone','bâtiment','bat','bâtiment','résidence','immeuble',
+  'arrêt','numéro','abonné','client','attention','note','signaler','important',
+  'supprimer','arrêter','arrêté','commercial','restaurant','bar','boulangerie',
+  'gauche','droite','premier','deuxième','troisième','sonnette','cloche',
+  'absent','absent','vacances','suspend','ne plus','plus de journal',
+  'à gauche','à droite','sous','devant','derrière','intérieur','extérieur'
+];
+
+let speechRec       = null;
+let noteSegments    = [];   // { id, text, ts, stopId, stopAddr, lat, lng, kept }
+let noteIdCounter   = 0;
+let srRunning       = false;
+let srErrorCount    = 0;
+
+function isTourneeRelated(text) {
+  const t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Contient un mot-clé tournée ?
+  if (MOTS_TOURNEE.some(kw => t.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))) return true;
+  // Contient un numéro d'arrêt (ex: "arrêt 12", "stop 5", "#3")
+  if (/arr[eê]t\s*\d+|stop\s*\d+|num[eé]ro\s*\d+|n[o°]\s*\d+|#\d+|\barrêt\b/.test(t)) return true;
+  // Contient les noms/adresses des stops chargés
+  for (const s of stops) {
+    if (s.address && t.includes(s.address.toLowerCase().substring(0,8))) return true;
+  }
+  return false;
+}
+
+function startSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setSrStatus('err', 'Reconnaissance vocale non disponible sur cet appareil');
+    return;
+  }
+  if (srRunning) return;
+
+  speechRec = new SR();
+  speechRec.lang = 'fr-FR';
+  speechRec.continuous = true;
+  speechRec.interimResults = true;
+  speechRec.maxAlternatives = 1;
+
+  speechRec.onstart = () => {
+    srRunning = true;
+    srErrorCount = 0;
+    setSrStatus('on', 'Écoute active — parlez pour noter');
+  };
+
+  speechRec.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const txt = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        const trimmed = txt.trim();
+        if (trimmed.length >= 3) addNoteSegment(trimmed);
+      } else {
+        interim += txt;
+      }
+    }
+    document.getElementById('note-interim').textContent = interim ? '🎙 ' + interim : '';
+  };
+
+  speechRec.onerror = (e) => {
+    if (e.error === 'no-speech') return; // silence normal
+    srErrorCount++;
+    if (e.error === 'not-allowed') {
+      setSrStatus('err', 'Microphone refusé pour la reconnaissance vocale');
+      srRunning = false; return;
+    }
+    if (srErrorCount > 5) {
+      setSrStatus('err', 'Trop d\'erreurs — reconnaissance pausée');
+      srRunning = false; return;
     }
   };
-  reader.readAsText(file);
-  // Reset input pour pouvoir re-charger le même fichier si besoin
-  event.target.value = '';
-}
 
-// Géocode les arrêts de référence qui n'ont pas encore de coordonnées (1 req/s Nominatim)
-// _geocodeRefVersion : incrémenté à chaque appel pour annuler les runs précédents
-let _geocodeRefVersion = 0;
-async function geocodeRefStops() {
-  recRefGeocoding = true;
-  const myVersion = ++_geocodeRefVersion;
-  const badge = document.getElementById('ref-geocode-badge');
-  const toGeocode = recRefStops.filter(s => !s.lat || !s.lng);
-  let done = 0;
+  speechRec.onend = () => {
+    document.getElementById('note-interim').textContent = '';
+    if (isRunning && srRunning) {
+      // Auto-redémarrage (Android coupe parfois après silence)
+      try { speechRec.start(); } catch(e) {}
+    } else {
+      srRunning = false;
+      setSrStatus('', isRunning ? 'Écoute arrêtée' : 'Tournée terminée');
+    }
+  };
 
-  for (const stop of toGeocode) {
-    if (_geocodeRefVersion !== myVersion) break; // fichier rechargé entre-temps → abandon
-    badge.textContent = `📡 ${done}/${toGeocode.length}`;
-    let addr = stop.address || '';
-    addr = addr.replace(/\bBlvd\b/gi, 'Boulevard').replace(/\bAv\.\b/gi, 'Avenue');
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`;
-      const r = await fetch(url, { headers: { 'User-Agent': 'TourneeGuide/2.1 pastek' } });
-      if (r.ok) {
-        const d = await r.json();
-        if (d.length > 0) {
-          const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
-          // Filtre outliers (> 4km du centre) — haversine renvoie des mètres (R=6371000)
-          if (haversine(43.2824, 5.4386, lat, lng) < 4000) {
-            stop.lat = lat; stop.lng = lng;
-            addRefMarker(stop);
-          }
-        }
-      }
-    } catch(e) { /* skip */ }
-    done++;
-    await new Promise(res => setTimeout(res, 1100)); // respect Nominatim 1 req/s
+  try {
+    speechRec.start();
+  } catch(e) {
+    setSrStatus('err', 'Impossible de démarrer la reconnaissance vocale');
   }
-
-  const geocoded = recRefStops.filter(s => s.lat && s.lng).length;
-  badge.textContent = `✓ ${geocoded}/${recRefStops.length}`;
-  badge.style.color = 'var(--green)';
-  recRefGeocoding = false;
-
-  // Afficher les marqueurs sur la carte
-  if (mapRec) mapRec.invalidateSize();
 }
 
-// Ajoute un marqueur discret sur la carte pour un arrêt de référence
-function addRefMarker(stop) {
-  if (!mapRec || !stop.lat || !stop.lng) return;
-  const icon = L.divIcon({
-    className: '',
-    html: `<div style="width:10px;height:10px;border-radius:50%;background:rgba(0,229,255,.5);border:1px solid var(--accent);"></div>`,
-    iconSize: [10, 10], iconAnchor: [5, 5]
-  });
-  const m = L.marker([stop.lat, stop.lng], { icon, interactive: false }).addTo(mapRec);
-  recRefMarkers.push(m);
+function stopSpeechRecognition() {
+  srRunning = false;
+  if (speechRec) {
+    try { speechRec.stop(); } catch(e) {}
+    speechRec = null;
+  }
+  document.getElementById('note-interim').textContent = '';
+  setSrStatus('', 'Reconnaissance vocale arrêtée');
 }
 
-// Trouve le stop de référence le plus proche (≤ 30m) non encore matché
-function findNearestRefStop(lat, lng) {
-  const REF_MATCH_RADIUS = 30;
+function setSrStatus(state, text) {
+  const dot = document.getElementById('sr-dot');
+  const txt = document.getElementById('sr-status-text');
+  dot.className = 'sr-dot' + (state ? ' ' + state : '');
+  txt.textContent = text;
+}
+
+function addNoteSegment(text) {
+  const nearest    = findNearestStop();
+  const isTournee  = isTourneeRelated(text);
+  const seg = {
+    id:       ++noteIdCounter,
+    text,
+    ts:       Date.now(),
+    stopId:   nearest?.id   || null,
+    stopAddr: nearest?.address || (nearest ? `Arrêt #${nearest.id}` : null),
+    lat:      lastPos?.lat  || null,
+    lng:      lastPos?.lng  || null,
+    kept:     isTournee     // auto-garder si lié à la tournée
+  };
+  noteSegments.unshift(seg); // plus récent en haut
+  refreshNotesList();
+
+  // Badge dans le HUD si note tournée
+  if (isTournee) vibrate([30, 20, 30]);
+}
+
+function findNearestStop() {
+  if (!lastPos || stops.length === 0) return null;
   let best = null, bestDist = Infinity;
-  for (const s of recRefStops) {
-    if (s._matched || !s.lat || !s.lng) continue;
-    const d = haversine(lat, lng, s.lat, s.lng);
-    if (d < REF_MATCH_RADIUS && d < bestDist) { best = s; bestDist = d; }
+  for (const s of stops) {
+    const d = haversine(lastPos.lat, lastPos.lng, s.lat, s.lng);
+    if (d < bestDist) { bestDist = d; best = s; }
   }
-  return best;
+  return bestDist < 150 ? best : null; // dans un rayon de 150m
 }
 
-// Charge les feux rouges de la zone via Overpass API (en arrière-plan, silencieux)
-async function fetchTrafficLights() {
-  // Bbox légèrement élargie autour de la tournée
-  const q = '[out:json];node["highway"="traffic_signals"](43.2680,5.4220,43.2920,5.4700);out;';
-  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
-  try {
-    const r = await fetch(url, { headers: { 'User-Agent': 'TourneeGuide/2.1' } });
-    if (!r.ok) return;
-    const data = await r.json();
-    recTrafficLights = (data.elements || []).map(el => ({ lat: el.lat, lng: el.lon }));
-    setAutoStatusLbl(`Prêt (${recTrafficLights.length} feux chargés)`);
-  } catch(e) {
-    // Overpass indisponible : on continue sans filtre feux
-    console.warn('Overpass unavailable:', e.message);
-  }
+function toggleNote(id) {
+  const seg = noteSegments.find(s => s.id === id);
+  if (seg) { seg.kept = !seg.kept; refreshNotesList(); }
 }
 
-// Vérifie si une position GPS est à moins de 20m d'un feu rouge connu
-function isNearTrafficLight(lat, lng) {
-  const LIGHT_RADIUS = 20; // mètres
-  return recTrafficLights.some(tl => haversine(lat, lng, tl.lat, tl.lng) < LIGHT_RADIUS);
-}
-
-// Mise à jour de la barre de progression dwell (appelée ~2/s)
-let _dwellAnimFrame = null;
-function updateDwellBar() {
-  if (!recDwellStart) { document.getElementById('auto-dwell-fill').style.width = '0%'; return; }
-  const elapsed = Date.now() - recDwellStart;
-  const pct = Math.min(100, (elapsed / AUTO_DELAY) * 100);
-  document.getElementById('auto-dwell-fill').style.width = pct + '%';
-  if (pct < 100 && recDwellTimer) {
-    _dwellAnimFrame = setTimeout(updateDwellBar, 80);
-  }
-}
-
-function autoDetectStop(lat, lng) {
-  if (!recAutoEnabled || !recRunning) return;
-
-  if (recAutoCooldown) {
-    setAutoStatusLbl('⏳ Cooldown…');
+function refreshNotesList() {
+  const list = document.getElementById('notes-list');
+  if (noteSegments.length === 0) {
+    list.innerHTML = '<div class="note-empty">Les notes vocales<br>apparaîtront ici</div>';
     return;
   }
 
-  if (!recDwellPos) {
-    recDwellPos = { lat, lng };
-    setAutoStatusLbl('Position initiale…');
+  // Compte les notes gardées
+  const keptCount = noteSegments.filter(s => s.kept).length;
+  const totalCount = noteSegments.length;
+
+  list.innerHTML = `<div style="padding:4px 12px 2px;font-size:8px;color:var(--muted);border-bottom:1px solid var(--border)">` +
+    `${keptCount} / ${totalCount} notes liées à la tournée — appui sur ✕/✓ pour changer</div>` +
+    noteSegments.map(s => {
+      const time = new Date(s.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      const badge = s.kept ? 'tour' : 'hors';
+      const badgeLabel = s.kept ? '✓ tournée' : '✕ hors';
+      const stopRef = s.stopAddr ? `📍 ${s.stopAddr}` : '📍 hors arrêt';
+      return `
+      <div class="note-item ${s.kept ? '' : 'discarded'}" id="note-${s.id}">
+        <div class="note-badge ${badge}">${badgeLabel}</div>
+        <div class="note-body">
+          <div class="note-text">${escapeHtml(s.text)}</div>
+          <div class="note-meta">${time} · ${stopRef}</div>
+        </div>
+        <button class="note-toggle" onclick="toggleNote(${s.id})" title="Inclure/Exclure">
+          ${s.kept ? '✕' : '✓'}
+        </button>
+      </div>`;
+    }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODE NAVIGATION GUIDÉE
+// ════════════════════════════════════════════════════════════════
+let navMode      = false;
+let navStops     = [];       // liste ordonnée des arrêts du template
+let navDelivered = new Set(); // IDs des arrêts livrés
+let navTargetMarker = null;  // marqueur de l'arrêt cible courant
+let _pendingNavData = null;  // données en attente de choix mode
+
+function isTemplateJson(data) {
+  // Template = pas de positions GPS enregistrées (tournée future)
+  return (!data.positions || data.positions.length === 0) && data.stops && data.stops.length > 0;
+}
+
+function promptNavMode(data) {
+  _pendingNavData = data;
+  const total  = (data.stops || []).length;
+  const name   = data.name || 'Tournée';
+  document.getElementById('nav-choice-info').innerHTML =
+    `<strong>${escapeHtml(name)}</strong><br>${total} arrêts`;
+  document.getElementById('modal-nav-choice').classList.add('visible');
+}
+
+function chooseVisualize() {
+  document.getElementById('modal-nav-choice').classList.remove('visible');
+  if (_pendingNavData) { loadTourDataDirect(_pendingNavData); _pendingNavData = null; }
+}
+
+function chooseNavigate() {
+  document.getElementById('modal-nav-choice').classList.remove('visible');
+  if (_pendingNavData) { setupNavMode(_pendingNavData); _pendingNavData = null; }
+}
+
+function setupNavMode(data) {
+  // Filtrer les stops avec GPS valides
+  navStops = (data.stops || []).filter(s => s.lat && s.lng);
+  navDelivered = new Set();
+  navMode = true;
+
+  // Charger les données et afficher tous les points sur la carte
+  loadTourDataDirect(data);
+
+  // Aller sur l'onglet Arrêts pour voir la liste
+  switchTab('stops');
+  refreshStopsList();
+
+  // ⚠️ La bannière nav et le GPS ne démarrent PAS ici —
+  // l'utilisateur peut explorer la carte librement.
+  // Le bouton COMMENCER lance réellement la tournée.
+  updateMainBtn('', '▶', 'COMMENCER TOURNÉE');
+
+  // Parcours en ROUGE en mode navigation (non livré = rouge, livré = vert)
+  if (polyline) polyline.setStyle({ color: '#ff4d6d', weight: 5, opacity: 0.9 });
+
+  showToast(`📍 ${navStops.length} arrêts — Explore la carte puis appuie sur COMMENCER`);
+}
+
+function stopNavMode() {
+  navMode = false;
+  navStops = [];
+  navDelivered = new Set();
+  if (navTargetMarker) { navTargetMarker.remove(); navTargetMarker = null; }
+  document.getElementById('nav-banner').classList.remove('show');
+  // Restaurer la couleur de la polyline
+  if (polyline) polyline.setStyle({ color: '#00e5ff', weight: 4, opacity: 0.85 });
+}
+
+function navCurrentStop() {
+  return navStops.find(s => !navDelivered.has(s.id)) || null;
+}
+
+function navNextStop() {
+  const rem = navStops.filter(s => !navDelivered.has(s.id));
+  return rem.length > 1 ? rem[1] : null;
+}
+
+function updateNavBanner() {
+  if (!navMode) return;
+  const current = navCurrentStop();
+  const next    = navNextStop();
+  const done    = navDelivered.size;
+  const total   = navStops.length;
+
+  document.getElementById('nav-progress').textContent = `${done}/${total}`;
+
+  if (!current) {
+    document.getElementById('nav-stop-num').textContent    = '✓';
+    document.getElementById('nav-stop-addr').textContent   = 'Tous les arrêts livrés !';
+    document.getElementById('nav-stop-client').textContent = '';
+    document.getElementById('nav-dist').textContent        = '—';
+    document.getElementById('nav-next').textContent        = '';
+    const notesEl = document.getElementById('nav-stop-notes');
+    notesEl.textContent = '';
+    notesEl.classList.remove('visible');
+    document.getElementById('nav-banner').classList.remove('near','at-stop');
+    if (navTargetMarker) { navTargetMarker.remove(); navTargetMarker = null; }
+    vibrate([100, 50, 100, 50, 200]);
     return;
   }
 
-  const dist = haversine(recDwellPos.lat, recDwellPos.lng, lat, lng);
+  document.getElementById('nav-stop-num').textContent    = `#${current.id}`;
+  document.getElementById('nav-stop-addr').textContent   = current.address || `Arrêt ${current.id}`;
+  document.getElementById('nav-stop-client').textContent = current.clientName || '';
+  document.getElementById('nav-next').textContent        = next
+    ? `→ #${next.id} ${(next.address || '').substring(0, 28)}`
+    : '→ Dernier arrêt';
 
-  if (dist < AUTO_RADIUS) {
-    // 1. Filtre feux rouges (annule le timer même s'il tourne — vrai feu rouge)
-    if (isNearTrafficLight(lat, lng)) {
-      setAutoStatusLbl('🚦 Feu — ignoré');
-      if (recDwellTimer) { clearTimeout(recDwellTimer); recDwellTimer = null; recDwellStart = null; document.getElementById('auto-dwell-fill').style.width = '0%'; }
-      return;
-    }
+  const notesEl = document.getElementById('nav-stop-notes');
+  if (current.notes) {
+    notesEl.textContent = '⚠ ' + current.notes.substring(0, 80);
+    notesEl.classList.add('visible');
+  } else {
+    notesEl.textContent = '';
+    notesEl.classList.remove('visible');
+  }
 
-    // Si le timer tourne déjà → ne pas ré-évaluer la correspondance
-    // (évite l'annulation du timer par dérive GPS — Bug A)
-    if (recDwellTimer) return;
+  // Mettre à jour le marqueur cible
+  if (current.lat && current.lng) {
+    if (navTargetMarker) navTargetMarker.remove();
+    const icon = L.divIcon({ className:'', html:'<div class="stop-target"></div>', iconSize:[18,18], iconAnchor:[9,9] });
+    navTargetMarker = L.marker([current.lat, current.lng], { icon, zIndexOffset:1100 }).addTo(map);
+    navTargetMarker.bindTooltip(`🎯 #${current.id}`, { permanent:true, direction:'top', offset:[0,-12], className:'stop-tooltip' });
+  }
 
-    // 2. Corroboration référence SEULEMENT si au moins un arrêt est géocodé
-    // (si géocodage pas encore terminé → fallback dwell générique — Bug B)
-    const hasGeocoded = recRefStops.some(s => s.lat && s.lng);
-    if (hasGeocoded) {
-      const match = findNearestRefStop(lat, lng);
-      if (!match) {
-        setAutoStatusLbl('📍 Hors tournée — ignoré');
-        return;
-      }
-      // Adresse reconnue : démarrer le timer avec les infos de référence
-      recDwellStart = Date.now();
-      updateDwellBar();
-      setAutoStatusLbl(`✔ ${match.clientName || match.address}`);
-      recDwellTimer = setTimeout(() => {
-        recDwellTimer = null; recDwellStart = null;
-        document.getElementById('auto-dwell-fill').style.width = '0%';
-        addAutoStop(lat, lng, match);
-      }, AUTO_DELAY);
+  // Distance et proximité
+  if (lastPos && current.lat) {
+    const d = haversine(lastPos.lat, lastPos.lng, current.lat, current.lng);
+    document.getElementById('nav-dist').textContent = formatDist(d);
+    const banner = document.getElementById('nav-banner');
+    if (d < 15) {
+      banner.classList.add('at-stop');
+      banner.classList.remove('near');
+    } else if (d < 50) {
+      banner.classList.add('near');
+      banner.classList.remove('at-stop');
     } else {
-      // Pas d'arrêts de référence géocodés : comportement générique (dwell simple)
-      recDwellStart = Date.now();
-      updateDwellBar();
-      setAutoStatusLbl('Arrêt détecté… 4s');
-      recDwellTimer = setTimeout(() => {
-        recDwellTimer = null; recDwellStart = null;
-        document.getElementById('auto-dwell-fill').style.width = '0%';
-        addAutoStop(lat, lng, null);
-      }, AUTO_DELAY);
+      banner.classList.remove('near','at-stop');
     }
   } else {
-    // L'utilisateur a bougé → réinitialiser
-    if (recDwellTimer) {
-      clearTimeout(recDwellTimer);
-      recDwellTimer = null;
-      recDwellStart = null;
-      document.getElementById('auto-dwell-fill').style.width = '0%';
-    }
-    recDwellPos = { lat, lng };
-    setAutoStatusLbl(`En mouvement (${Math.round(dist)}m)`);
+    document.getElementById('nav-dist').textContent = '—';
+  }
+
+  // Centrer la carte sur l'arrêt cible si pas en cours de tournée
+  if (!isRunning && current.lat && current.lng) {
+    map.panTo([current.lat, current.lng], { animate: true, duration: 0.5 });
   }
 }
 
-function addAutoStop(lat, lng, refStop) {
-  // Cooldown pour éviter double-enregistrement
-  recAutoCooldown = true;
-  recDwellPos = null;
-  // Marquer le refStop comme déjà utilisé pour ne pas le re-matcher
-  if (refStop) refStop._matched = true;
-  setTimeout(() => {
-    recAutoCooldown = false;
-    recDwellPos = null;
-    setAutoStatusLbl('Prêt');
-  }, AUTO_COOLDOWN);
+function navMarkDelivered() {
+  const current = navCurrentStop();
+  if (!current) return;
+  navDelivered.add(current.id);
 
-  const stopNum = recStops.length + 1;
+  // Changer le marqueur en "livré"
+  const entry = stopMarkers.find(e => e.stop.id === current.id);
+  if (entry) {
+    const icon = L.divIcon({ className:'', html:'<div class="stop-delivered"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+    entry.marker.setIcon(icon);
+    entry.marker.setTooltipContent(`✓ #${current.id}`);
+  }
 
-  // Si on a une adresse de référence → pré-remplir avec toutes les données connues
-  const stop = refStop ? {
-    id: stopNum,
-    clientName: refStop.clientName || `Arrêt ${stopNum}`,
-    address:    refStop.address   || `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-    floor:      refStop.floor     || '',
-    doorCode:   refStop.doorCode  || '',
-    notes:      refStop.notes     || '',
-    products:   refStop.products  || [{ name: 'La Provence', qty: 1 }],
-    lat, lng,
-    delivered: false,
-    autoDetected: true,
-    refId: refStop.id   // lien avec l'ID du fichier de référence
-  } : {
-    id: stopNum,
-    clientName: `Arrêt ${stopNum}`,
-    address: '',
-    floor: '', doorCode: '', notes: 'auto',
-    products: [{ name: 'La Provence', qty: 1 }],
-    lat, lng,
-    delivered: false,
-    autoDetected: true
+  // Supprimer le marqueur cible
+  if (navTargetMarker) { navTargetMarker.remove(); navTargetMarker = null; }
+
+  document.getElementById('hud-stops').textContent = navDelivered.size;
+  vibrate([60, 30, 60]);
+  showToast(`✅ Arrêt #${current.id} livré — ${navDelivered.size}/${navStops.length}`);
+  updateNavBanner();
+
+  // Centrer sur le prochain
+  const next = navCurrentStop();
+  if (next && next.lat && map) {
+    setTimeout(() => map.panTo([next.lat, next.lng], { animate:true, duration:0.6 }), 300);
+  }
+}
+
+function navSkipStop() {
+  const current = navCurrentStop();
+  if (!current) return;
+  // Remettre à la fin de la liste
+  const idx = navStops.findIndex(s => s.id === current.id);
+  if (idx >= 0) {
+    navStops.splice(idx, 1);
+    navStops.push(current);
+  }
+  if (navTargetMarker) { navTargetMarker.remove(); navTargetMarker = null; }
+  showToast(`⏭ Arrêt #${current.id} reporté à la fin`);
+  updateNavBanner();
+}
+
+function navGoToStop(stopId) {
+  // Naviguer vers un arrêt spécifique depuis la liste
+  const idx = navStops.findIndex(s => s.id === stopId && !navDelivered.has(stopId));
+  if (idx < 0) return;
+  // Remonter en tête
+  const stop = navStops.splice(idx, 1)[0];
+  navStops.unshift(stop);
+  if (navTargetMarker) { navTargetMarker.remove(); navTargetMarker = null; }
+  showToast(`🎯 Navigation vers arrêt #${stopId}`);
+  updateNavBanner();
+}
+
+// ════════════════════════════════════════════════════════════════
+// WRAPPER loadTourData — détecte template vs tournée complète
+// ════════════════════════════════════════════════════════════════
+// Renommer l'ancienne fonction en loadTourDataDirect (appelée directement)
+const loadTourDataDirect = loadTourData;
+
+// Nouvelle version avec détection template
+function loadTourDataSmart(data) {
+  if (isTemplateJson(data)) {
+    promptNavMode(data);
+  } else {
+    loadTourDataDirect(data);
+  }
+}
+
+// Patcher les entrées qui appellent loadTourData via fichier ou bibliothèque
+(function() {
+  const origOnJson = window.onJsonFileSelected;
+  // Intercepter onJsonFileSelected
+  window._loadFromFile = function(data) { loadTourDataSmart(data); };
+  // Intercepter selectTourFromLibrary
+  const origSelect = window.selectTourFromLibrary;
+  window.selectTourFromLibrary = function(id) {
+    const entry = libTours.find(t => t.id === id);
+    if (!entry) return;
+    activeTourId = id;
+    closeLibrary();
+    document.getElementById('btn-lib-save').disabled = false;
+    loadTourDataSmart(entry.data);
   };
+})();
 
-  recStops.push(stop);
-  addRecStopMarker(stop);
-  document.getElementById('rec-stops-hud').textContent = recStops.length;
-  renderRecStopsList();
+window.addEventListener('load', () => { initMap(); libLoad(); });
 
-  if (refStop) {
-    // Adresse déjà connue — pas besoin de reverse geocode
-    setAutoStatusLbl(`✓ #${stopNum} ${stop.clientName}`);
-  } else {
-    // Pas de référence → reverse geocode
-    reverseGeocode(lat, lng, addr => {
-      stop.address = addr || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      renderRecStopsList();
-      setAutoStatusLbl(`✓ #${stopNum} enregistré`);
-    });
-    setAutoStatusLbl(`✓ Arrêt ${stopNum} — geocodage…`);
+// Patcher onJsonFileSelected pour utiliser loadTourDataSmart
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('input-json');
+  if (inp) {
+    inp.onchange = function(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try { loadTourDataSmart(JSON.parse(e.target.result)); }
+        catch { alert('Fichier JSON invalide.'); }
+      };
+      reader.readAsText(file);
+      evt.target.value = '';
+    };
   }
-}
-
-// ══════════════════════════════════════════════════════════════
-// PAUSE / REPRISE NAVIGATION
-// ══════════════════════════════════════════════════════════════
-function toggleNavPause() {
-  const btn = document.getElementById('btn-nav-pause');
-  if (!navPaused) {
-    // ── PAUSE ──
-    navPaused = true;
-    btn.textContent = '▶ REPRISE';
-    btn.style.color = 'var(--muted)';
-    btn.style.borderColor = 'var(--muted)';
-    btn.style.background = 'rgba(255,255,255,0.04)';
-    // Arrêter GPS + timer d'arrivée
-    if (navArrivalTimer) { clearTimeout(navArrivalTimer); navArrivalTimer = null; }
-    if (navWatchId !== null) { navigator.geolocation.clearWatch(navWatchId); navWatchId = null; }
-    speechSynthesis && speechSynthesis.cancel();
-    speak('Tournée en pause.');
-  } else {
-    // ── REPRISE ──
-    navPaused = false;
-    btn.textContent = '⏸ PAUSE';
-    btn.style.color = 'var(--yellow)';
-    btn.style.borderColor = 'var(--yellow)';
-    btn.style.background = 'rgba(255,214,10,.08)';
-    // Relancer GPS
-    if (navigator.geolocation && navRoute) {
-      navWatchId = navigator.geolocation.watchPosition(
-        onNavPos,
-        err => console.warn('GPS nav:', err.message),
-        { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-      );
-    }
-    speak('Tournée reprise.');
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// ENREGISTREMENT AUDIO (tranches de 10 min)
-// ══════════════════════════════════════════════════════════════
-async function startAudioRec() {
-  stopAudioRec(); // couper un éventuel enregistrement précédent (évite la fuite micro)
-  audioChunkNum = 0;
-  try {
-    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    startNewAudioChunk();
-  } catch(e) {
-    console.warn('Micro non disponible :', e.message);
-    // L'app continue normalement sans audio
-  }
-}
-
-function startNewAudioChunk() {
-  if (!audioStream) return;
-  audioChunks = [];
-  const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg',''].find(m => !m || MediaRecorder.isTypeSupported(m)) || '';
-  audioRecorder = new MediaRecorder(audioStream, mimeType ? { mimeType } : {});
-  audioRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
-  audioRecorder.onstop = () => {
-    if (audioChunks.length === 0) return;
-    const blob = new Blob(audioChunks, { type: audioRecorder.mimeType || 'audio/webm' });
-    const ext = (audioRecorder.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
-    const d = new Date();
-    const dateStr = d.toISOString().slice(0, 10);
-    const timeStr = d.toTimeString().slice(0, 5).replace(':', 'h');
-    const fname = `tournee_${dateStr}_${timeStr}_partie${audioChunkNum}.${ext}`;
-    downloadBlob(blob, fname);
-  };
-  audioRecorder.start(2000); // flush toutes les 2s
-  // Planifier la prochaine tranche dans 10 minutes
-  audioChunkTimer = setTimeout(() => {
-    audioChunkNum++;
-    if (audioRecorder && audioRecorder.state === 'recording') audioRecorder.stop();
-    setTimeout(startNewAudioChunk, 800); // petit délai pour laisser onstop se déclencher
-  }, 10 * 60 * 1000);
-}
-
-function stopAudioRec() {
-  if (audioChunkTimer) { clearTimeout(audioChunkTimer); audioChunkTimer = null; }
-  if (audioRecorder && audioRecorder.state !== 'inactive') {
-    audioChunkNum++;
-    try { audioRecorder.stop(); } catch(e) {}
-  }
-  if (audioStream) {
-    audioStream.getTracks().forEach(t => t.stop());
-    audioStream = null;
-  }
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
-}
-
-// ══════════════════════════════════════════════════════════════
-// RAPPORT DE TOURNÉE
-// ══════════════════════════════════════════════════════════════
-function generateReport() {
-  if (!navRoute) return;
-  const d = new Date();
-  const dateStr = d.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const timeStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
-  const dur = navStart ? formatElapsedLong(Date.now() - navStart) : '—';
-  const delivered = navRoute.stops.filter(s => s.delivered);
-  const skipped   = navRoute.stops.filter(s => !s.delivered);
-  const totalJournaux = delivered.reduce((sum, s) => sum + (s.products ? s.products.reduce((a, p) => a + p.qty, 0) : 1), 0);
-
-  let txt = '';
-  txt += `╔══════════════════════════════════════════╗\n`;
-  txt += `  RAPPORT DE TOURNÉE — ${navRoute.name}\n`;
-  txt += `╚══════════════════════════════════════════╝\n`;
-  txt += `  Date    : ${dateStr}\n`;
-  txt += `  Heure   : ${timeStr}\n`;
-  txt += `  Durée   : ${dur}\n`;
-  txt += `  Livrés  : ${delivered.length} / ${navRoute.stops.length} arrêts\n`;
-  txt += `  Journaux: ${totalJournaux} exemplaires livrés\n`;
-  txt += `──────────────────────────────────────────\n\n`;
-
-  txt += `DÉTAIL DES ARRÊTS :\n\n`;
-  navRoute.stops.forEach(s => {
-    const ok = s.delivered;
-    const qty = s.products ? s.products.reduce((a, p) => a + p.qty, 0) : 1;
-    const heure = s.deliveredAt
-      ? new Date(s.deliveredAt).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })
-      : '—';
-    txt += ok
-      ? `  ✓ #${String(s.id).padEnd(3)} ${s.clientName}\n`
-      : `  ✗ #${String(s.id).padEnd(3)} ${s.clientName}\n`;
-    txt += `       ${s.address}\n`;
-    if (ok) {
-      txt += `       Livré à ${heure}  ·  ${qty} journal${qty > 1 ? 'x' : ''}\n`;
-    } else {
-      txt += `       NON LIVRÉ\n`;
-    }
-    if (s.notes && s.notes.trim()) {
-      const noteOnly = s.notes.replace(/\s*\|\s*\d\/7/, '').trim();
-      if (noteOnly) txt += `       Note : ${noteOnly}\n`;
-    }
-    txt += '\n';
-  });
-
-  if (skipped.length > 0) {
-    txt += `──────────────────────────────────────────\n`;
-    txt += `NON LIVRÉS (${skipped.length}) :\n`;
-    skipped.forEach(s => {
-      txt += `  · #${s.id} ${s.clientName} — ${s.address}\n`;
-    });
-    txt += '\n';
-  }
-
-  txt += `══════════════════════════════════════════\n`;
-  txt += `  Généré par TournéeGuide\n`;
-
-  const dFmt = d.toISOString().slice(0, 10);
-  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  downloadBlob(blob, `rapport_tournee_${dFmt}.txt`);
-}
-
-// ══════════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════════
-window.addEventListener('load', () => {
-  showScreen('home');
-  // Précharger les voix TTS
-  if (window.speechSynthesis) window.speechSynthesis.getVoices();
 });
-window.speechSynthesis && window.speechSynthesis.addEventListener &&
-  window.speechSynthesis.addEventListener('voiceschanged', () => {});
 </script>
 </body>
 </html>
