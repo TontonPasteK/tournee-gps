@@ -2143,12 +2143,20 @@ function updateMainBtn(cls,icon,label) {
   document.getElementById('btn-icon').textContent = icon;
   document.getElementById('btn-label').textContent = label;
 }
+function syncCtrlState() {
+  if (isRunning)       showCtrlState('running');
+  else if (navMode)    showCtrlState('ready');
+  else                 showCtrlState('home');
+}
+
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
     t.classList.toggle('active', ['controls','stops','notes','export'][i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
+  // Resynchroniser l'état du panneau Controls à chaque retour sur cet onglet
+  if (name === 'controls') syncCtrlState();
 }
 function vibrate(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
