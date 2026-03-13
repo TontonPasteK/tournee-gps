@@ -599,35 +599,60 @@ html, body {
     <div class="tab-content active" id="tab-controls">
       <div class="ctrl">
 
-        <!-- ── Bouton principal unique (change selon l'état) ── -->
-        <button class="btn-main" id="btn-main" onclick="mainAction()" style="margin-bottom:10px">
-          <span id="btn-icon">🧭</span>
-          <span id="btn-label">CHARGER MA TOURNÉE</span>
+        <!-- ══ BOUTON PRINCIPAL UNIQUE (caché en accueil, visible en ready/running) ══ -->
+        <button class="btn-main" id="btn-main" onclick="mainAction()" style="display:none;margin-bottom:10px;width:100%">
+          <span id="btn-icon">▶</span>
+          <span id="btn-label">COMMENCER TOURNÉE</span>
         </button>
 
-        <!-- ── Contenu ACCUEIL ── -->
+        <!-- ══════════════════════════════════════════
+             ÉTAT ACCUEIL — deux boutons principaux
+             ══════════════════════════════════════════ -->
         <div id="ctrl-home">
-          <div style="text-align:center;font-size:9px;color:var(--muted);margin-bottom:12px">Importe ton fichier JSON pour la navigation guidée</div>
-          <div class="btn-row">
-            <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
-            <button class="btn-sm" onclick="startFreeMode()" style="font-size:9px">⏺ Mode libre</button>
-          </div>
+          <button onclick="openLibraryForNav()" style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            width:100%;padding:18px 12px;border-radius:14px;border:none;cursor:pointer;
+            background:var(--accent2);color:#fff;margin-bottom:10px;gap:4px;
+            font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">
+            <span style="font-size:28px;line-height:1">🧭</span>
+            <span style="font-size:16px">DÉMARRER UNE TOURNÉE</span>
+            <span style="font-size:9px;opacity:.75;font-family:'Space Mono',monospace;letter-spacing:0">Sélectionner et suivre les arrêts</span>
+          </button>
+          <button onclick="startFreeMode()" style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            width:100%;padding:14px 12px;border-radius:14px;cursor:pointer;
+            background:rgba(0,229,255,0.08);border:1.5px solid rgba(0,229,255,0.35);
+            color:var(--accent);margin-bottom:0;gap:4px;
+            font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">
+            <span style="font-size:22px;line-height:1">⏺</span>
+            <span style="font-size:14px">CRÉER UNE TOURNÉE</span>
+            <span style="font-size:9px;opacity:.65;font-family:'Space Mono',monospace;letter-spacing:0">Enregistre ton parcours en temps réel (GPS + audio)</span>
+          </button>
         </div>
 
-        <!-- ── Contenu PRÊT (tournée chargée) ── -->
+        <!-- ══════════════════════════════════════════
+             ÉTAT PRÊT — tournée chargée, prête à démarrer
+             ══════════════════════════════════════════ -->
         <div id="ctrl-ready" style="display:none">
-          <div id="tour-info-card" style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;text-align:center">
-            <div id="tour-info-name" style="font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:1px">—</div>
-            <div id="tour-info-stops" style="font-size:10px;color:var(--muted);margin-top:3px">— arrêts</div>
+          <div style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.3);
+                      border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center">
+            <div id="tour-info-name" style="font-size:14px;font-weight:700;color:var(--accent2);
+                                            letter-spacing:1px;font-family:'Bebas Neue',sans-serif">—</div>
+            <div id="tour-info-stops" style="font-size:10px;color:var(--muted);margin-top:4px">— arrêts</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:3px;opacity:.7">
+              🔴 Rouge = à livrer &nbsp;·&nbsp; 🟢 Vert = livré
+            </div>
           </div>
           <div class="btn-row">
             <button class="btn-sm" id="btn-fit" onclick="fitBoundsToRoute()" style="font-size:9px">🗺 Vue globale</button>
-            <button class="btn-sm hl-cyan" onclick="openLibrary()" style="font-size:9px">📚 Mes tournées</button>
+            <button class="btn-sm hl-cyan" onclick="openLibraryForNav()" style="font-size:9px">🔄 Changer</button>
             <button class="btn-sm" onclick="resetToHome()" style="font-size:9px;color:var(--muted)">✕ Annuler</button>
           </div>
         </div>
 
-        <!-- ── Contenu EN COURS ── -->
+        <!-- ══════════════════════════════════════════
+             ÉTAT EN COURS — navigation ou enregistrement actif
+             ══════════════════════════════════════════ -->
         <div id="ctrl-running" style="display:none">
           <div class="seg-indicator hidden" id="seg-indicator">
             🎙 Segment audio <span id="seg-num">1</span> en cours — <span id="seg-size">0 MB</span>
@@ -683,15 +708,17 @@ html, body {
 <div class="lib-modal-overlay" id="modal-library">
   <div class="lib-panel">
     <div class="lib-header">
-      <div class="lib-title">📚 MES TOURNÉES</div>
+      <div class="lib-title" id="lib-title">📚 MES TOURNÉES</div>
       <button class="lib-close" onclick="closeLibrary()">✕</button>
     </div>
     <div class="lib-actions">
-      <button class="btn-sm hl-cyan" style="height:36px;font-size:9px" onclick="triggerLoadJson()">📂 Importer JSON</button>
-      <button class="btn-sm hl-green" style="height:36px;font-size:9px" id="btn-lib-save" disabled onclick="saveCurrentToLibrary()">💾 Sauvegarder actuelle</button>
+      <button class="btn-sm hl-cyan" style="height:40px;font-size:10px;flex:1" onclick="triggerLoadJson()">📂 Importer un fichier JSON</button>
+      <button class="btn-sm hl-green" style="height:40px;font-size:10px" id="btn-lib-save" disabled onclick="saveCurrentToLibrary()">💾 Sauvegarder</button>
     </div>
     <div class="lib-list" id="lib-list">
-      <div class="lib-empty">Aucune tournée sauvegardée.<br>Importe un fichier JSON ou<br>termine une tournée pour la sauvegarder.</div>
+      <div class="lib-empty">Aucune tournée sauvegardée.<br><br>
+        Appuie sur <strong>📂 Importer un fichier JSON</strong><br>
+        pour charger une tournée depuis ton téléphone.</div>
     </div>
   </div>
 </div>
@@ -815,37 +842,39 @@ function initMap() {
 // ════════════════════════════════════════════════════════════════
 // États : 'home' | 'ready' | 'running' | 'free' | 'free-running'
 function showCtrlState(state) {
+  // Masquer tous les blocs d'état
   ['ctrl-home','ctrl-ready','ctrl-running'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  const map = {
-    'home':    'ctrl-home',
-    'ready':   'ctrl-ready',
-    'running': 'ctrl-running'
-  };
-  const target = document.getElementById(map[state]);
+  // Afficher le bon bloc
+  const target = document.getElementById('ctrl-' + state);
   if (target) target.style.display = '';
 
-  // Adapter le bouton principal à chaque état
+  // Gérer le btn-main unique
   const btn = document.getElementById('btn-main');
   if (!btn) return;
+
   if (state === 'home') {
-    btn.className = 'btn-main';
-    btn.style.background = 'var(--accent2)'; btn.style.color = '#fff';
-    btn.onclick = triggerLoadJson;
-    document.getElementById('btn-icon').textContent = '🧭';
-    document.getElementById('btn-label').textContent = 'CHARGER MA TOURNÉE';
+    // En accueil : les deux gros boutons sont dans ctrl-home, btn-main est caché
+    btn.style.display = 'none';
+
   } else if (state === 'ready') {
+    // Prêt à démarrer : btn vert COMMENCER
+    btn.style.display = '';
     btn.className = 'btn-main';
-    btn.style.background = 'var(--green)'; btn.style.color = '#000';
-    btn.onclick = mainAction;
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#000';
+    btn.style.removeProperty && btn.style.removeProperty('margin');
     document.getElementById('btn-icon').textContent = '▶';
     document.getElementById('btn-label').textContent = 'COMMENCER TOURNÉE';
+
   } else if (state === 'running') {
+    // En cours : btn rouge ARRÊTER
+    btn.style.display = '';
     btn.className = 'btn-main running';
-    btn.style.background = ''; btn.style.color = '';
-    btn.onclick = mainAction;
+    btn.style.background = '';
+    btn.style.color = '';
     document.getElementById('btn-icon').textContent = '■';
     document.getElementById('btn-label').textContent = 'ARRÊTER';
   }
@@ -2245,15 +2274,36 @@ function selectTourFromLibrary(id) {
   document.getElementById('btn-lib-save').disabled = false;
 }
 
-function openLibrary() {
+// Mode d'ouverture de la bibliothèque : 'nav' = navigation auto, 'default' = comportement normal
+let _libOpenMode = 'default';
+
+function openLibraryForNav() {
+  _libOpenMode = 'nav';
   libLoad();
-  // Activer "Sauvegarder actuelle" si une tournée est en mémoire
+  document.getElementById('lib-title').textContent = '🧭 DÉMARRER UNE TOURNÉE';
+  document.getElementById('btn-lib-save').disabled = true; // pas de sauvegarde ici
+  // Message si aucune tournée
+  if (libTours.length === 0) {
+    renderLibraryList();
+    document.getElementById('modal-library').classList.add('visible');
+    return;
+  }
+  renderLibraryList();
+  document.getElementById('modal-library').classList.add('visible');
+}
+
+function openLibrary() {
+  _libOpenMode = 'default';
+  libLoad();
+  document.getElementById('lib-title').textContent = '📚 MES TOURNÉES';
   document.getElementById('btn-lib-save').disabled = (stops.length === 0 && positions.length === 0);
   renderLibraryList();
   document.getElementById('modal-library').classList.add('visible');
 }
 
 function closeLibrary() {
+  _libOpenMode = 'default';
+  document.getElementById('lib-title').textContent = '📚 MES TOURNÉES';
   document.getElementById('modal-library').classList.remove('visible');
 }
 
@@ -2764,26 +2814,25 @@ function loadTourDataSmart(data) {
   }
 }
 
-// Patcher les entrées qui appellent loadTourData via fichier ou bibliothèque
-(function() {
-  const origOnJson = window.onJsonFileSelected;
-  // Intercepter onJsonFileSelected
-  window._loadFromFile = function(data) { loadTourDataSmart(data); };
-  // Intercepter selectTourFromLibrary
-  const origSelect = window.selectTourFromLibrary;
-  window.selectTourFromLibrary = function(id) {
-    const entry = libTours.find(t => t.id === id);
-    if (!entry) return;
-    activeTourId = id;
-    closeLibrary();
-    document.getElementById('btn-lib-save').disabled = false;
+// ── Sélection depuis la bibliothèque : respecte le mode d'ouverture ──
+window.selectTourFromLibrary = function(id) {
+  const entry = libTours.find(t => t.id === id);
+  if (!entry) return;
+  activeTourId = id;
+  closeLibrary();
+
+  if (_libOpenMode === 'nav') {
+    // Vient de "DÉMARRER UNE TOURNÉE" → navigation automatique
+    setupNavMode(entry.data);
+  } else {
+    // Accès depuis la bibliothèque classique → smart load (détecte template)
     loadTourDataSmart(entry.data);
-  };
-})();
+  }
+};
 
 window.addEventListener('load', () => { initMap(); libLoad(); showCtrlState('home'); });
 
-// Patcher onJsonFileSelected pour utiliser loadTourDataSmart
+// ── Patch onJsonFileSelected : quand on importe un JSON depuis le mode nav, auto-navigate ──
 document.addEventListener('DOMContentLoaded', () => {
   const inp = document.getElementById('input-json');
   if (inp) {
@@ -2792,7 +2841,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = e => {
-        try { loadTourDataSmart(JSON.parse(e.target.result)); }
+        try {
+          const data = JSON.parse(e.target.result);
+          if (_libOpenMode === 'nav' && isTemplateJson(data)) {
+            setupNavMode(data);
+          } else {
+            loadTourDataSmart(data);
+          }
+        }
         catch { alert('Fichier JSON invalide.'); }
       };
       reader.readAsText(file);
