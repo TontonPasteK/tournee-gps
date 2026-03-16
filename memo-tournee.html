@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mémo Tournée</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;background:#0d0d0d;color:#f0f0f0;font-family:system-ui,-apple-system,sans-serif;overflow:hidden;position:fixed;user-select:none}
+.screen{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;background:#0d0d0d}
+.hidden{display:none!important}
+
+/* ─── ACCUEIL ─── */
+.home-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;gap:10px}
+.home-logo{font-size:52px}
+.home-title{font-size:30px;font-weight:800;color:#f0f0f0;letter-spacing:-0.5px}
+.home-sub{font-size:13px;color:#666;margin-top:-4px}
+.home-cards{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.hcard{background:#171717;border:1.5px solid #2a2a2a;border-radius:18px;padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:background .15s,transform .1s}
+.hcard:active{background:#1e1e1e;transform:scale(0.98)}
+.hcard-icon{font-size:34px;line-height:1;flex-shrink:0}
+.hcard-title{font-size:17px;font-weight:700}
+.hcard-desc{font-size:12px;color:#666;margin-top:2px}
+.hcard.blue{border-color:#1d4ed8}.hcard.blue .hcard-title{color:#60a5fa}
+.hcard.red{border-color:#7f1d1d}.hcard.red .hcard-title{color:#f87171}
+.hcard.amber{border-color:#78350f}.hcard.amber .hcard-title{color:#fbbf24}
+.hcard.green{border-color:#14532d}.hcard.green .hcard-title{color:#4ade80}
+.tour-badge{width:100%;max-width:400px;background:#0f2a0f;border:1.5px solid #166534;border-radius:14px;padding:12px 16px;display:none}
+.tour-badge-lbl{font-size:11px;color:#4ade80;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.tour-badge-name{font-size:16px;font-weight:700;color:#f0f0f0;margin-top:2px}
+.tour-badge-info{font-size:12px;color:#666;margin-top:2px}
+
+/* ─── HEADER ─── */
+.sh{background:#0d0d0d;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1a1a1a;flex-shrink:0;position:sticky;top:0;z-index:10}
+.back{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;color:#f0f0f0;padding:8px 14px;font-size:14px;cursor:pointer;font-weight:600}
+.sh-title{font-size:17px;font-weight:700;flex:1}
+
+/* ─── BOUTONS ─── */
+.btn{border:none;border-radius:14px;font-weight:700;cursor:pointer;padding:16px;width:100%;font-size:16px;transition:opacity .15s,transform .1s}
+.btn:active{opacity:.85;transform:scale(.98)}
+.btn-g{background:#22c55e;color:#000;font-size:18px}
+.btn-r{background:#ef4444;color:#fff;font-size:18px}
+.btn-b{background:#3b82f6;color:#fff;font-size:18px}
+.btn-s{background:#1a1a1a;border:1.5px solid #2a2a2a;color:#f0f0f0;font-size:15px}
+.btn-amber{background:#f59e0b;color:#000;font-size:16px}
+.btn-danger-outline{background:#1a1a1a;border:1.5px solid #ef4444;color:#ef4444;font-size:14px;padding:12px}
+
+/* ─── INFO BOX ─── */
+.infobox{background:#111;border-radius:14px;padding:16px;font-size:13px;color:#888;line-height:1.8}
+.infobox strong{color:#f0f0f0;display:block;margin-bottom:6px}
+
+/* ─── PRÉPARER ─── */
+.prep-wrap{padding:20px;display:flex;flex-direction:column;gap:16px}
+.upload-zone{border:2px dashed #2a2a2a;border-radius:16px;padding:44px 20px;text-align:center;cursor:pointer;transition:border-color .2s}
+.upload-zone:active{border-color:#3b82f6}
+.uz-icon{font-size:52px;margin-bottom:10px}
+.uz-title{font-size:18px;font-weight:700}
+.uz-hint{font-size:13px;color:#555;margin-top:6px}
+.tour-summary{background:#171717;border:1.5px solid #2a2a2a;border-radius:16px;padding:20px}
+.ts-name{font-size:20px;font-weight:800;color:#4ade80}
+.ts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.ts-stat{background:#111;border-radius:10px;padding:12px;text-align:center}
+.ts-val{font-size:26px;font-weight:800}
+.ts-lbl{font-size:10px;color:#555;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.stop-list{background:#171717;border:1.5px solid #2a2a2a;border-radius:16px;overflow:hidden}
+.sl-header{padding:12px 16px;font-size:11px;font-weight:700;color:#555;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid #1a1a1a}
+.sl-item{padding:12px 16px;border-bottom:1px solid #111;display:flex;align-items:flex-start;gap:10px}
+.sl-item:last-child{border-bottom:none}
+.sl-num{background:#222;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.sl-addr{font-size:14px;font-weight:600}
+.sl-subs{font-size:12px;color:#666;margin-top:2px}
+.sl-badges{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700}
+.b-code{background:#1e3a5f;color:#60a5fa}
+.b-note{background:#1a3a1a;color:#4ade80}
+.b-freq{background:#2a1a00;color:#fbbf24}
+.sector-sep{padding:10px 16px 4px;font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:2px;text-transform:uppercase;background:#171717}
+
+/* ─── APPRENDRE ─── */
+.learn-start-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px}
+.learn-hdr{background:#0d0d0d;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.rec-badge{display:flex;align-items:center;gap:8px}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.rec-time{font-size:18px;font-weight:800;color:#ef4444;font-variant-numeric:tabular-nums}
+.learn-progress{font-size:14px;color:#555;font-weight:600}
+.stop-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative}
+.swipe-hints{display:flex;justify-content:space-between;width:100%;max-width:400px;margin-bottom:10px;opacity:.4}
+.sh-l{font-size:12px;color:#888}
+.sh-r{font-size:12px;color:#22c55e;font-weight:700}
+.stop-card{background:#171717;border:1.5px solid #2a2a2a;border-radius:20px;padding:24px 20px;width:100%;max-width:400px;transition:transform .15s,opacity .15s}
+.sc-num{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.sc-addr{font-size:24px;font-weight:800;line-height:1.2}
+.sc-res{font-size:14px;color:#888;margin-top:4px}
+.sc-div{border:none;border-top:1px solid #222;margin:16px 0}
+.sc-subs{display:flex;flex-direction:column;gap:10px}
+.sub-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub-name{font-size:17px;font-weight:600}
+.sub-qty{background:#22c55e;color:#000;font-size:14px;font-weight:800;padding:5px 12px;border-radius:8px}
+.sc-code{background:#1e3a5f;border-radius:10px;padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:8px}
+.sc-code-lbl{font-size:11px;color:#60a5fa;font-weight:700;text-transform:uppercase}
+.sc-code-val{font-size:20px;font-weight:800;color:#fff;letter-spacing:3px}
+.sc-notes{background:#1a2a1a;border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px;color:#4ade80}
+.sc-markers{background:#2a1a00;border-radius:10px;padding:8px 14px;margin-top:8px;font-size:12px;color:#f59e0b}
+.sc-swipe-hint{font-size:11px;color:#444;margin-top:12px;text-align:center}
+.learn-bottom{padding:14px 16px;display:flex;gap:10px;border-top:1px solid #1a1a1a;flex-shrink:0}
+.btn-mark{flex:1;background:#171717;border:2px solid #f59e0b;border-radius:14px;color:#f59e0b;font-size:14px;font-weight:700;padding:15px 10px;cursor:pointer;transition:background .15s}
+.btn-mark:active{background:#2a1a00}
+.btn-livré{flex:2;background:#22c55e;border:none;border-radius:14px;color:#000;font-size:20px;font-weight:800;padding:15px;cursor:pointer}
+.btn-livré:active{opacity:.8}
+
+/* ─── FINALISER ─── */
+.fin-wrap{padding:18px;display:flex;flex-direction:column;gap:12px}
+.fin-stop{background:#171717;border:1.5px solid #2a2a2a;border-radius:14px;padding:16px}
+.fin-stop.has-note{border-color:#22c55e}
+.fin-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.fin-addr{font-size:15px;font-weight:700;flex:1}
+.fin-code{background:#1e3a5f;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:800;color:#60a5fa;flex-shrink:0}
+.play-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.play-btn{background:#1e3a5f;border:none;border-radius:8px;color:#60a5fa;font-size:16px;padding:7px 12px;cursor:pointer;font-weight:700}
+.play-btn:active{opacity:.8}
+.ts-lbl{font-size:11px;color:#444}
+.note-input{background:#111;border:1.5px solid #2a2a2a;border-radius:10px;color:#f0f0f0;font-size:14px;padding:10px 12px;width:100%;margin-top:10px;resize:none;font-family:inherit;line-height:1.5}
+.note-input:focus{outline:none;border-color:#22c55e}
+.fin-footer{padding:16px;border-top:1px solid #1a1a1a;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+
+/* ─── GUIDER ─── */
+#guide-map{position:absolute;inset:0;z-index:0}
+.guide-run-wrap{position:relative;flex:1;overflow:hidden}
+.guide-top{position:absolute;top:0;left:0;right:0;z-index:100;padding:12px}
+.guide-hud{background:rgba(13,13,13,.93);border:1.5px solid #2a2a2a;border-radius:18px;padding:16px 18px;backdrop-filter:blur(12px)}
+.guide-sector{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1.5px}
+.guide-address{font-size:22px;font-weight:800;line-height:1.2;margin-top:4px}
+.guide-info{font-size:13px;color:#888;margin-top:4px}
+.guide-dist{font-size:32px;font-weight:800;color:#3b82f6;margin-top:8px;font-variant-numeric:tabular-nums}
+.guide-instr{font-size:14px;color:#fbbf24;margin-top:4px;min-height:20px}
+.guide-bottom{position:absolute;bottom:0;left:0;right:0;z-index:100;padding:12px;display:flex;flex-direction:column;gap:8px}
+.guide-prog{font-size:13px;color:#555;text-align:center;font-weight:600}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;border:1.5px solid #2a2a2a;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:700;color:#f0f0f0;z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── LOADER ─── */
+#loader{position:fixed;inset:0;background:rgba(13,13,13,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;gap:16px}
+.spin{width:44px;height:44px;border:3px solid #1a1a1a;border-top-color:#22c55e;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loader p{font-size:15px;color:#555}
+#loader.hidden{display:none}
+
+/* ─── GUIDE START ─── */
+.guide-start-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="loader" class="hidden"><div class="spin"></div><p id="loader-txt">Chargement...</p></div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN 0 — ACCUEIL
+═══════════════════════════════════════════ -->
+<div id="s-home" class="screen">
+  <div class="home-wrap">
+    <div class="home-logo">📦</div>
+    <div class="home-title">Mémo Tournée</div>
+    <div class="home-sub">Distribution de journaux — Guide complet</div>
+    <div class="home-cards">
+      <div class="hcard blue" onclick="goTo('prepare')">
+        <div class="hcard-icon">📋</div>
+        <div><div class="hcard-title">1 — PRÉPARER</div><div class="hcard-desc">Charger le fichier Excel des abonnés</div></div>
+      </div>
+      <div class="hcard red" onclick="goTo('learn')">
+        <div class="hcard-icon">🎤</div>
+        <div><div class="hcard-title">2 — APPRENDRE</div><div class="hcard-desc">Enregistrer la tournée avec le formateur</div></div>
+      </div>
+      <div class="hcard amber" onclick="goTo('finalize')">
+        <div class="hcard-icon">✏️</div>
+        <div><div class="hcard-title">3 — FINALISER</div><div class="hcard-desc">Annoter et exporter la tournée complète</div></div>
+      </div>
+      <div class="hcard green" onclick="goTo('guide')">
+        <div class="hcard-icon">🗺️</div>
+        <div><div class="hcard-title">4 — GUIDER</div><div class="hcard-desc">Navigation GPS + guidage vocal comme Google Maps</div></div>
+      </div>
+    </div>
+    <div class="tour-badge" id="home-badge">
+      <div class="tour-badge-lbl">Tournée en mémoire</div>
+      <div class="tour-badge-name" id="home-badge-name"></div>
+      <div class="tour-badge-info" id="home-badge-info"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN 1 — PRÉPARER
+═══════════════════════════════════════════ -->
+<div id="s-prepare" class="screen hidden">
+  <div class="sh">
+    <button class="back" onclick="goTo('home')">← Retour</button>
+    <div class="sh-title">Préparer la tournée</div>
+  </div>
+
+  <div id="prep-upload" class="prep-wrap">
+    <div class="infobox"><strong>📌 Comment ça marche</strong>Chargez votre fichier Excel (.xlsx) contenant la liste des abonnés. L'appli lit automatiquement toutes les colonnes et prépare la tournée.</div>
+    <div class="upload-zone" onclick="document.getElementById('xl-input').click()">
+      <div class="uz-icon">📂</div>
+      <div class="uz-title">Touchez pour charger votre Excel</div>
+      <div class="uz-hint">Fichier .xlsx — feuille principale de la tournée</div>
+    </div>
+    <input type="file" id="xl-input" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
+  </div>
+
+  <div id="prep-result" class="prep-wrap" style="display:none">
+    <div class="tour-summary">
+      <div class="ts-name" id="ts-name"></div>
+      <div class="ts-grid" id="ts-grid"></div>
+    </div>
+    <div id="prep-list"></div>
+    <div style="height:8px"></div>
+    <button class="btn btn-g" onclick="prepDone()">✅ Tournée prête — Aller à APPRENDRE</button>
+    <button class="btn btn-s" onclick="dlTourJSON()">💾 Télécharger le fichier tournée (.json)</button>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN 2 — APPRENDRE
+═══════════════════════════════════════════ -->
+<div id="s-learn" class="screen hidden">
+  <div class="sh">
+    <button class="back" id="learn-back" onclick="goTo('home')">← Retour</button>
+    <div class="sh-title">Tournée avec le formateur</div>
+  </div>
+
+  <!-- Avant démarrage -->
+  <div id="learn-idle" class="learn-start-wrap">
+    <div style="text-align:center">
+      <div style="font-size:52px">🎤</div>
+      <div style="font-size:22px;font-weight:800;margin-top:10px" id="learn-tour-title">Aucune tournée chargée</div>
+      <div style="font-size:13px;color:#555;margin-top:4px" id="learn-tour-sub"></div>
+    </div>
+    <div class="infobox" style="max-width:400px;width:100%"><strong>Comment utiliser</strong>
+      ① Appuyez sur DÉMARRER quand vous partez avec le formateur<br>
+      ② L'audio s'enregistre en continu tout seul<br>
+      ③ À chaque arrêt livré : glissez à droite ou appuyez ✅ LIVRÉ<br>
+      ④ Quelque chose d'important à retenir : appuyez 🔖 MARQUER<br>
+      ⑤ À la fin : TERMINER → deux fichiers se téléchargent
+    </div>
+    <div id="learn-load-file" style="width:100%;max-width:400px;display:none">
+      <button class="btn btn-s" onclick="document.getElementById('tour-json-input').click()">📂 Charger un fichier tournée (.json)</button>
+      <input type="file" id="tour-json-input" accept=".json" style="display:none" onchange="loadTourJSON(this)">
+    </div>
+    <button class="btn btn-r" id="btn-start" style="max-width:400px;width:100%" onclick="startLearning()">▶ DÉMARRER LA TOURNÉE</button>
+  </div>
+
+  <!-- Pendant l'enregistrement -->
+  <div id="learn-running" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="learn-hdr">
+      <div class="rec-badge">
+        <div class="rec-dot"></div>
+        <span class="rec-time" id="rec-time">00:00:00</span>
+      </div>
+      <div class="learn-progress" id="learn-prog"></div>
+      <button style="background:#111;border:1.5px solid #ef4444;border-radius:10px;color:#ef4444;font-size:13px;font-weight:700;padding:10px 14px;cursor:pointer" onclick="confirmEnd()">⏹ TERMINER</button>
+    </div>
+
+    <div class="stop-zone" id="stop-zone"
+         ontouchstart="ts(event)" ontouchmove="tm(event)" ontouchend="te(event)">
+      <div class="swipe-hints">
+        <span class="sh-l">← Arrêt précédent</span>
+        <span class="sh-r">LIVRÉ →</span>
+      </div>
+      <div class="stop-card" id="stop-card"></div>
+      <div class="sc-swipe-hint">Glissez à droite = LIVRÉ &nbsp;|&nbsp; Appui long = 🔖 Marquer</div>
+    </div>
+
+    <div class="learn-bottom">
+      <button class="btn-mark" id="btn-mark" onclick="markStamp()">🔖 MARQUER</button>
+      <button class="btn-livré" onclick="markDelivered()">✅ LIVRÉ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN 3 — FINALISER
+═══════════════════════════════════════════ -->
+<div id="s-finalize" class="screen hidden">
+  <div class="sh">
+    <button class="back" onclick="goTo('home')">← Retour</button>
+    <div class="sh-title">Finaliser la tournée</div>
+  </div>
+
+  <div id="fin-load" class="fin-wrap">
+    <div class="infobox"><strong>📌 Comment utiliser</strong>Chargez le fichier session enregistré lors de la tournée, puis chargez l'audio. Vous pouvez réécouter chaque arrêt et compléter les notes avant d'exporter le JSON final.</div>
+    <button class="btn btn-s" onclick="document.getElementById('sess-input').click()">📂 Charger le fichier session (.json)</button>
+    <input type="file" id="sess-input" accept=".json" style="display:none" onchange="loadSession(this)">
+    <div id="fin-audio-btn" style="display:none">
+      <button class="btn btn-s" onclick="document.getElementById('audio-input').click()">🔊 Charger l'enregistrement audio (.webm / .ogg)</button>
+      <input type="file" id="audio-input" accept="audio/*" style="display:none" onchange="loadAudio(this)">
+    </div>
+  </div>
+
+  <div id="fin-editor" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div style="padding:12px 16px;background:#111;border-bottom:1px solid #1a1a1a;flex-shrink:0">
+      <div id="fin-tour-name" style="font-size:16px;font-weight:800;color:#4ade80"></div>
+      <div id="fin-tour-stats" style="font-size:12px;color:#555;margin-top:2px"></div>
+    </div>
+    <div id="fin-stops" style="overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
+    <div class="fin-footer">
+      <button class="btn btn-g" onclick="exportFinal()">📤 EXPORTER JSON FINAL</button>
+      <button class="btn btn-b" onclick="goTo('guide')">🗺️ Aller à GUIDER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN 4 — GUIDER
+═══════════════════════════════════════════ -->
+<div id="s-guide" class="screen hidden">
+  <div class="sh" id="guide-sh">
+    <button class="back" onclick="goTo('home')">← Retour</button>
+    <div class="sh-title">Navigation GPS</div>
+  </div>
+
+  <!-- Avant démarrage -->
+  <div id="guide-idle" class="guide-start-wrap">
+    <div style="text-align:center">
+      <div style="font-size:52px">🗺️</div>
+      <div style="font-size:22px;font-weight:800;margin-top:10px" id="guide-tour-title">Aucune tournée</div>
+      <div style="font-size:13px;color:#555;margin-top:4px" id="guide-tour-sub"></div>
+    </div>
+    <div class="infobox" style="max-width:400px;width:100%"><strong>Navigation automatique</strong>
+      🗺️ Votre position en temps réel sur la carte<br>
+      🔊 Annonces vocales : prochain arrêt + instructions<br>
+      📍 Détection automatique quand vous arrivez<br>
+      🔄 Recalcul de route à chaque arrêt
+    </div>
+    <div id="guide-load-file" style="width:100%;max-width:400px;display:none">
+      <button class="btn btn-s" onclick="document.getElementById('guide-json-input').click()">📂 Charger la tournée finalisée (.json)</button>
+      <input type="file" id="guide-json-input" accept=".json" style="display:none" onchange="loadGuideTour(this)">
+    </div>
+    <button class="btn btn-b" id="btn-guide-start" style="max-width:400px;width:100%" onclick="startGuide()">🗺️ DÉMARRER LA NAVIGATION</button>
+  </div>
+
+  <!-- Pendant la navigation -->
+  <div id="guide-run" class="guide-run-wrap" style="display:none;flex:1">
+    <div id="guide-map"></div>
+    <div class="guide-top">
+      <div class="guide-hud">
+        <div class="guide-sector" id="g-sector"></div>
+        <div class="guide-address" id="g-address"></div>
+        <div class="guide-info" id="g-info"></div>
+        <div class="guide-dist" id="g-dist">—</div>
+        <div class="guide-instr" id="g-instr"></div>
+      </div>
+    </div>
+    <div class="guide-bottom">
+      <div class="guide-prog" id="g-prog"></div>
+      <button class="btn btn-g" style="font-size:20px;padding:18px" onclick="guideDelivered()">✅ LIVRÉ — ARRÊT SUIVANT</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-s" style="flex:1;font-size:13px;padding:12px" onclick="guideRecenter()">📍 Recentrer</button>
+        <button class="btn btn-danger-outline" style="flex:1" onclick="stopGuide()">⏹ Terminer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+//  ÉTAT GLOBAL
+// ══════════════════════════════════════════════════
+const S = {
+  tour: null,           // tournée chargée depuis Excel
+  session: null,        // données session APPRENDRE
+  finalTour: null,      // tournée finalisée
+  // APPRENDRE
+  recorder: null,
+  chunks: [],
+  recStart: null,
+  recInterval: null,
+  stopIdx: 0,
+  stopEvents: [],
+  markers: [],
+  gpsTrack: [],
+  gpsWatch: null,
+  swipeX: 0,
+  swipeY: 0,
+  longTimer: null,
+  // FINALISER
+  audioURL: null,
+  audioEl: null,
+  // GUIDER
+  gMap: null,
+  gWatch: null,
+  gStops: [],
+  gIdx: 0,
+  gAnnounced: -1,
+  gSelfMarker: null,
+  gNextMarker: null,
+  gRouteLine: null,
+  gPos: null,
+};
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('s-' + id).classList.remove('hidden');
+  if (id === 'home') refreshHome();
+  if (id === 'learn') refreshLearn();
+  if (id === 'guide') refreshGuide();
+}
+
+function refreshHome() {
+  const b = document.getElementById('home-badge');
+  const t = S.finalTour || S.tour;
+  if (t) {
+    b.style.display = 'block';
+    document.getElementById('home-badge-name').textContent = t.name || 'Tournée';
+    const nb = t.stops ? t.stops.length : 0;
+    document.getElementById('home-badge-info').textContent = nb + ' arrêts actifs';
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+function refreshLearn() {
+  const t = S.tour;
+  if (t) {
+    document.getElementById('learn-tour-title').textContent = t.name;
+    document.getElementById('learn-tour-sub').textContent = t.stops.length + ' arrêts';
+    document.getElementById('learn-load-file').style.display = 'none';
+    document.getElementById('btn-start').disabled = false;
+  } else {
+    document.getElementById('learn-tour-title').textContent = 'Aucune tournée chargée';
+    document.getElementById('learn-tour-sub').textContent = 'Allez d\'abord dans PRÉPARER';
+    document.getElementById('learn-load-file').style.display = 'block';
+    document.getElementById('btn-start').disabled = true;
+  }
+}
+
+function refreshGuide() {
+  const t = S.finalTour || S.tour;
+  const hasGPS = t && t.stops && t.stops.some(s => s.lat && s.lng);
+  if (t) {
+    document.getElementById('guide-tour-title').textContent = t.name;
+    const nb = t.stops.filter(s => s.lat && s.lng).length;
+    document.getElementById('guide-tour-sub').textContent = nb + ' arrêts avec position GPS / ' + t.stops.length + ' total';
+    document.getElementById('guide-load-file').style.display = 'none';
+    document.getElementById('btn-guide-start').disabled = !hasGPS;
+  } else {
+    document.getElementById('guide-tour-title').textContent = 'Aucune tournée finalisée';
+    document.getElementById('guide-tour-sub').textContent = 'Effectuez d\'abord les étapes 1 à 3';
+    document.getElementById('guide-load-file').style.display = 'block';
+    document.getElementById('btn-guide-start').disabled = true;
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  UTILITAIRES
+// ══════════════════════════════════════════════════
+function toast(msg, dur = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), dur);
+}
+function showLoad(txt = 'Chargement...') {
+  document.getElementById('loader-txt').textContent = txt;
+  document.getElementById('loader').classList.remove('hidden');
+}
+function hideLoad() { document.getElementById('loader').classList.add('hidden'); }
+
+function dlBlob(content, name, type) {
+  const b = content instanceof Blob ? content : new Blob([content], { type });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href = u; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(u), 3000);
+}
+function fmtTime(sec) {
+  const s = Math.floor(sec), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  if (h > 0) return h + 'h' + String(m).padStart(2,'0') + 'm' + String(ss).padStart(2,'0') + 's';
+  return String(m).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+}
+function fmtDate() { return new Date().toISOString().slice(0, 10); }
+function slug(s) { return s.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''); }
+function audioNow() { return (Date.now() - S.recStart) / 1000; }
+
+function haversine(la1, lo1, la2, lo2) {
+  const R = 6371000, r = Math.PI / 180;
+  const f1 = la1 * r, f2 = la2 * r, df = (la2 - la1) * r, dl = (lo2 - lo1) * r;
+  const a = Math.sin(df/2)**2 + Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function speak(txt) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = 'fr-FR'; u.rate = 1.05; u.volume = 1.0;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v => v.lang.startsWith('fr') && v.localService)
+         || voices.find(v => v.lang.startsWith('fr'));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
+function mimeType() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+// ══════════════════════════════════════════════════
+//  1 — PRÉPARER
+// ══════════════════════════════════════════════════
+function loadExcel(inp) {
+  const f = inp.files[0]; if (!f) return;
+  showLoad('Lecture du fichier Excel…');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      let sheet = wb.SheetNames[0];
+      for (const n of wb.SheetNames)
+        if (n.toLowerCase().includes('tourn')) { sheet = n; break; }
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { header: 1, defval: '' });
+      parseTour(rows, sheet, f.name);
+      hideLoad();
+    } catch(err) { hideLoad(); alert('Erreur : ' + err.message); }
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+function parseTour(rows, sheetName, fileName) {
+  // Détection entête
+  let hRow = -1, C = {};
+  for (let i = 0; i < Math.min(rows.length, 8); i++) {
+    const r = rows[i].map(c => String(c).toLowerCase().trim());
+    const ni = r.findIndex(c => c.includes('arrêt') || c.includes('arret'));
+    if (ni >= 0) {
+      hRow = i;
+      r.forEach((c, j) => {
+        if (c.includes('arrêt') || c.includes('arret')) C.num = j;
+        else if (c === 'secteur') C.sec = j;
+        else if (c.includes('rue') || c.includes('voie')) C.rue = j;
+        else if (c === 'n°' || c === 'n') C.num2 = j;
+        else if (c.includes('résid') || c.includes('bât')) C.res = j;
+        else if (c === 'nom') C.nom = j;
+        else if (c.includes('prénom') || c === 'prenom') C.pre = j;
+        else if (c.includes('jours') || c.includes('sem')) C.jrs = j;
+        else if (c.includes('nb') || c.includes('journ')) C.qty = j;
+        else if (c.includes('code') || c.includes('accès')) C.code = j;
+        else if (c === 'notes' || c === 'note') C.note = j;
+        else if (c === 'statut') C.stat = j;
+      });
+      break;
+    }
+  }
+  if (hRow < 0) {
+    C = { num: 0, sec: 1, rue: 2, num2: 3, res: 4, nom: 5, pre: 6, jrs: 7, qty: 8, code: 9, note: 10, stat: 11 };
+    hRow = 1;
+  }
+
+  const byId = {}, ordered = [];
+  for (let i = hRow + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => c === '')) continue;
+    const raw = String(r[C.num] || '').trim();
+    if (raw.includes('═') || raw.toLowerCase().includes('secteur')) continue;
+    const stat = String(r[C.stat] || '').toLowerCase();
+    if (stat.includes('arrêt') || stat.includes('suppr')) continue;
+    const id = parseInt(raw);
+    if (isNaN(id)) continue;
+
+    const sub = {
+      nom: String(r[C.nom] || '').trim(),
+      prenom: String(r[C.pre] || '').trim(),
+      jours: String(r[C.jrs] || '7/7').trim(),
+      qty: parseInt(r[C.qty]) || 1,
+    };
+
+    if (byId[id]) {
+      byId[id].subs.push(sub);
+      if (!byId[id].code && r[C.code]) byId[id].code = String(r[C.code]).trim();
+      if (!byId[id].notes && r[C.note]) byId[id].notes = String(r[C.note]).trim();
+    } else {
+      const stop = {
+        id, secteur: String(r[C.sec] || '').trim(),
+        rue: String(r[C.rue] || '').trim(),
+        numero: String(r[C.num2] || '').trim(),
+        res: String(r[C.res] || '').trim(),
+        subs: [sub],
+        code: String(r[C.code] || '').trim(),
+        notes: String(r[C.note] || '').trim(),
+        lat: null, lng: null,
+      };
+      byId[id] = stop; ordered.push(stop);
+    }
+  }
+  ordered.sort((a, b) => a.id - b.id);
+
+  S.tour = { name: sheetName.replace(/^Tournée\s*/i,'').trim() || fileName.replace(/\.xlsx?$/,''), source: fileName, stops: ordered };
+  renderPrepResult();
+}
+
+function renderPrepResult() {
+  document.getElementById('prep-upload').style.display = 'none';
+  document.getElementById('prep-result').style.display = 'flex';
+  const t = S.tour;
+  document.getElementById('ts-name').textContent = t.name;
+  const secs = [...new Set(t.stops.map(s => s.secteur).filter(Boolean))];
+  const totalSubs = t.stops.reduce((a, s) => a + s.subs.length, 0);
+  document.getElementById('ts-grid').innerHTML = `
+    <div class="ts-stat"><div class="ts-val">${t.stops.length}</div><div class="ts-lbl">Arrêts</div></div>
+    <div class="ts-stat"><div class="ts-val">${totalSubs}</div><div class="ts-lbl">Abonnés</div></div>
+    <div class="ts-stat"><div class="ts-val">${secs.length}</div><div class="ts-lbl">Secteurs</div></div>`;
+
+  let html = '', lastSec = '';
+  for (const s of t.stops) {
+    if (s.secteur !== lastSec) {
+      html += `<div class="sector-sep">📍 ${s.secteur || 'Secteur'}</div>`;
+      lastSec = s.secteur;
+    }
+    const names = s.subs.map(x => x.nom + ' ' + x.prenom).join(', ');
+    const tot = s.subs.reduce((a, x) => a + x.qty, 0);
+    html += `<div class="sl-item">
+      <div class="sl-num">${s.id}</div>
+      <div>
+        <div class="sl-addr">${s.rue} ${s.numero}${s.res ? ' — ' + s.res : ''}</div>
+        <div class="sl-subs">${names} · ×${tot}</div>
+        <div class="sl-badges">
+          <span class="badge b-freq">${s.subs[0].jours}</span>
+          ${s.code ? `<span class="badge b-code">🔑 ${s.code}</span>` : ''}
+          ${s.notes ? `<span class="badge b-note">📝 Note</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('prep-list').innerHTML = `
+    <div class="stop-list">
+      <div class="sl-header">Tous les arrêts — ${t.stops.length}</div>
+      ${html}
+    </div>`;
+}
+
+function prepDone() { toast('✅ Tournée prête !'); setTimeout(() => goTo('learn'), 600); }
+function dlTourJSON() {
+  dlBlob(JSON.stringify(S.tour, null, 2), `tournee-${slug(S.tour.name)}-${fmtDate()}.json`, 'application/json');
+}
+function loadTourJSON(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => { try { S.tour = JSON.parse(e.target.result); refreshLearn(); toast('✅ ' + S.tour.name); } catch { alert('Fichier invalide'); } };
+  r.readAsText(f);
+}
+
+// ══════════════════════════════════════════════════
+//  2 — APPRENDRE
+// ══════════════════════════════════════════════════
+function startLearning() {
+  if (!S.tour) { toast('⚠️ Chargez d\'abord une tournée'); return; }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    S.recorder = new MediaRecorder(stream, { mimeType: mimeType() });
+    S.chunks = [];
+    S.recorder.ondataavailable = e => { if (e.data.size > 0) S.chunks.push(e.data); };
+    S.recorder.start(1000);
+    S.recStart = Date.now();
+    S.stopIdx = 0; S.stopEvents = []; S.markers = []; S.gpsTrack = [];
+
+    if (navigator.geolocation)
+      S.gpsWatch = navigator.geolocation.watchPosition(
+        p => { S.gpsTrack.push({ lat: p.coords.latitude, lng: p.coords.longitude, t: audioNow() }); S.gPos = { lat: p.coords.latitude, lng: p.coords.longitude }; },
+        null, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      );
+
+    S.recInterval = setInterval(() => {
+      const e = Math.floor((Date.now() - S.recStart) / 1000);
+      const h = Math.floor(e / 3600), m = Math.floor((e % 3600) / 60), s = e % 60;
+      document.getElementById('rec-time').textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }, 1000);
+
+    document.getElementById('learn-idle').style.display = 'none';
+    document.getElementById('learn-running').style.display = 'flex';
+    document.getElementById('learn-back').style.display = 'none';
+    renderStop();
+  }).catch(e => alert('Micro inaccessible :\n' + e.message));
+}
+
+function renderStop() {
+  const stop = S.tour.stops[S.stopIdx];
+  if (!stop) { confirmEnd(); return; }
+  document.getElementById('learn-prog').textContent = (S.stopIdx + 1) + ' / ' + S.tour.stops.length;
+
+  const tot = stop.subs.reduce((a, x) => a + x.qty, 0);
+  const subsHtml = stop.subs.map(x => `
+    <div class="sub-row">
+      <div class="sub-name">${x.nom} ${x.prenom}</div>
+      <div class="sub-qty">×${x.qty}</div>
+    </div>`).join('');
+
+  const mks = S.markers.filter(m => m.stopId === stop.id);
+
+  document.getElementById('stop-card').innerHTML = `
+    <div class="sc-num">ARRÊT ${stop.id} — ${stop.secteur || ''}</div>
+    <div class="sc-addr">${stop.rue} ${stop.numero}</div>
+    ${stop.res ? `<div class="sc-res">${stop.res}</div>` : ''}
+    <hr class="sc-div">
+    <div class="sc-subs">${subsHtml}</div>
+    ${stop.code ? `<div class="sc-code"><span class="sc-code-lbl">🔑 CODE</span><span class="sc-code-val">${stop.code}</span></div>` : ''}
+    ${stop.notes ? `<div class="sc-notes">📝 ${stop.notes}</div>` : ''}
+    ${mks.length > 0 ? `<div class="sc-markers">🔖 ${mks.length} note(s) marquée(s) à ${mks.map(m => fmtTime(m.audioTime)).join(', ')}</div>` : ''}`;
+}
+
+function markDelivered() {
+  const stop = S.tour.stops[S.stopIdx]; if (!stop) return;
+  const at = audioNow();
+  const pos = S.gpsTrack.length ? S.gpsTrack[S.gpsTrack.length - 1] : null;
+  S.stopEvents.push({ stopId: stop.id, idx: S.stopIdx, audioTime: at, lat: pos?.lat ?? null, lng: pos?.lng ?? null, ts: Date.now() });
+  if (pos) { stop.lat = pos.lat; stop.lng = pos.lng; }
+  animateCard('right', () => { S.stopIdx++; renderStop(); });
+  toast('✅ Arrêt ' + stop.id + ' livré');
+}
+
+function markStamp() {
+  const stop = S.tour.stops[S.stopIdx];
+  const at = audioNow();
+  S.markers.push({ stopId: stop ? stop.id : null, stopIdx: S.stopIdx, audioTime: at });
+  const btn = document.getElementById('btn-mark');
+  btn.style.background = '#f59e0b'; btn.style.color = '#000';
+  setTimeout(() => { btn.style.background = ''; btn.style.color = ''; }, 400);
+  toast('🔖 Marqué à ' + fmtTime(at));
+  renderStop();
+}
+
+function animateCard(dir, cb) {
+  const c = document.getElementById('stop-card');
+  c.style.transition = 'transform .25s,opacity .25s';
+  c.style.transform = dir === 'right' ? 'translateX(110%) rotate(5deg)' : 'translateX(-110%) rotate(-5deg)';
+  c.style.opacity = '0';
+  setTimeout(() => { c.style.transition = ''; c.style.transform = ''; c.style.opacity = ''; cb(); }, 260);
+}
+
+// Swipe
+function ts(e) {
+  S.swipeX = e.touches[0].clientX; S.swipeY = e.touches[0].clientY;
+  S.longTimer = setTimeout(markStamp, 600);
+}
+function tm(e) {
+  const dx = e.touches[0].clientX - S.swipeX;
+  if (Math.abs(dx) > 20) { clearTimeout(S.longTimer); S.longTimer = null; }
+  if (Math.abs(dx) > Math.abs(e.touches[0].clientY - S.swipeY)) {
+    const c = document.getElementById('stop-card');
+    c.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
+    c.style.opacity = Math.max(0.3, 1 - Math.abs(dx) / 280);
+  }
+}
+function te(e) {
+  clearTimeout(S.longTimer); S.longTimer = null;
+  const dx = e.changedTouches[0].clientX - S.swipeX;
+  const c = document.getElementById('stop-card');
+  if (dx > 90) { markDelivered(); }
+  else if (dx < -90 && S.stopIdx > 0) { S.stopIdx--; animateCard('left', renderStop); toast('◀ Arrêt précédent'); }
+  else { c.style.transform = ''; c.style.opacity = ''; }
+  S.swipeX = 0;
+}
+
+function confirmEnd() {
+  const done = S.stopIdx, total = S.tour.stops.length;
+  if (done < total && !confirm(`${done} arrêts sur ${total} effectués.\nTerminer et sauvegarder ?`)) return;
+  endTour();
+}
+
+function endTour() {
+  if (S.recorder && S.recorder.state !== 'inactive') S.recorder.stop();
+  clearInterval(S.recInterval);
+  if (S.gpsWatch) { navigator.geolocation.clearWatch(S.gpsWatch); S.gpsWatch = null; }
+
+  const sess = { tourName: S.tour.name, startTime: new Date(S.recStart).toISOString(), duration: audioNow(), stops: S.tour.stops, stopEvents: S.stopEvents, audioMarkers: S.markers, gpsTrack: S.gpsTrack };
+  S.session = sess;
+
+  setTimeout(() => {
+    dlBlob(JSON.stringify(sess, null, 2), `session-${slug(S.tour.name)}-${fmtDate()}.json`, 'application/json');
+    if (S.chunks.length) {
+      const mt = S.recorder.mimeType || 'audio/webm';
+      const ext = mt.includes('ogg') ? 'ogg' : mt.includes('mp4') ? 'mp4' : 'webm';
+      dlBlob(new Blob(S.chunks, { type: mt }), `audio-${slug(S.tour.name)}-${fmtDate()}.${ext}`, mt);
+    }
+    toast('💾 Sauvegardé ! Vérifiez vos téléchargements.', 4000);
+    document.getElementById('learn-idle').style.display = 'flex';
+    document.getElementById('learn-running').style.display = 'none';
+    document.getElementById('learn-back').style.display = '';
+    setTimeout(() => goTo('home'), 2500);
+  }, 600);
+}
+
+// ══════════════════════════════════════════════════
+//  3 — FINALISER
+// ══════════════════════════════════════════════════
+function loadSession(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      S.session = JSON.parse(e.target.result);
+      if (S.session.stops) S.tour = { name: S.session.tourName, stops: S.session.stops };
+      document.getElementById('fin-audio-btn').style.display = 'block';
+      toast('✅ Session chargée. Chargez maintenant l\'audio.');
+    } catch { alert('Fichier de session invalide'); }
+  };
+  r.readAsText(f);
+}
+
+function loadAudio(inp) {
+  const f = inp.files[0]; if (!f) return;
+  if (S.audioURL) URL.revokeObjectURL(S.audioURL);
+  S.audioURL = URL.createObjectURL(f);
+  S.audioEl = new Audio(S.audioURL);
+  renderFinalize();
+}
+
+function renderFinalize() {
+  const sess = S.session; if (!sess) return;
+  document.getElementById('fin-load').style.display = 'none';
+  const ed = document.getElementById('fin-editor');
+  ed.style.display = 'flex';
+  document.getElementById('fin-tour-name').textContent = sess.tourName;
+  document.getElementById('fin-tour-stats').textContent = (sess.stops?.length || 0) + ' arrêts · Durée : ' + fmtTime(sess.duration || 0);
+
+  const stops = sess.stops || [];
+  const events = sess.stopEvents || [];
+  const marks = sess.audioMarkers || [];
+
+  let html = '';
+  for (const s of stops) {
+    const ev = events.find(e => e.stopId === s.id);
+    const mks = marks.filter(m => m.stopId === s.id);
+    const at = ev ? ev.audioTime : null;
+    const names = s.subs.map(x => x.nom + ' ' + x.prenom).join(', ');
+    const tot = s.subs.reduce((a, x) => a + x.qty, 0);
+    const hasAudio = at !== null && S.audioEl;
+
+    const audioRow = hasAudio ? `<div class="play-row">
+      <button class="play-btn" onclick="playAt(${Math.max(0, at - 30)})">▶ Écouter</button>
+      <span class="ts-lbl">@ ${fmtTime(at)}</span></div>` : '';
+    const mksRow = mks.map((m, i) => `<div class="play-row">
+      <button class="play-btn" onclick="playAt(${Math.max(0, m.audioTime - 5)})">🔖 Note ${i+1}</button>
+      <span class="ts-lbl">@ ${fmtTime(m.audioTime)}</span></div>`).join('');
+
+    html += `<div class="fin-stop ${s.notes ? 'has-note' : ''}" id="fs-${s.id}">
+      <div class="fin-hdr">
+        <div>
+          <div style="font-size:11px;color:#555;margin-bottom:2px">ARRÊT ${s.id} · ${s.secteur || ''}</div>
+          <div class="fin-addr">${s.rue} ${s.numero}${s.res ? ' — ' + s.res : ''}</div>
+          <div style="font-size:12px;color:#555;margin-top:3px">${names} · ×${tot}</div>
+        </div>
+        ${s.code ? `<div class="fin-code">🔑 ${s.code}</div>` : ''}
+      </div>
+      ${audioRow}${mksRow}
+      <textarea class="note-input" rows="2" placeholder="Ajouter une note…" id="ni-${s.id}" onchange="setNote(${s.id},this.value)">${s.notes || ''}</textarea>
+    </div>`;
+  }
+  document.getElementById('fin-stops').innerHTML = html;
+}
+
+function playAt(t) {
+  if (!S.audioEl) { toast('⚠️ Chargez l\'audio d\'abord'); return; }
+  S.audioEl.currentTime = t; S.audioEl.play();
+  toast('▶ ' + fmtTime(t));
+}
+
+function setNote(id, val) {
+  const updateStop = stops => { const s = stops.find(x => x.id === id); if (s) s.notes = val; };
+  if (S.session?.stops) updateStop(S.session.stops);
+  if (S.tour?.stops) updateStop(S.tour.stops);
+  const card = document.getElementById('fs-' + id);
+  if (card) card.classList.toggle('has-note', val.length > 0);
+}
+
+function exportFinal() {
+  const stops = S.session?.stops || S.tour?.stops || [];
+  const final = { name: S.session?.tourName || S.tour?.name || 'Tournée', exportedAt: new Date().toISOString(), stops };
+  S.finalTour = final;
+  dlBlob(JSON.stringify(final, null, 2), `tournee-finale-${slug(final.name)}-${fmtDate()}.json`, 'application/json');
+  toast('✅ JSON final exporté !');
+}
+
+// ══════════════════════════════════════════════════
+//  4 — GUIDER
+// ══════════════════════════════════════════════════
+function loadGuideTour(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => { try { S.finalTour = JSON.parse(e.target.result); refreshGuide(); toast('✅ ' + S.finalTour.name); } catch { alert('Fichier invalide'); } };
+  r.readAsText(f);
+}
+
+function startGuide() {
+  const tour = S.finalTour || S.tour;
+  if (!tour) return;
+  S.gStops = tour.stops.filter(s => s.lat && s.lng);
+  if (!S.gStops.length) { alert('Aucune position GPS. Effectuez d\'abord l\'étape APPRENDRE.'); return; }
+  S.gIdx = 0; S.gAnnounced = -1;
+
+  document.getElementById('guide-idle').style.display = 'none';
+  document.getElementById('guide-run').style.display = 'block';
+  document.getElementById('guide-sh').style.display = 'none';
+
+  setTimeout(() => initMap(tour), 150);
+}
+
+function initMap(tour) {
+  if (S.gMap) { S.gMap.remove(); S.gMap = null; S.gSelfMarker = null; S.gNextMarker = null; S.gRouteLine = null; }
+  S.gMap = L.map('guide-map', { zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(S.gMap);
+
+  S.gStops.forEach((s, i) => {
+    const icon = L.divIcon({
+      html: `<div style="background:${i===0?'#3b82f6':'#2a2a2a'};color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:2px solid ${i===0?'#fff':'#555'}">${s.id}</div>`,
+      className: '', iconSize: [30,30], iconAnchor: [15,15]
+    });
+    L.marker([s.lat, s.lng], { icon }).addTo(S.gMap)
+      .bindPopup(`<b>Arrêt ${s.id}</b><br>${s.rue} ${s.numero}`);
+  });
+
+  S.gMap.setView([S.gStops[0].lat, S.gStops[0].lng], 17);
+
+  if (S.gWatch) navigator.geolocation.clearWatch(S.gWatch);
+  S.gWatch = navigator.geolocation.watchPosition(
+    p => onGPS(p.coords.latitude, p.coords.longitude),
+    null, { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+  );
+
+  updateGuideHUD();
+  setTimeout(() => { if (S.gPos) calcRoute(S.gPos.lat, S.gPos.lng, S.gStops[0].lat, S.gStops[0].lng); }, 4000);
+}
+
+function onGPS(lat, lng) {
+  S.gPos = { lat, lng };
+  if (!S.gSelfMarker) {
+    const icon = L.divIcon({ html: `<div style="background:#ef4444;border-radius:50%;width:16px;height:16px;border:3px solid #fff;box-shadow:0 0 0 4px rgba(239,68,68,.3)"></div>`, className: '', iconSize:[16,16], iconAnchor:[8,8] });
+    S.gSelfMarker = L.marker([lat, lng], { icon }).addTo(S.gMap);
+  } else { S.gSelfMarker.setLatLng([lat, lng]); }
+
+  if (S.gIdx < S.gStops.length) {
+    const ns = S.gStops[S.gIdx];
+    const d = haversine(lat, lng, ns.lat, ns.lng);
+    document.getElementById('g-dist').textContent = d < 1000 ? Math.round(d) + ' m' : (d/1000).toFixed(1) + ' km';
+    if (d < 60 && S.gAnnounced !== S.gIdx) {
+      S.gAnnounced = S.gIdx;
+      announceStop(ns);
+    }
+  }
+  S.gMap.panTo([lat, lng], { animate: true, duration: 0.8 });
+}
+
+function announceStop(s) {
+  const names = s.subs.map(x => x.nom + ' ' + x.prenom).join(', ');
+  const tot = s.subs.reduce((a, x) => a + x.qty, 0);
+  let t = `Arrêt ${s.id}. ${s.rue}, numéro ${s.numero}. `;
+  if (s.res) t += s.res + '. ';
+  t += `${names}. ${tot} journal${tot > 1 ? 'x' : ''}. `;
+  if (s.code) t += `Code d'accès : ${s.code}. `;
+  if (s.notes) t += `Note : ${s.notes}.`;
+  speak(t);
+}
+
+async function calcRoute(la1, lo1, la2, lo2) {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${lo1},${la1};${lo2},${la2}?steps=true&geometries=geojson&overview=full`;
+    const d = await fetch(url).then(r => r.json());
+    if (!d.routes?.[0]) return;
+    const route = d.routes[0];
+    if (S.gRouteLine) S.gMap.removeLayer(S.gRouteLine);
+    S.gRouteLine = L.geoJSON(route.geometry, { style: { color: '#3b82f6', weight: 5, opacity: .85 } }).addTo(S.gMap);
+    const steps = route.legs[0].steps;
+    if (steps?.length) {
+      const step = steps[0];
+      const dir = translateDir(step.maneuver.type, step.maneuver.modifier);
+      document.getElementById('g-instr').textContent = `↗ ${dir} — ${step.name || ''}`;
+      if (step.distance > 30) speak(`Dans ${Math.round(step.distance)} mètres, ${dir}`);
+    }
+  } catch { /* pas de réseau, silencieux */ }
+}
+
+function translateDir(type, mod) {
+  const k = type + '-' + (mod || '');
+  return ({ 'turn-left': 'tournez à gauche', 'turn-right': 'tournez à droite', 'turn-slight left': 'légèrement à gauche', 'turn-slight right': 'légèrement à droite', 'turn-sharp left': 'virage serré à gauche', 'turn-sharp right': 'virage serré à droite', 'continue-straight': 'continuez tout droit', 'arrive-': 'vous êtes arrivé', 'depart-': 'démarrez', 'roundabout-': 'prenez le rond-point' }[k] || type.replace(/-/, ' '));
+}
+
+function updateGuideHUD() {
+  if (S.gIdx >= S.gStops.length) {
+    speak('Tournée terminée ! Bravo !'); toast('🎉 Tournée terminée !', 5000); return;
+  }
+  const s = S.gStops[S.gIdx];
+  const names = s.subs.map(x => x.nom + ' ' + x.prenom).join(' · ');
+  const tot = s.subs.reduce((a, x) => a + x.qty, 0);
+  document.getElementById('g-sector').textContent = `📍 ${s.secteur || ''} — Arrêt ${s.id}`;
+  document.getElementById('g-address').textContent = `${s.rue} ${s.numero}`;
+  document.getElementById('g-info').textContent = `${names} · ×${tot}${s.code ? ' · 🔑 ' + s.code : ''}`;
+  document.getElementById('g-prog').textContent = `${S.gIdx + 1} sur ${S.gStops.length} — ${S.gStops.length - S.gIdx - 1} restants`;
+  document.getElementById('g-instr').textContent = s.notes ? `📝 ${s.notes}` : '';
+
+  if (!S.gNextMarker) {
+    const icon = L.divIcon({ html: `<div style="background:#22c55e;border-radius:50%;width:22px;height:22px;border:3px solid #fff"></div>`, className: '', iconSize:[22,22], iconAnchor:[11,11] });
+    S.gNextMarker = L.marker([s.lat, s.lng], { icon }).addTo(S.gMap);
+  } else { S.gNextMarker.setLatLng([s.lat, s.lng]); }
+  S.gMap.setView([s.lat, s.lng], 17);
+}
+
+function guideDelivered() {
+  toast('✅ Arrêt ' + S.gStops[S.gIdx].id + ' livré');
+  S.gIdx++; S.gAnnounced = -1;
+  updateGuideHUD();
+  if (S.gIdx < S.gStops.length && S.gPos) {
+    const ns = S.gStops[S.gIdx];
+    calcRoute(S.gPos.lat, S.gPos.lng, ns.lat, ns.lng);
+    speak(`En route pour l'arrêt ${ns.id}, ${ns.rue}, numéro ${ns.numero}`);
+  }
+}
+
+function guideRecenter() {
+  if (S.gPos) S.gMap.setView([S.gPos.lat, S.gPos.lng], 17);
+  else if (S.gIdx < S.gStops.length) S.gMap.setView([S.gStops[S.gIdx].lat, S.gStops[S.gIdx].lng], 17);
+}
+
+function stopGuide() {
+  if (!confirm('Terminer la navigation ?')) return;
+  if (S.gWatch) { navigator.geolocation.clearWatch(S.gWatch); S.gWatch = null; }
+  speechSynthesis.cancel();
+  document.getElementById('guide-idle').style.display = 'flex';
+  document.getElementById('guide-run').style.display = 'none';
+  document.getElementById('guide-sh').style.display = 'flex';
+  goTo('home');
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  if (speechSynthesis) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; }
+  if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {});
+  refreshHome();
+});
+</script>
+</body>
+</html>
