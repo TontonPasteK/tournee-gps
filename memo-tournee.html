@@ -1032,7 +1032,8 @@ async function calcRoute(la1, lo1, la2, lo2) {
     if (steps?.length) {
       const step = steps[0];
       const dir = translateDir(step.maneuver.type, step.maneuver.modifier);
-      document.getElementById('g-instr').textContent = `↗ ${dir} — ${step.name || ''}`;
+      // FIX: ne pas afficher " — " quand le nom de rue est vide
+      document.getElementById('g-instr').textContent = step.name ? `↗ ${dir} — ${step.name}` : `↗ ${dir}`;
       if (step.distance > 30) speak(`Dans ${Math.round(step.distance)} mètres, ${dir}`);
     }
   } catch { /* pas de réseau, silencieux */ }
@@ -1048,10 +1049,12 @@ function updateGuideHUD() {
     speak('Tournée terminée ! Bravo !'); toast('🎉 Tournée terminée !', 5000); return;
   }
   const s = S.gStops[S.gIdx];
-  const names = s.subs.map(x => x.nom + ' ' + x.prenom).join(' · ');
+  // FIX: ignorer les noms vides ou "—"
+  const names = s.subs.map(x => (x.nom && x.nom !== '—') ? (x.nom + ' ' + x.prenom).trim() : '').filter(Boolean).join(' · ') || '—';
   const tot = s.subs.reduce((a, x) => a + x.qty, 0);
   document.getElementById('g-sector').textContent = `📍 ${s.secteur || ''} — Arrêt ${s.id}`;
-  document.getElementById('g-address').textContent = `${s.rue} ${s.numero}`;
+  // FIX: numéro avant la rue (format adresse français standard)
+  document.getElementById('g-address').textContent = s.numero ? `${s.numero} ${s.rue}` : s.rue;
   document.getElementById('g-info').textContent = `${names} · ×${tot}${s.code ? ' · 🔑 ' + s.code : ''}`;
   document.getElementById('g-prog').textContent = `${S.gIdx + 1} sur ${S.gStops.length} — ${S.gStops.length - S.gIdx - 1} restants`;
   document.getElementById('g-instr').textContent = s.notes ? `📝 ${s.notes}` : '';
