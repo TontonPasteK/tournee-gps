@@ -380,6 +380,8 @@ const S = {
   finalTour: null,      // tournée finalisée
   // APPRENDRE
   recorder: null,
+  recStream: null,
+  wakeLock: null,
   chunks: [],
   recStart: null,
   recInterval: null,
@@ -415,6 +417,12 @@ function goTo(id) {
   if (id === 'home') refreshHome();
   if (id === 'learn') refreshLearn();
   if (id === 'guide') refreshGuide();
+  // FIX: réinitialiser l'écran FINALISER à chaque visite
+  if (id === 'finalize') {
+    document.getElementById('fin-load').style.display = 'flex';
+    document.getElementById('fin-editor').style.display = 'none';
+    document.getElementById('fin-audio-btn').style.display = 'none';
+  }
 }
 
 function refreshHome() {
@@ -664,15 +672,38 @@ function loadTourJSON(inp) {
 // ══════════════════════════════════════════════════
 //  2 — APPRENDRE
 // ══════════════════════════════════════════════════
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      S.wakeLock = await navigator.wakeLock.request('screen');
+      S.wakeLock.addEventListener('release', () => {
+        // Renouveler si la page est toujours active (ex: après mise en veille momentanée)
+        if (!document.hidden) requestWakeLock();
+      });
+    } catch(e) { /* non supporté ou refusé */ }
+  }
+}
+
+function releaseWakeLock() {
+  if (S.wakeLock) { S.wakeLock.release().catch(() => {}); S.wakeLock = null; }
+}
+
 function startLearning() {
   if (!S.tour) { toast('⚠️ Chargez d\'abord une tournée'); return; }
+  // FIX: effacer l'ancien GPS watch s'il existe
+  if (S.gpsWatch) { navigator.geolocation.clearWatch(S.gpsWatch); S.gpsWatch = null; }
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    // FIX: stocker le stream pour pouvoir le stopper proprement
+    S.recStream = stream;
     S.recorder = new MediaRecorder(stream, { mimeType: mimeType() });
-    S.chunks = [];
+    // FIX: réinitialiser tous les tableaux de la session précédente
+    S.chunks = []; S.stopEvents = []; S.markers = []; S.gpsTrack = [];
     S.recorder.ondataavailable = e => { if (e.data.size > 0) S.chunks.push(e.data); };
+    // FIX: utiliser onstop pour déclencher le téléchargement au bon moment
+    S.recorder.onstop = () => doDownloads();
     S.recorder.start(1000);
     S.recStart = Date.now();
-    S.stopIdx = 0; S.stopEvents = []; S.markers = []; S.gpsTrack = [];
+    S.stopIdx = 0;
 
     if (navigator.geolocation)
       S.gpsWatch = navigator.geolocation.watchPosition(
@@ -685,6 +716,9 @@ function startLearning() {
       const h = Math.floor(e / 3600), m = Math.floor((e % 3600) / 60), s = e % 60;
       document.getElementById('rec-time').textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }, 1000);
+
+    // FIX: demander le wake lock pour garder l'écran allumé pendant la tournée
+    requestWakeLock();
 
     document.getElementById('learn-idle').style.display = 'none';
     document.getElementById('learn-running').style.display = 'flex';
@@ -754,8 +788,10 @@ function ts(e) {
 }
 function tm(e) {
   const dx = e.touches[0].clientX - S.swipeX;
-  if (Math.abs(dx) > 20) { clearTimeout(S.longTimer); S.longTimer = null; }
-  if (Math.abs(dx) > Math.abs(e.touches[0].clientY - S.swipeY)) {
+  const dy = e.touches[0].clientY - S.swipeY;
+  // FIX: annuler le long press si mouvement horizontal OU vertical > 20px
+  if (Math.abs(dx) > 20 || Math.abs(dy) > 20) { clearTimeout(S.longTimer); S.longTimer = null; }
+  if (Math.abs(dx) > Math.abs(dy)) {
     const c = document.getElementById('stop-card');
     c.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
     c.style.opacity = Math.max(0.3, 1 - Math.abs(dx) / 280);
@@ -777,27 +813,38 @@ function confirmEnd() {
   endTour();
 }
 
+function doDownloads() {
+  // FIX: appelé via recorder.onstop → tous les chunks sont garantis disponibles
+  const sess = S.session;
+  dlBlob(JSON.stringify(sess, null, 2), `session-${slug(sess.tourName)}-${fmtDate()}.json`, 'application/json');
+  if (S.chunks.length) {
+    const mt = S.recorder.mimeType || 'audio/webm';
+    const ext = mt.includes('ogg') ? 'ogg' : mt.includes('mp4') ? 'mp4' : 'webm';
+    dlBlob(new Blob(S.chunks, { type: mt }), `audio-${slug(sess.tourName)}-${fmtDate()}.${ext}`, mt);
+  }
+  toast('💾 Sauvegardé ! Vérifiez vos téléchargements.', 4000);
+  document.getElementById('learn-idle').style.display = 'flex';
+  document.getElementById('learn-running').style.display = 'none';
+  document.getElementById('learn-back').style.display = '';
+  setTimeout(() => goTo('home'), 2500);
+}
+
 function endTour() {
-  if (S.recorder && S.recorder.state !== 'inactive') S.recorder.stop();
   clearInterval(S.recInterval);
   if (S.gpsWatch) { navigator.geolocation.clearWatch(S.gpsWatch); S.gpsWatch = null; }
+  // FIX: libérer le wake lock
+  releaseWakeLock();
 
-  const sess = { tourName: S.tour.name, startTime: new Date(S.recStart).toISOString(), duration: audioNow(), stops: S.tour.stops, stopEvents: S.stopEvents, audioMarkers: S.markers, gpsTrack: S.gpsTrack };
-  S.session = sess;
+  S.session = { tourName: S.tour.name, startTime: new Date(S.recStart).toISOString(), duration: audioNow(), stops: S.tour.stops, stopEvents: S.stopEvents, audioMarkers: S.markers, gpsTrack: S.gpsTrack };
 
-  setTimeout(() => {
-    dlBlob(JSON.stringify(sess, null, 2), `session-${slug(S.tour.name)}-${fmtDate()}.json`, 'application/json');
-    if (S.chunks.length) {
-      const mt = S.recorder.mimeType || 'audio/webm';
-      const ext = mt.includes('ogg') ? 'ogg' : mt.includes('mp4') ? 'mp4' : 'webm';
-      dlBlob(new Blob(S.chunks, { type: mt }), `audio-${slug(S.tour.name)}-${fmtDate()}.${ext}`, mt);
-    }
-    toast('💾 Sauvegardé ! Vérifiez vos téléchargements.', 4000);
-    document.getElementById('learn-idle').style.display = 'flex';
-    document.getElementById('learn-running').style.display = 'none';
-    document.getElementById('learn-back').style.display = '';
-    setTimeout(() => goTo('home'), 2500);
-  }, 600);
+  if (S.recorder && S.recorder.state !== 'inactive') {
+    // onstop déclenchera doDownloads() automatiquement
+    S.recorder.stop();
+  } else {
+    doDownloads();
+  }
+  // FIX: stopper les pistes audio pour libérer le micro (fin de barre rouge Android)
+  if (S.recStream) { S.recStream.getTracks().forEach(t => t.stop()); S.recStream = null; }
 }
 
 // ══════════════════════════════════════════════════
@@ -912,6 +959,8 @@ function startGuide() {
   document.getElementById('guide-run').style.display = 'block';
   document.getElementById('guide-sh').style.display = 'none';
 
+  // FIX: wake lock pendant la navigation
+  requestWakeLock();
   setTimeout(() => initMap(tour), 150);
 }
 
@@ -1034,6 +1083,8 @@ function stopGuide() {
   if (!confirm('Terminer la navigation ?')) return;
   if (S.gWatch) { navigator.geolocation.clearWatch(S.gWatch); S.gWatch = null; }
   speechSynthesis.cancel();
+  // FIX: libérer le wake lock en fin de navigation
+  releaseWakeLock();
   document.getElementById('guide-idle').style.display = 'flex';
   document.getElementById('guide-run').style.display = 'none';
   document.getElementById('guide-sh').style.display = 'flex';
@@ -1044,8 +1095,15 @@ function stopGuide() {
 //  INIT
 // ══════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  if (speechSynthesis) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; }
-  if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {});
+  // FIX: pré-charger les voix FR dès le départ (asynchrone sur Android)
+  if (speechSynthesis) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
+  }
+  // FIX: renouveler le wake lock si la page revient au premier plan
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && S.wakeLock === null && (S.recorder || S.gWatch)) requestWakeLock();
+  });
   refreshHome();
 });
 </script>
